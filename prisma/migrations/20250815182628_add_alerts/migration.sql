@@ -1,0 +1,9 @@
+-- CreateTable
+CREATE TABLE "Alert" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "message" TEXT NOT NULL,
+    "read" BOOLEAN NOT NULL DEFAULT false,
+    "contractId" INTEGER NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Alert_contractId_fkey" FOREIGN KEY ("contractId") REFERENCES "Contract" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
