@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema de Controle de Contratos</title>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="brand-bar"></div>
+
+    <header class="header">
+      <h1>Sistema de Controle de Contratos</h1>
+      <p>Gerencie contratos, centros de custo e contas contábeis de forma inteligente</p>
+    </header>
+
+    <div id="alerts"></div>
+
+    <!-- Indicadores -->
+    <section class="stats-grid">
+      <article class="stat-card">
+        <div class="stat-number text-primary" id="totalContratos">0</div>
+        <div class="stat-label">Total de Contratos</div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-number text-success" id="contratosAtivos">0</div>
+        <div class="stat-label">Contratos Ativos</div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-number text-secondary" id="contratosVencendo">0</div>
+        <div class="stat-label">Vencendo em 30 dias</div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-number text-danger" id="contratosEstouro">0</div>
+        <div class="stat-label">Com Estouro de Saldo</div>
+      </article>
+    </section>
+
+    <!-- Abas -->
+    <nav class="nav-tabs">
+      <button class="nav-tab active" onclick="showTab('contratos', this)">Contratos</button>
+      <button class="nav-tab" onclick="showTab('centros', this)">Centros de Custo</button>
+      <button class="nav-tab" onclick="showTab('contas', this)">Contas Contábeis</button>
+    </nav>
+
+    <!-- CONTRATOS -->
+    <section id="contratos" class="tab-content active">
+      <div class="card">
+        <div class="card-header">
+          <h3>Gestão de Contratos</h3>
+          <button class="btn" onclick="openModal('contratoModal')">+ Novo Contrato</button>
+        </div>
+
+        <div class="table-container">
+          <table id="contratosTable">
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Fornecedor</th>
+                <th>Centro de Custo</th>
+                <th>Valor Total</th>
+                <th>Saldo Utilizado</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTROS DE CUSTO -->
+    <section id="centros" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h3>Centros de Custo</h3>
+          <button class="btn" onclick="openModal('centroModal')">+ Novo Centro</button>
+        </div>
+
+        <div class="table-container">
+          <table id="centrosTable">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nome</th>
+                <th>Responsável</th>
+                <th>Email</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTAS CONTÁBEIS -->
+    <section id="contas" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h3>Contas Contábeis</h3>
+          <button class="btn" onclick="openModal('contaModal')">+ Nova Conta</button>
+        </div>
+
+        <div class="table-container">
+          <table id="contasTable">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Tipo</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- MODAL CONTRATO -->
+  <div id="contratoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="contratoModalTitle">Novo Contrato</h2>
+        <button class="close" onclick="closeModal('contratoModal')">&times;</button>
+      </div>
+      <form id="contratoForm" class="form-grid">
+        <div class="form-group">
+          <label for="numeroContrato">Número do Contrato *</label>
+          <input type="text" id="numeroContrato" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="fornecedor">Fornecedor *</label>
+          <input type="text" id="fornecedor" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="centroCustoContrato">Centro de Custo *</label>
+          <select id="centroCustoContrato" class="form-control" required>
+            <option value="">Selecione um centro de custo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="contaContabil">Conta Contábil *</label>
+          <select id="contaContabil" class="form-control" required>
+            <option value="">Selecione uma conta contábil</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="valorTotal">Valor Total (R$) *</label>
+          <input type="number" id="valorTotal" class="form-control" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label for="saldoUtilizado">Saldo Utilizado (R$)</label>
+          <input type="number" id="saldoUtilizado" class="form-control" step="0.01" value="0">
+        </div>
+        <div class="form-group">
+          <label for="dataInicio">Data de Início *</label>
+          <input type="date" id="dataInicio" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="dataVencimento">Data de Vencimento *</label>
+          <input type="date" id="dataVencimento" class="form-control" required>
+        </div>
+        <div class="form-group form-group--full">
+          <label for="observacoes">Observações</label>
+          <textarea id="observacoes" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-neutral" onclick="closeModal('contratoModal')">Cancelar</button>
+          <button type="submit" class="btn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CENTRO -->
+  <div id="centroModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="centroModalTitle">Novo Centro de Custo</h2>
+        <button class="close" onclick="closeModal('centroModal')">&times;</button>
+      </div>
+      <form id="centroForm" class="form-grid">
+        <div class="form-group">
+          <label for="codigoCentro">Código *</label>
+          <input type="text" id="codigoCentro" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="nomeCentro">Nome *</label>
+          <input type="text" id="nomeCentro" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="responsavel">Responsável *</label>
+          <input type="text" id="responsavel" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="emailResponsavel">Email do Responsável *</label>
+          <input type="email" id="emailResponsavel" class="form-control" required>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-neutral" onclick="closeModal('centroModal')">Cancelar</button>
+          <button type="submit" class="btn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CONTA -->
+  <div id="contaModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="contaModalTitle">Nova Conta Contábil</h2>
+        <button class="close" onclick="closeModal('contaModal')">&times;</button>
+      </div>
+      <form id="contaForm" class="form-grid">
+        <div class="form-group">
+          <label for="codigoConta">Código *</label>
+          <input type="text" id="codigoConta" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="descricaoConta">Descrição *</label>
+          <input type="text" id="descricaoConta" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="tipoConta">Tipo *</label>
+          <select id="tipoConta" class="form-control" required>
+            <option value="">Selecione o tipo</option>
+            <option value="Despesa">Despesa</option>
+            <option value="Receita">Receita</option>
+            <option value="Ativo">Ativo</option>
+            <option value="Passivo">Passivo</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-neutral" onclick="closeModal('contaModal')">Cancelar</button>
+          <button type="submit" class="btn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- sempre no final do body -->
+<script src="./js/app.js?v=3" defer></script>
+</body>
+</html>
