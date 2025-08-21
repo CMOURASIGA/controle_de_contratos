@@ -4,10 +4,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
-/* ========== CORS ========== */
+/* ================= CORS ================= */
 const allowList = (process.env.CORS_ORIGIN || '')
   .split(',')
   .map(s => s.trim())
@@ -20,47 +23,42 @@ app.use(
       if (allowList.length === 0 || allowList.includes(origin)) return cb(null, true);
       return cb(new Error('Not allowed by CORS'));
     },
-    credentials: false
   })
 );
 
 app.use(express.json());
 
 /* ========== Postgres (SSL por ambiente) ========== */
-// SSL verdadeiro em produção/railway; sem SSL no local
-const looksLikeCloud =
-  process.env.NODE_ENV === 'production' ||
-  (process.env.DATABASE_URL && /railway|render|amazonaws|azure|google/i.test(process.env.DATABASE_URL));
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
+/* -------- uploads (anexos) -------- */
+const uploadDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+const upload = multer({ dest: uploadDir });
+app.use('/files', express.static(uploadDir));
 
 /* ---- bootstrap de esquema (idempotente) ---- */
 async function ensureSchema() {
   await pool.query(`
-    -- coluna para ativação/inativação
     ALTER TABLE contratos
       ADD COLUMN IF NOT EXISTS ativo boolean NOT NULL DEFAULT true;
 
-    -- saldo_utilizado padrão
     ALTER TABLE contratos
       ALTER COLUMN saldo_utilizado SET DEFAULT 0;
 
-    -- tabela de movimentações (log) com possível anexo por URL
     CREATE TABLE IF NOT EXISTS contrato_movimentos (
       id             SERIAL PRIMARY KEY,
       contrato_id    INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
-      tipo           TEXT NOT NULL,  -- ex: PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO etc.
+      tipo           TEXT NOT NULL,  -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
       descricao      TEXT,
-      valor_delta    NUMERIC DEFAULT 0, -- impacto no saldo_utilizado (positivo soma no utilizado)
+      valor_delta    NUMERIC DEFAULT 0,
       anexo_url      TEXT,
       criado_em      TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
-    -- índice simples para consultas por contrato
     CREATE INDEX IF NOT EXISTS idx_contrato_movimentos_contrato_id
       ON contrato_movimentos (contrato_id);
   `);
@@ -76,12 +74,12 @@ function httpErr(res, err, status = 500) {
   console.error(err);
   return res.status(status).json({
     error: 'Erro interno',
-    detail: err.detail || err.message || String(err)
+    detail: err.detail || err.message || String(err),
   });
 }
 
 /* ========== Healthcheck ========== */
-app.get('/health', async (req, res) => {
+app.get('/health', async (_req, res) => {
   try {
     await pingDB();
     res.json({ ok: true });
@@ -90,12 +88,11 @@ app.get('/health', async (req, res) => {
   }
 });
 
-/* ====================================================================== */
-/* =======================   CENTROS DE CUSTO   ========================= */
-/* ====================================================================== */
+/* =================================================================== */
+/* =======================   CENTROS DE CUSTO   ====================== */
+/* =================================================================== */
 
-// GET todos
-app.get('/centros', async (req, res) => {
+app.get('/centros', async (_req, res) => {
   try {
     const { rows } = await pool.query(
       'SELECT id, codigo, nome, responsavel, email FROM centros_custo ORDER BY id DESC'
@@ -106,7 +103,6 @@ app.get('/centros', async (req, res) => {
   }
 });
 
-// POST criar
 app.post('/centros', async (req, res) => {
   try {
     const { codigo, nome, responsavel, email } = req.body;
@@ -125,7 +121,6 @@ app.post('/centros', async (req, res) => {
   }
 });
 
-// PUT atualizar
 app.put('/centros/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -150,7 +145,6 @@ app.put('/centros/:id', async (req, res) => {
   }
 });
 
-// DELETE apagar
 app.delete('/centros/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -162,12 +156,11 @@ app.delete('/centros/:id', async (req, res) => {
   }
 });
 
-/* ====================================================================== */
-/* =======================   CONTAS CONTÁBEIS   ========================= */
-/* ====================================================================== */
+/* =================================================================== */
+/* =======================   CONTAS CONTÁBEIS   ====================== */
+/* =================================================================== */
 
-// GET todos
-app.get('/contas', async (req, res) => {
+app.get('/contas', async (_req, res) => {
   try {
     const { rows } = await pool.query(
       'SELECT id, codigo, descricao, tipo FROM contas_contabeis ORDER BY id DESC'
@@ -178,7 +171,6 @@ app.get('/contas', async (req, res) => {
   }
 });
 
-// POST criar
 app.post('/contas', async (req, res) => {
   try {
     const { codigo, descricao, tipo } = req.body;
@@ -197,7 +189,6 @@ app.post('/contas', async (req, res) => {
   }
 });
 
-// PUT atualizar
 app.put('/contas/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -221,7 +212,6 @@ app.put('/contas/:id', async (req, res) => {
   }
 });
 
-// DELETE apagar
 app.delete('/contas/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -233,84 +223,78 @@ app.delete('/contas/:id', async (req, res) => {
   }
 });
 
-/* ====================================================================== */
-/* ============================   CONTRATOS   ============================ */
-/* ====================================================================== */
+/* =================================================================== */
+/* ============================   CONTRATOS   ========================= */
+/* =================================================================== */
 
-/**
- * GET /contratos
- * Filtros (querystring):
- *  - ativo=true|false
- *  - status=ATIVO|INATIVO|VENCIDO|VENCE_EM_30_DIAS
- *  - centro=<id>
- *  - conta=<id>
- *  - fornecedor=<texto>
- *  - q=<busca livre em numero/descricao/fornecedor>
- *  - vencimentoDe=YYYY-MM-DD
- *  - vencimentoAte=YYYY-MM-DD
- */
+/** constrói WHERE e params para /contratos e /relatorios/contratos */
+function buildWhere(req) {
+  // compat de nomes vindos do front antigo
+  const q = {
+    ativo: req.query.ativo,
+    status: req.query.status || (req.query.vencendo30 ? 'VENCE_EM_30_DIAS' : undefined),
+    centro: req.query.centro,
+    conta: req.query.conta,
+    fornecedor: req.query.fornecedor,
+    q: req.query.q,
+    vencimentoDe: req.query.vencimentoDe || req.query.inicioDesde, // compat
+    vencimentoAte: req.query.vencimentoAte,
+  };
+
+  const where = [];
+  const params = [];
+
+  if (typeof q.ativo !== 'undefined') {
+    params.push(String(q.ativo).toLowerCase() === 'true');
+    where.push(`c.ativo = $${params.length}`);
+  }
+
+  if (q.status) {
+    const idx = params.push(String(q.status).toUpperCase());
+    where.push(`
+      CASE
+        WHEN NOT c.ativo THEN 'INATIVO'
+        WHEN c.data_fim < CURRENT_DATE THEN 'VENCIDO'
+        WHEN c.data_fim <= CURRENT_DATE + INTERVAL '30 days' THEN 'VENCE_EM_30_DIAS'
+        ELSE 'ATIVO'
+      END = $${idx}
+    `);
+  }
+
+  if (q.centro) {
+    params.push(Number(q.centro));
+    where.push(`c.centro_custo_id = $${params.length}`);
+  }
+  if (q.conta) {
+    params.push(Number(q.conta));
+    where.push(`c.conta_contabil_id = $${params.length}`);
+  }
+  if (q.fornecedor) {
+    params.push(`%${q.fornecedor}%`);
+    where.push(`c.fornecedor ILIKE $${params.length}`);
+  }
+  if (q.q) {
+    params.push(`%${q.q}%`);
+    where.push(
+      `(c.numero ILIKE $${params.length} OR c.descricao ILIKE $${params.length} OR c.fornecedor ILIKE $${params.length})`
+    );
+  }
+  if (q.vencimentoDe) {
+    params.push(q.vencimentoDe);
+    where.push(`c.data_fim >= $${params.length}`);
+  }
+  if (q.vencimentoAte) {
+    params.push(q.vencimentoAte);
+    where.push(`c.data_fim <= $${params.length}`);
+  }
+
+  return { whereSQL: where.length ? `WHERE ${where.join(' AND ')}` : '', params };
+}
+
+/** GET /contratos (lista + filtros) */
 app.get('/contratos', async (req, res) => {
   try {
-    const {
-      ativo,
-      status,
-      centro,
-      conta,
-      fornecedor,
-      q,
-      vencimentoDe,
-      vencimentoAte
-    } = req.query;
-
-    const where = [];
-    const params = [];
-
-    // ativo
-    if (typeof ativo !== 'undefined') {
-      params.push(String(ativo).toLowerCase() === 'true');
-      where.push(`c.ativo = $${params.length}`);
-    }
-
-    // status calculado
-    if (status) {
-      const idx = params.push(status.toUpperCase());
-      where.push(`
-        CASE
-          WHEN NOT c.ativo THEN 'INATIVO'
-          WHEN c.data_fim < CURRENT_DATE THEN 'VENCIDO'
-          WHEN c.data_fim <= CURRENT_DATE + INTERVAL '30 days' THEN 'VENCE_EM_30_DIAS'
-          ELSE 'ATIVO'
-        END = $${idx}
-      `);
-    }
-
-    if (centro) {
-      params.push(Number(centro));
-      where.push(`c.centro_custo_id = $${params.length}`);
-    }
-    if (conta) {
-      params.push(Number(conta));
-      where.push(`c.conta_contabil_id = $${params.length}`);
-    }
-    if (fornecedor) {
-      params.push(`%${fornecedor}%`);
-      where.push(`c.fornecedor ILIKE $${params.length}`);
-    }
-    if (q) {
-      params.push(`%${q}%`);
-      where.push(`(c.numero ILIKE $${params.length} OR c.descricao ILIKE $${params.length} OR c.fornecedor ILIKE $${params.length})`);
-    }
-    if (vencimentoDe) {
-      params.push(vencimentoDe);
-      where.push(`c.data_fim >= $${params.length}`);
-    }
-    if (vencimentoAte) {
-      params.push(vencimentoAte);
-      where.push(`c.data_fim <= $${params.length}`);
-    }
-
-    const whereSQL = where.length ? `WHERE ${where.join(' AND ')}` : '';
-
+    const { whereSQL, params } = buildWhere(req);
     const qres = await pool.query(
       `
       SELECT
@@ -337,15 +321,13 @@ app.get('/contratos', async (req, res) => {
       `,
       params
     );
-
     res.json(qres.rows);
   } catch (err) {
-    console.error('GET /contratos error:', err);
-    res.status(500).json({ error: 'Erro interno', detail: err.detail || err.message });
+    httpErr(res, err);
   }
 });
 
-// CRIAR CONTRATO
+/** POST /contratos */
 app.post('/contratos', async (req, res) => {
   try {
     const {
@@ -358,7 +340,7 @@ app.post('/contratos', async (req, res) => {
       dataInicio,
       dataVencimento,
       observacoes,
-      ativo
+      ativo,
     } = req.body;
 
     const ins = await pool.query(
@@ -376,18 +358,17 @@ app.post('/contratos', async (req, res) => {
         dataInicio || null,
         dataVencimento || null,
         observacoes || null,
-        typeof ativo === 'boolean' ? ativo : true
+        typeof ativo === 'boolean' ? ativo : true,
       ]
     );
 
     res.status(201).json({ ok: true, id: ins.rows[0].id });
   } catch (err) {
-    console.error('POST /contratos error:', err);
-    res.status(500).json({ error: 'Erro interno', detail: err.detail || err.message });
+    httpErr(res, err);
   }
 });
 
-// ATUALIZAR CONTRATO
+/** PUT /contratos/:id */
 app.put('/contratos/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -401,7 +382,7 @@ app.put('/contratos/:id', async (req, res) => {
       dataInicio,
       dataVencimento,
       observacoes,
-      ativo
+      ativo,
     } = req.body;
 
     await pool.query(
@@ -428,32 +409,28 @@ app.put('/contratos/:id', async (req, res) => {
         dataVencimento || null,
         observacoes || null,
         typeof ativo === 'boolean' ? ativo : true,
-        id
+        id,
       ]
     );
 
     res.json({ ok: true });
   } catch (err) {
-    console.error('PUT /contratos error:', err);
-    res.status(500).json({ error: 'Erro interno', detail: err.detail || err.message });
+    httpErr(res, err);
   }
 });
 
-// EXCLUIR CONTRATO
+/** DELETE /contratos/:id */
 app.delete('/contratos/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
     await pool.query('DELETE FROM contratos WHERE id=$1', [id]);
     res.json({ ok: true });
   } catch (err) {
-    console.error('DELETE /contratos error:', err);
-    res.status(500).json({ error: 'Erro interno', detail: err.detail || err.message });
+    httpErr(res, err);
   }
 });
 
 /* --------- Ações de status --------- */
-
-// Inativar
 app.post('/contratos/:id/inativar', async (req, res) => {
   const id = Number(req.params.id);
   const { motivo } = req.body || {};
@@ -476,7 +453,6 @@ app.post('/contratos/:id/inativar', async (req, res) => {
   }
 });
 
-// Ativar
 app.post('/contratos/:id/ativar', async (req, res) => {
   const id = Number(req.params.id);
   const client = await pool.connect();
@@ -498,7 +474,6 @@ app.post('/contratos/:id/ativar', async (req, res) => {
   }
 });
 
-// Renovar (atualiza data_fim e, opcionalmente, soma valor)
 app.post('/contratos/:id/renovar', async (req, res) => {
   const id = Number(req.params.id);
   const { novaDataFim, valorAdicional, observacao } = req.body || {};
@@ -507,16 +482,13 @@ app.post('/contratos/:id/renovar', async (req, res) => {
     await client.query('BEGIN');
 
     if (valorAdicional && Number(valorAdicional) !== 0) {
-      await client.query(
-        'UPDATE contratos SET valor = COALESCE(valor,0) + $1 WHERE id=$2',
-        [Number(valorAdicional), id]
-      );
+      await client.query('UPDATE contratos SET valor = COALESCE(valor,0) + $1 WHERE id=$2', [
+        Number(valorAdicional),
+        id,
+      ]);
     }
     if (novaDataFim) {
-      await client.query(
-        'UPDATE contratos SET data_fim = $1 WHERE id=$2',
-        [novaDataFim, id]
-      );
+      await client.query('UPDATE contratos SET data_fim = $1 WHERE id=$2', [novaDataFim, id]);
     }
 
     await client.query(
@@ -535,9 +507,7 @@ app.post('/contratos/:id/renovar', async (req, res) => {
   }
 });
 
-/* --------- Movimentações (log + anexos via URL) --------- */
-
-// Listar movimentos
+/* --------- Movimentações --------- */
 app.get('/contratos/:id/movimentos', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -555,7 +525,6 @@ app.get('/contratos/:id/movimentos', async (req, res) => {
   }
 });
 
-// Criar movimento (impacta saldo_utilizado se valorDelta informado)
 app.post('/contratos/:id/movimentos', async (req, res) => {
   const id = Number(req.params.id);
   const { tipo, descricao, valorDelta, anexoUrl } = req.body || {};
@@ -589,8 +558,82 @@ app.post('/contratos/:id/movimentos', async (req, res) => {
   }
 });
 
+/* ---- Alias /compatibilidade com /movimentacoes ---- */
+app.get('/contratos/:id/movimentacoes', (req, res) => app._router.handle(req, res));
+app.post('/contratos/:id/movimentacoes', (req, res) => app._router.handle(req, res));
+
+/* --------- Upload de anexo --------- */
+app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!req.file) return res.status(400).json({ error: 'Arquivo não enviado' });
+    const url = `/files/${req.file.filename}`;
+
+    await pool.query(
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, descricao, valor_delta, anexo_url)
+       VALUES ($1, 'ANEXO', 'Upload de anexo', 0, $2)`,
+      [id, url]
+    );
+
+    res.status(201).json({ ok: true, url });
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/* --------- Relatório CSV --------- */
+app.get('/relatorios/contratos', async (req, res) => {
+  try {
+    const { whereSQL, params } = buildWhere(req);
+    const { rows } = await pool.query(
+      `
+      SELECT
+        c.id, c.numero, c.fornecedor,
+        c.valor AS valor_total, c.saldo_utilizado,
+        c.data_inicio, c.data_fim, c.ativo
+      FROM contratos c
+      ${whereSQL}
+      ORDER BY c.id DESC
+      `,
+      params
+    );
+
+    const head = [
+      'id',
+      'numero',
+      'fornecedor',
+      'valor_total',
+      'saldo_utilizado',
+      'data_inicio',
+      'data_fim',
+      'ativo',
+    ];
+    const csv = [
+      head.join(';'),
+      ...rows.map(r =>
+        [
+          r.id,
+          r.numero ?? '',
+          r.fornecedor ?? '',
+          r.valor_total ?? 0,
+          r.saldo_utilizado ?? 0,
+          r.data_inicio ? new Date(r.data_inicio).toISOString().slice(0, 10) : '',
+          r.data_fim ? new Date(r.data_fim).toISOString().slice(0, 10) : '',
+          r.ativo ? 'true' : 'false',
+        ].join(';')
+      ),
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="contratos.csv"');
+    res.send(csv);
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
 /* ========== 404 padrão ========== */
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).json({ error: 'Rota não encontrada' });
 });
 
@@ -598,9 +641,7 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 8080;
 ensureSchema()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`API rodando na porta ${PORT}`);
-    });
+    app.listen(PORT, () => console.log(`API rodando na porta ${PORT}`));
   })
   .catch(err => {
     console.error('Falha ao iniciar por erro de schema:', err);
