@@ -1,7 +1,7 @@
 /***********************
  * CONFIGURAÇÃO
  ***********************/
-const API = 'https://SEU-APP.up.railway.app'; // <- troque pela URL da sua API
+const API = 'https://controledecontratos-production.up.railway.app';
 
 // Estado em memória (carregado da API)
 let contratos = [];
@@ -42,35 +42,58 @@ document.addEventListener('DOMContentLoaded', async function () {
 });
 
 async function initializeData() {
-  // Carrega centros, contas e contratos da API
-  const [centros, contas, contrs] = await Promise.all([
-    apiGet('/centros'),
-    apiGet('/contas'),
-    apiGet('/contratos'),
-  ]);
+  // Mostra um “carregando” simples (opcional)
+  const alerts = document.getElementById('alerts');
+  alerts.innerHTML = '';
 
-  centrosCusto = centros;
-  contasContabeis = contas;
-  contratos = contrs;
+  try {
+    const [centrosRes, contasRes, contratosRes] = await Promise.allSettled([
+      apiGet('/centros'),
+      apiGet('/contas'),
+      apiGet('/contratos'),
+    ]);
 
-  updateTables();
-  updateStats();
-  checkAlerts();
+    centrosCusto = centrosRes.status === 'fulfilled' ? centrosRes.value : [];
+    contasContabeis = contasRes.status === 'fulfilled' ? contasRes.value : [];
+    contratos = contratosRes.status === 'fulfilled' ? contratosRes.value : [];
+
+    // Mensagens por falha parcial
+    if (centrosRes.status === 'rejected') {
+      showAlert('Não foi possível carregar Centros de Custo.', 'warning');
+    }
+    if (contasRes.status === 'rejected') {
+      showAlert('Não foi possível carregar Contas Contábeis.', 'warning');
+    }
+    if (contratosRes.status === 'rejected') {
+      showAlert('Não foi possível carregar Contratos. Os demais dados foram carregados.', 'warning');
+    }
+
+    updateTables();
+    updateStats();
+    checkAlerts();
+
+  } catch (err) {
+    console.error('Falha inesperada ao inicializar dados:', err);
+    showAlert('Erro ao carregar dados da API. Verifique a conexão.', 'danger');
+  }
 }
+
 
 /***********************
  * ABAS
  ***********************/
-function showTab(tabName, el) {
+function showTab(tabName, ev) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-  const btn = el || (typeof event !== 'undefined' ? (event.currentTarget || event.target) : null);
-  if (btn && btn.classList) btn.classList.add('active');
+  if (ev && ev.currentTarget) {
+    ev.currentTarget.classList.add('active');
+  }
 
   const content = document.getElementById(tabName);
   if (content) content.classList.add('active');
 }
+
 
 /***********************
  * MODAIS
