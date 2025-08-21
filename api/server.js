@@ -229,7 +229,6 @@ app.delete('/contas/:id', async (req, res) => {
 
 /** constrói WHERE e params para /contratos e /relatorios/contratos */
 function buildWhere(req) {
-  // compat de nomes vindos do front antigo
   const q = {
     ativo: req.query.ativo,
     status: req.query.status || (req.query.vencendo30 ? 'VENCE_EM_30_DIAS' : undefined),
@@ -508,7 +507,7 @@ app.post('/contratos/:id/renovar', async (req, res) => {
 });
 
 /* --------- Movimentações --------- */
-app.get('/contratos/:id/movimentos', async (req, res) => {
+const getMovements = async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { rows } = await pool.query(
@@ -523,9 +522,9 @@ app.get('/contratos/:id/movimentos', async (req, res) => {
   } catch (err) {
     httpErr(res, err);
   }
-});
+};
 
-app.post('/contratos/:id/movimentos', async (req, res) => {
+const postMovement = async (req, res) => {
   const id = Number(req.params.id);
   const { tipo, descricao, valorDelta, anexoUrl } = req.body || {};
   if (!tipo) return res.status(400).json({ error: 'Campo "tipo" é obrigatório' });
@@ -556,11 +555,13 @@ app.post('/contratos/:id/movimentos', async (req, res) => {
   } finally {
     client.release();
   }
-});
+};
 
-/* ---- Alias /compatibilidade com /movimentacoes ---- */
-app.get('/contratos/:id/movimentacoes', (req, res) => app._router.handle(req, res));
-app.post('/contratos/:id/movimentacoes', (req, res) => app._router.handle(req, res));
+app.get('/contratos/:id/movimentos', getMovements);
+app.post('/contratos/:id/movimentos', postMovement);
+/* compat com rotas antigas */
+app.get('/contratos/:id/movimentacoes', getMovements);
+app.post('/contratos/:id/movimentacoes', postMovement);
 
 /* --------- Upload de anexo --------- */
 app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {

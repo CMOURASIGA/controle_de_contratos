@@ -296,7 +296,7 @@ function updateCentrosTable() {
         <td>${centro.email}</td>
         <td>
           <button class="btn btn-warning" style="padding:6px 12px;margin-right:5px" onclick="editCentro(${centro.id})">Editar</button>
-          <button class="btn btn-danger"  style="padding:6px 12px" onclick="deleteCentro(${centro.id})">Excluir</button>
+          <button class="btn btn-danger"  style="padding:6px 12px;margin-right:5px" onclick="deleteCentro(${centro.id})">Excluir</button>
         </td>
       </tr>`;
   });
@@ -314,7 +314,7 @@ function updateContasTable() {
         <td>${conta.tipo}</td>
         <td>
           <button class="btn btn-warning" style="padding:6px 12px;margin-right:5px" onclick="editConta(${conta.id})">Editar</button>
-          <button class="btn btn-danger"  style="padding:6px 12px" onclick="deleteConta(${conta.id})">Excluir</button>
+          <button class="btn btn-danger"  style="padding:6px 12px;margin-right:5px" onclick="deleteConta(${conta.id})">Excluir</button>
         </td>
       </tr>`;
   });
@@ -523,7 +523,7 @@ document.getElementById('contratoForm')?.addEventListener('submit', async functi
       showAlert('Contrato criado com sucesso!', 'success');
     }
 
-    if (hasFile && saved && (saved.id || saved.ok)) {
+    if (hasFile && (saved?.id || saved?.ok)) {
       const fd = new FormData();
       fd.append('file', fileInput.files[0]);
       const id = editingId || saved.id;
