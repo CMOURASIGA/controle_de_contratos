@@ -50,16 +50,27 @@ async function ensureSchema() {
       ALTER COLUMN saldo_utilizado SET DEFAULT 0;
 
     CREATE TABLE IF NOT EXISTS contrato_movimentos (
-      id             SERIAL PRIMARY KEY,
-      contrato_id    INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
-      tipo           TEXT NOT NULL,  -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
-      observacao      TEXT,
-      valor    NUMERIC DEFAULT 0,
-      criado_em      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      id           SERIAL PRIMARY KEY,
+      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
+      tipo         TEXT NOT NULL,  -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
+      observacao   TEXT,
+      valor        NUMERIC DEFAULT 0,
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE INDEX IF NOT EXISTS idx_contrato_movimentos_contrato_id
       ON contrato_movimentos (contrato_id);
+
+    CREATE TABLE IF NOT EXISTS contrato_arquivos (
+      id           SERIAL PRIMARY KEY,
+      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
+      nome_arquivo TEXT NOT NULL,
+      url          TEXT NOT NULL,
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_contrato_arquivos_contrato_id
+      ON contrato_arquivos (contrato_id);
   `);
 }
 
@@ -525,7 +536,7 @@ const getMovements = async (req, res) => {
 
 const postMovement = async (req, res) => {
   const id = Number(req.params.id);
-  const { tipo, observacao, valorDelta, anexoUrl } = req.body || {};
+  const { tipo, observacao, valorDelta } = req.body || {};
   if (!tipo) return res.status(400).json({ error: 'Campo "tipo" é obrigatório' });
 
   const client = await pool.connect();
@@ -534,9 +545,9 @@ const postMovement = async (req, res) => {
 
     const { rows } = await client.query(
       `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
-       VALUES ($1,$2,$3,$4,$5)
+       VALUES ($1,$2,$3,$4)
        RETURNING id`,
-      [id, tipo, observacao || null, Number(valorDelta || 0), anexoUrl || null]
+      [id, tipo, observacao || null, Number(valorDelta || 0)]
     );
 
     if (valorDelta && Number(valorDelta) !== 0) {
@@ -567,15 +578,25 @@ app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!req.file) return res.status(400).json({ error: 'Arquivo não enviado' });
-    const url = `/files/${req.file.filename}`;
 
+    const url = `/files/${req.file.filename}`;
+    const nome = req.file.originalname || req.file.filename;
+
+    // guarda o arquivo na tabela própria
     await pool.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
-       VALUES ($1, 'ANEXO', 'Upload de anexo', 0, $2)`,
-      [id, url]
+      `INSERT INTO contrato_arquivos (contrato_id, nome_arquivo, url)
+       VALUES ($1,$2,$3)`,
+      [id, nome, url]
     );
 
-    res.status(201).json({ ok: true, url });
+    // registra um movimento (sem estourar colunas)
+    await pool.query(
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
+       VALUES ($1, 'ANEXO', $2, 0)`,
+      [id, `Upload de anexo: ${nome}`]
+    );
+
+    res.status(201).json({ ok: true, url, nome });
   } catch (err) {
     httpErr(res, err);
   }
