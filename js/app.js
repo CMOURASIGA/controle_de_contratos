@@ -268,16 +268,17 @@ function updateContratosTable() {
         <td>
           <div>R$ ${toBRL(contrato.saldoUtilizado)}</div>
           <div class="progress-bar">
-            <div class="progress-fill" style="width:${Math.min(pct,100)}%; background:${pct>90?'var(--danger-color)':'var(--accent-color)'}"></div>
+            <div class="progress-fill" style="width:${Math.min(pct,100)}%; background:${pct>90?'var(--danger)':'var(--accent)'}"></div>
           </div>
           <small>${isFinite(pct)?pct.toFixed(1):'0.0'}% utilizado</small>
         </td>
         <td>${new Date(contrato.dataVencimento).toLocaleDateString('pt-BR')}</td>
         <td><span class="badge ${statusClass}">${statusText}</span></td>
         <td style="white-space:nowrap">
+          <button class="btn"             style="padding:6px 12px;margin-right:5px" onclick="viewContrato(${contrato.id})">Visualizar</button>
           <button class="btn btn-warning" style="padding:6px 12px;margin-right:5px" onclick="editContrato(${contrato.id})">Editar</button>
           <button class="btn btn-danger"  style="padding:6px 12px;margin-right:5px" onclick="deleteContrato(${contrato.id})">Excluir</button>
-          <button class="btn"            style="padding:6px 12px" onclick="openMovModal(${contrato.id})">Movimentar</button>
+          <button class="btn"             style="padding:6px 12px" onclick="openMovModal(${contrato.id})">Movimentar</button>
         </td>
       </tr>`;
   });
@@ -372,6 +373,58 @@ function checkAlerts() {
 }
 
 /***********************
+ * VISUALIZAR CONTRATO
+ ***********************/
+async function viewContrato(id){
+  const c = contratos.find(x => x.id === id);
+  if(!c) return;
+
+  // dados
+  const centro = centrosCusto.find(k => k.id === c.centroCusto);
+  const conta  = contasContabeis.find(k => k.id === c.contaContabil);
+  const diasVenc = Math.ceil((new Date(c.dataVencimento) - new Date()) / (1000*60*60*24));
+  let statusText = 'Ativo';
+  if (c.ativo === false) statusText = 'Inativo';
+  else if (diasVenc <= 0) statusText = 'Vencido';
+  else if (diasVenc <= 30) statusText = 'Vencendo';
+  const el = (id)=>document.getElementById(id);
+  el('viewNumero').textContent = c.numero;
+  el('viewFornecedor').textContent = c.fornecedor;
+  el('viewStatus').textContent = statusText;
+  el('viewCentro').textContent = centro ? `${centro.codigo} - ${centro.nome}` : 'N/A';
+  el('viewConta').textContent  = conta ? `${conta.codigo} - ${conta.descricao}` : 'N/A';
+  el('viewAtivo').textContent  = c.ativo ? 'Sim' : 'Não';
+  el('viewValor').textContent  = 'R$ ' + toBRL(c.valorTotal);
+  el('viewSaldo').textContent  = 'R$ ' + toBRL(c.saldoUtilizado);
+  el('viewVenc').textContent   = new Date(c.dataVencimento).toLocaleDateString('pt-BR');
+  el('viewObs').textContent    = c.observacoes || '-';
+
+  // anexos
+  const filesDiv = el('viewFiles');
+  filesDiv.innerHTML = 'Carregando...';
+  try{
+    const lista = await apiGet(`/contratos/${id}/arquivos`);
+    if(!lista.length){ filesDiv.textContent = 'Sem anexos.'; }
+    else{
+      filesDiv.innerHTML = '';
+      lista.forEach(a=>{
+        const link = document.createElement('a');
+        link.href = `${API}${a.url}`;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'btn';
+        link.textContent = a.nome_arquivo || 'Arquivo';
+        filesDiv.appendChild(link);
+      });
+    }
+  }catch(_){
+    filesDiv.textContent = 'Falha ao carregar anexos.';
+  }
+
+  openModal('viewModal');
+}
+
+/***********************
  * CRUD CONTRATOS
  ***********************/
 function editContrato(id) {
@@ -462,7 +515,7 @@ document.getElementById('movForm')?.addEventListener('submit', async function(e)
   const tipoTela = document.getElementById('movTipo').value; // 'saida' | 'ajuste'
   const payload = {
     tipo: (tipoTela === 'saida' ? 'PAGAMENTO' : 'AJUSTE'),
-    descricao: document.getElementById('movObs').value || null,
+    observacao: document.getElementById('movObs').value || null,
     valorDelta: parseFloat(document.getElementById('movValor').value) || 0
   };
   try {
@@ -599,6 +652,7 @@ document.getElementById('contaForm')?.addEventListener('submit', async function 
 window.showTab = showTab;
 window.openModal = openModal;
 window.closeModal = closeModal;
+window.viewContrato = viewContrato;
 window.editContrato = editContrato;
 window.deleteContrato = deleteContrato;
 window.editCentro   = editCentro;

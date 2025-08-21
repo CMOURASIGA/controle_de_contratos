@@ -340,16 +340,9 @@ app.get('/contratos', async (req, res) => {
 app.post('/contratos', async (req, res) => {
   try {
     const {
-      numero,
-      fornecedor,
-      centroCusto,
-      contaContabil,
-      valorTotal,
-      saldoUtilizado,
-      dataInicio,
-      dataVencimento,
-      observacoes,
-      ativo,
+      numero, fornecedor, centroCusto, contaContabil,
+      valorTotal, saldoUtilizado, dataInicio, dataVencimento,
+      observacoes, ativo,
     } = req.body;
 
     const ins = await pool.query(
@@ -358,14 +351,10 @@ app.post('/contratos', async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING id`,
       [
-        numero || null,
-        fornecedor || null,
-        centroCusto || null,
-        contaContabil || null,
-        valorTotal || 0,
-        saldoUtilizado || 0,
-        dataInicio || null,
-        dataVencimento || null,
+        numero || null, fornecedor || null,
+        centroCusto || null, contaContabil || null,
+        valorTotal || 0, saldoUtilizado || 0,
+        dataInicio || null, dataVencimento || null,
         observacoes || null,
         typeof ativo === 'boolean' ? ativo : true,
       ]
@@ -382,40 +371,21 @@ app.put('/contratos/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
     const {
-      numero,
-      fornecedor,
-      centroCusto,
-      contaContabil,
-      valorTotal,
-      saldoUtilizado,
-      dataInicio,
-      dataVencimento,
-      observacoes,
-      ativo,
+      numero, fornecedor, centroCusto, contaContabil,
+      valorTotal, saldoUtilizado, dataInicio, dataVencimento,
+      observacoes, ativo,
     } = req.body;
 
     await pool.query(
       `UPDATE contratos
-          SET numero=$1,
-              fornecedor=$2,
-              centro_custo_id=$3,
-              conta_contabil_id=$4,
-              valor=$5,
-              saldo_utilizado=$6,
-              data_inicio=$7,
-              data_fim=$8,
-              descricao=$9,
-              ativo=$10
+          SET numero=$1, fornecedor=$2, centro_custo_id=$3, conta_contabil_id=$4,
+              valor=$5, saldo_utilizado=$6, data_inicio=$7, data_fim=$8, descricao=$9, ativo=$10
         WHERE id=$11`,
       [
-        numero || null,
-        fornecedor || null,
-        centroCusto || null,
-        contaContabil || null,
-        valorTotal || 0,
-        saldoUtilizado || 0,
-        dataInicio || null,
-        dataVencimento || null,
+        numero || null, fornecedor || null,
+        centroCusto || null, contaContabil || null,
+        valorTotal || 0, saldoUtilizado || 0,
+        dataInicio || null, dataVencimento || null,
         observacoes || null,
         typeof ativo === 'boolean' ? ativo : true,
         id,
@@ -492,8 +462,7 @@ app.post('/contratos/:id/renovar', async (req, res) => {
 
     if (valorAdicional && Number(valorAdicional) !== 0) {
       await client.query('UPDATE contratos SET valor = COALESCE(valor,0) + $1 WHERE id=$2', [
-        Number(valorAdicional),
-        id,
+        Number(valorAdicional), id,
       ]);
     }
     if (novaDataFim) {
@@ -582,14 +551,12 @@ app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
     const url = `/files/${req.file.filename}`;
     const nome = req.file.originalname || req.file.filename;
 
-    // guarda o arquivo na tabela própria
     await pool.query(
       `INSERT INTO contrato_arquivos (contrato_id, nome_arquivo, url)
        VALUES ($1,$2,$3)`,
       [id, nome, url]
     );
 
-    // registra um movimento (sem estourar colunas)
     await pool.query(
       `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
        VALUES ($1, 'ANEXO', $2, 0)`,
@@ -597,6 +564,23 @@ app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
     );
 
     res.status(201).json({ ok: true, url, nome });
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/* --------- Lista de anexos --------- */
+app.get('/contratos/:id/arquivos', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { rows } = await pool.query(
+      `SELECT id, contrato_id, nome_arquivo, url, criado_em
+         FROM contrato_arquivos
+        WHERE contrato_id = $1
+        ORDER BY id DESC`,
+      [id]
+    );
+    res.json(rows);
   } catch (err) {
     httpErr(res, err);
   }
@@ -619,16 +603,7 @@ app.get('/relatorios/contratos', async (req, res) => {
       params
     );
 
-    const head = [
-      'id',
-      'numero',
-      'fornecedor',
-      'valor_total',
-      'saldo_utilizado',
-      'data_inicio',
-      'data_fim',
-      'ativo',
-    ];
+    const head = ['id','numero','fornecedor','valor_total','saldo_utilizado','data_inicio','data_fim','ativo'];
     const csv = [
       head.join(';'),
       ...rows.map(r =>
