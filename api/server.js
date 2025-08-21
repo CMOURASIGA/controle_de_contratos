@@ -55,7 +55,6 @@ async function ensureSchema() {
       tipo           TEXT NOT NULL,  -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
       observacao      TEXT,
       valor    NUMERIC DEFAULT 0,
-      anexo_url      TEXT,
       criado_em      TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
@@ -512,7 +511,7 @@ const getMovements = async (req, res) => {
     const id = Number(req.params.id);
     const { rows } = await pool.query(
       `SELECT id, contrato_id, tipo, observacao, valor AS "valorDelta",
-              anexo_url AS "anexoUrl", criado_em AS "criadoEm"
+               criado_em AS "criadoEm"
          FROM contrato_movimentos
         WHERE contrato_id = $1
         ORDER BY id DESC`,
@@ -534,7 +533,7 @@ const postMovement = async (req, res) => {
     await client.query('BEGIN');
 
     const { rows } = await client.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor, anexo_url)
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
        VALUES ($1,$2,$3,$4,$5)
        RETURNING id`,
       [id, tipo, observacao || null, Number(valorDelta || 0), anexoUrl || null]
@@ -571,7 +570,7 @@ app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
     const url = `/files/${req.file.filename}`;
 
     await pool.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor, anexo_url)
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
        VALUES ($1, 'ANEXO', 'Upload de anexo', 0, $2)`,
       [id, url]
     );
