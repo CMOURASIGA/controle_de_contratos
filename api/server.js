@@ -26,21 +26,16 @@ app.use(
 
 app.use(express.json());
 
-/* ========== Postgres (Railway) ========== */
-const isLocal =
-  process.env.DATABASE_URL &&
-  (process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1'));
-
-import pkg from 'pg';
-const { Pool } = pkg;
+/* ========== Postgres (SSL por ambiente) ========== */
+// SSL verdadeiro em produção/railway; sem SSL no local
+const looksLikeCloud =
+  process.env.NODE_ENV === 'production' ||
+  (process.env.DATABASE_URL && /railway|render|amazonaws|azure|google/i.test(process.env.DATABASE_URL));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: looksLikeCloud ? { rejectUnauthorized: false } : false
 });
-
 
 /* ---- bootstrap de esquema (idempotente) ---- */
 async function ensureSchema() {
