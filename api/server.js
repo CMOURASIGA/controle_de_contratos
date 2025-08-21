@@ -438,7 +438,7 @@ app.post('/contratos/:id/inativar', async (req, res) => {
     await client.query('BEGIN');
     await client.query('UPDATE contratos SET ativo=false WHERE id=$1', [id]);
     await client.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, descricao, valor_delta)
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor_delta)
        VALUES ($1, 'INATIVACAO', $2, 0)`,
       [id, motivo || null]
     );
@@ -459,7 +459,7 @@ app.post('/contratos/:id/ativar', async (req, res) => {
     await client.query('BEGIN');
     await client.query('UPDATE contratos SET ativo=true WHERE id=$1', [id]);
     await client.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, descricao, valor_delta)
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor_delta)
        VALUES ($1, 'ATIVACAO', NULL, 0)`,
       [id]
     );
@@ -491,7 +491,7 @@ app.post('/contratos/:id/renovar', async (req, res) => {
     }
 
     await client.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, descricao, valor_delta)
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor_delta)
        VALUES ($1, 'RENOVACAO', $2, 0)`,
       [id, observacao || null]
     );
@@ -511,7 +511,7 @@ const getMovements = async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { rows } = await pool.query(
-      `SELECT id, contrato_id, tipo, descricao, valor_delta AS "valorDelta",
+      `SELECT id, contrato_id, tipo, observacao, valor_delta AS "valorDelta",
               anexo_url AS "anexoUrl", criado_em AS "criadoEm"
          FROM contrato_movimentos
         WHERE contrato_id = $1
@@ -526,7 +526,7 @@ const getMovements = async (req, res) => {
 
 const postMovement = async (req, res) => {
   const id = Number(req.params.id);
-  const { tipo, descricao, valorDelta, anexoUrl } = req.body || {};
+  const { tipo, observacao, valorDelta, anexoUrl } = req.body || {};
   if (!tipo) return res.status(400).json({ error: 'Campo "tipo" é obrigatório' });
 
   const client = await pool.connect();
@@ -534,10 +534,10 @@ const postMovement = async (req, res) => {
     await client.query('BEGIN');
 
     const { rows } = await client.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, descricao, valor_delta, anexo_url)
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor_delta, anexo_url)
        VALUES ($1,$2,$3,$4,$5)
        RETURNING id`,
-      [id, tipo, descricao || null, Number(valorDelta || 0), anexoUrl || null]
+      [id, tipo, observacao || null, Number(valorDelta || 0), anexoUrl || null]
     );
 
     if (valorDelta && Number(valorDelta) !== 0) {
@@ -571,7 +571,7 @@ app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
     const url = `/files/${req.file.filename}`;
 
     await pool.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, descricao, valor_delta, anexo_url)
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor_delta, anexo_url)
        VALUES ($1, 'ANEXO', 'Upload de anexo', 0, $2)`,
       [id, url]
     );
