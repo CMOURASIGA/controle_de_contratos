@@ -23,8 +23,19 @@ async function apiSend(path, method, body) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body || {})
   });
-  if (!r.ok) throw new Error(`${method} ${path} falhou: ${r.status}`);
+  if (!r.ok) {
+    const txt = await r.text().catch(()=>'');
+    throw new Error(`${method} ${path} falhou: ${r.status} ${txt}`);
+  }
   return r.status === 204 ? null : r.json();
+}
+async function apiSendForm(path, formData) {
+  const r = await fetch(`${API}${path}`, { method: 'POST', body: formData });
+  if (!r.ok) throw new Error(`POST form ${path} falhou: ${r.status}`);
+  return r.json();
+}
+function toBRL(n) {
+  return Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
 }
 
 /***********************
@@ -33,6 +44,10 @@ async function apiSend(path, method, body) {
 document.addEventListener('DOMContentLoaded', async function () {
   try {
     await initializeData();
+    // filtros: eventos
+    document.getElementById('btnAplicarFiltros').addEventListener('click', applyFilters);
+    document.getElementById('btnLimparFiltros').addEventListener('click', clearFilters);
+    document.getElementById('btnRelatorio').addEventListener('click', baixarRelatorio);
     // atualiza alertas a cada 30s
     setInterval(checkAlerts, 30000);
   } catch (e) {
@@ -42,7 +57,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 });
 
 async function initializeData() {
-  // Mostra um “carregando” simples (opcional)
   const alerts = document.getElementById('alerts');
   alerts.innerHTML = '';
 
@@ -57,17 +71,12 @@ async function initializeData() {
     contasContabeis = contasRes.status === 'fulfilled' ? contasRes.value : [];
     contratos = contratosRes.status === 'fulfilled' ? contratosRes.value : [];
 
-    // Mensagens por falha parcial
-    if (centrosRes.status === 'rejected') {
-      showAlert('Não foi possível carregar Centros de Custo.', 'warning');
-    }
-    if (contasRes.status === 'rejected') {
-      showAlert('Não foi possível carregar Contas Contábeis.', 'warning');
-    }
-    if (contratosRes.status === 'rejected') {
-      showAlert('Não foi possível carregar Contratos. Os demais dados foram carregados.', 'warning');
-    }
+    if (centrosRes.status === 'rejected') showAlert('Não foi possível carregar Centros de Custo.', 'warning');
+    if (contasRes.status === 'rejected') showAlert('Não foi possível carregar Contas Contábeis.', 'warning');
+    if (contratosRes.status === 'rejected') showAlert('Não foi possível carregar Contratos. Os demais dados foram carregados.', 'warning');
 
+    // Preenche filtro de centros
+    populateFiltroCentro();
     updateTables();
     updateStats();
     checkAlerts();
@@ -78,22 +87,22 @@ async function initializeData() {
   }
 }
 
-
 /***********************
  * ABAS
  ***********************/
-function showTab(tabName, ev) {
+function showTab(tabName, elOrEvent) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-  if (ev && ev.currentTarget) {
-    ev.currentTarget.classList.add('active');
-  }
+  let btn = null;
+  if (elOrEvent && elOrEvent.currentTarget) btn = elOrEvent.currentTarget; // evento
+  else if (elOrEvent instanceof HTMLElement) btn = elOrEvent; // passou this
+
+  if (btn) btn.classList.add('active');
 
   const content = document.getElementById(tabName);
   if (content) content.classList.add('active');
 }
-
 
 /***********************
  * MODAIS
@@ -108,7 +117,6 @@ function openModal(modalId) {
     updateContaContabilOptions();
   }
 }
-
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
@@ -128,7 +136,6 @@ function closeModal(modalId) {
     document.getElementById('contaModalTitle').textContent = 'Nova Conta Contábil';
   }
 }
-
 // Fecha modal clicando fora
 window.addEventListener('click', function (e) {
   if (e.target.classList && e.target.classList.contains('modal')) {
@@ -137,7 +144,7 @@ window.addEventListener('click', function (e) {
 });
 
 /***********************
- * DROPDOWNS DO CONTRATO
+ * DROPDOWNS CONTRATO
  ***********************/
 function updateCentroCustoOptions() {
   const select = document.getElementById('centroCustoContrato');
@@ -150,7 +157,6 @@ function updateCentroCustoOptions() {
     select.appendChild(opt);
   });
 }
-
 function updateContaContabilOptions() {
   const select = document.getElementById('contaContabil');
   if (!select) return;
@@ -161,6 +167,77 @@ function updateContaContabilOptions() {
     opt.textContent = `${conta.codigo} - ${conta.descricao}`;
     select.appendChild(opt);
   });
+}
+
+/***********************
+ * FILTROS + RELATÓRIO
+ ***********************/
+function populateFiltroCentro() {
+  const sel = document.getElementById('filtroCentro');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todos</option>';
+  centrosCusto.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = `${c.codigo} - ${c.nome}`;
+    sel.appendChild(opt);
+  });
+  if (current) sel.value = current;
+}
+
+function buildContratosQueryFromFilters() {
+  const params = new URLSearchParams();
+  const st = document.getElementById('filtroStatus').value;
+  const cc = document.getElementById('filtroCentro').value;
+  const di = document.getElementById('filtroInicio').value;
+  const dv = document.getElementById('filtroFim').value;
+
+  if (st === 'ativo') params.set('ativo', 'true');
+  if (st === 'inativo') params.set('ativo', 'false');
+  if (st === 'vencendo') params.set('vencendo30', 'true');
+  if (st === 'vencido') params.set('vencido', 'true');
+  if (cc) params.set('centro', cc);
+  if (di) params.set('inicioDesde', di);
+  if (dv) params.set('vencimentoAte', dv);
+
+  const qs = params.toString();
+  return '/contratos' + (qs ? `?${qs}` : '');
+}
+async function applyFilters() {
+  const path = buildContratosQueryFromFilters();
+  try {
+    contratos = await apiGet(path);
+    updateTables(); updateStats(); checkAlerts();
+  } catch (e) {
+    console.error(e);
+    showAlert('Falha ao aplicar filtros.', 'danger');
+  }
+}
+async function clearFilters() {
+  document.getElementById('filtroStatus').value = '';
+  document.getElementById('filtroCentro').value = '';
+  document.getElementById('filtroInicio').value = '';
+  document.getElementById('filtroFim').value = '';
+  await applyFilters();
+}
+async function baixarRelatorio() {
+  try {
+    const path = buildContratosQueryFromFilters();
+    const url = `${API}/relatorios/contratos${path.includes('?') ? '&' : '?'}format=csv`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Relatório indisponível.');
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `contratos_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (e) {
+    console.error(e);
+    showAlert('Erro ao gerar relatório.', 'danger');
+  }
 }
 
 /***********************
@@ -179,19 +256,21 @@ function updateContratosTable() {
 
   contratos.forEach(contrato => {
     const centro = centrosCusto.find(c => c.id === contrato.centroCusto);
-    const percentualUtilizado = (Number(contrato.saldoUtilizado) / Number(contrato.valorTotal)) * 100;
+    const pct = (Number(contrato.saldoUtilizado) / Number(contrato.valorTotal)) * 100;
     const diasVencimento = Math.ceil((new Date(contrato.dataVencimento) - new Date()) / (1000 * 60 * 60 * 24));
 
     let statusClass = 'badge-success';
     let statusText = 'Ativo';
-
-    if (diasVencimento <= 0) {
+    if (contrato.ativo === false) {
+      statusClass = 'badge';
+      statusText = 'Inativo';
+    } else if (diasVencimento <= 0) {
       statusClass = 'badge-danger';
       statusText = 'Vencido';
     } else if (diasVencimento <= 30) {
       statusClass = 'badge-warning';
       statusText = 'Vencendo';
-    } else if (percentualUtilizado >= 90) {
+    } else if (pct >= 90) {
       statusClass = 'badge-warning';
       statusText = 'Saldo Baixo';
     }
@@ -201,19 +280,20 @@ function updateContratosTable() {
         <td>${contrato.numero}</td>
         <td>${contrato.fornecedor}</td>
         <td>${centro ? centro.nome : 'N/A'}</td>
-        <td>R$ ${Number(contrato.valorTotal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+        <td>R$ ${toBRL(contrato.valorTotal)}</td>
         <td>
-          <div>R$ ${Number(contrato.saldoUtilizado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+          <div>R$ ${toBRL(contrato.saldoUtilizado)}</div>
           <div class="progress-bar">
-            <div class="progress-fill" style="width:${Math.min(percentualUtilizado,100)}%; background:${percentualUtilizado>90?'var(--danger-color)':'var(--accent-color)'}"></div>
+            <div class="progress-fill" style="width:${Math.min(pct,100)}%; background:${pct>90?'var(--danger-color)':'var(--accent-color)'}"></div>
           </div>
-          <small>${isFinite(percentualUtilizado)?percentualUtilizado.toFixed(1):'0.0'}% utilizado</small>
+          <small>${isFinite(pct)?pct.toFixed(1):'0.0'}% utilizado</small>
         </td>
         <td>${new Date(contrato.dataVencimento).toLocaleDateString('pt-BR')}</td>
         <td><span class="badge ${statusClass}">${statusText}</span></td>
-        <td>
+        <td style="white-space:nowrap">
           <button class="btn btn-warning" style="padding:6px 12px;margin-right:5px" onclick="editContrato(${contrato.id})">Editar</button>
-          <button class="btn btn-danger" style="padding:6px 12px" onclick="deleteContrato(${contrato.id})">Excluir</button>
+          <button class="btn btn-danger" style="padding:6px 12px;margin-right:5px" onclick="deleteContrato(${contrato.id})">Excluir</button>
+          <button class="btn" style="padding:6px 12px" onclick="openMovModal(${contrato.id})">Movimentar</button>
         </td>
       </tr>
     `;
@@ -269,10 +349,10 @@ function updateContasTable() {
  ***********************/
 function updateStats() {
   const totalContratos = contratos.length;
-
-  const contratosAtivos = contratos.filter(c => new Date(c.dataVencimento) > new Date()).length;
+  const contratosAtivos = contratos.filter(c => c.ativo !== false && new Date(c.dataVencimento) > new Date()).length;
 
   const contratosVencendo = contratos.filter(c => {
+    if (c.ativo === false) return false;
     const vencimento = new Date(c.dataVencimento);
     const hoje = new Date();
     const dias = Math.ceil((vencimento - hoje) / (1000 * 60 * 60 * 24));
@@ -297,6 +377,7 @@ function checkAlerts() {
 
   // Vencendo em 30 dias
   const vencendo = contratos.filter(c => {
+    if (c.ativo === false) return false;
     const venc = new Date(c.dataVencimento);
     const hoje = new Date();
     const dias = Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
@@ -353,6 +434,7 @@ function editContrato(id) {
   document.getElementById('dataInicio').value           = c.dataInicio?.slice(0,10) || '';
   document.getElementById('dataVencimento').value       = c.dataVencimento?.slice(0,10) || '';
   document.getElementById('observacoes').value          = c.observacoes || '';
+  document.getElementById('ativo').value                = (c.ativo === false ? 'false' : 'true');
 
   openModal('contratoModal');
 }
@@ -360,7 +442,7 @@ function editContrato(id) {
 async function deleteContrato(id) {
   if (!confirm('Tem certeza que deseja excluir este contrato?')) return;
   await apiSend(`/contratos/${id}`, 'DELETE');
-  contratos = await apiGet('/contratos');
+  contratos = await apiGet(buildContratosQueryFromFilters());
   updateTables(); updateStats(); checkAlerts();
   showAlert('Contrato excluído com sucesso!', 'success');
 }
@@ -379,13 +461,13 @@ function editCentro(id) {
   document.getElementById('emailResponsavel').value = c.email;
   openModal('centroModal');
 }
-
 async function deleteCentro(id) {
   const usados = contratos.filter(c => c.centroCusto === id);
   if (usados.length > 0) { alert(`Não é possível excluir: usado por ${usados.length} contrato(s).`); return; }
   if (!confirm('Excluir centro de custo?')) return;
   await apiSend(`/centros/${id}`, 'DELETE');
   centrosCusto = await apiGet('/centros');
+  populateFiltroCentro();
   updateTables();
   showAlert('Centro de custo excluído!', 'success');
 }
@@ -403,7 +485,6 @@ function editConta(id) {
   document.getElementById('tipoConta').value = c.tipo;
   openModal('contaModal');
 }
-
 async function deleteConta(id) {
   const usados = contratos.filter(c => c.contaContabil === id);
   if (usados.length > 0) { alert(`Não é possível excluir: usada por ${usados.length} contrato(s).`); return; }
@@ -413,6 +494,39 @@ async function deleteConta(id) {
   updateTables();
   showAlert('Conta contábil excluída!', 'success');
 }
+
+/***********************
+ * MOVIMENTAÇÕES
+ ***********************/
+function openMovModal(contratoId) {
+  document.getElementById('movContratoId').value = contratoId;
+  document.getElementById('movTipo').value = 'saida';
+  document.getElementById('movValor').value = '';
+  document.getElementById('movData').value = new Date().toISOString().slice(0,10);
+  document.getElementById('movObs').value = '';
+  openModal('movModal');
+}
+document.getElementById('movForm')?.addEventListener('submit', async function(e){
+  e.preventDefault();
+  const id = document.getElementById('movContratoId').value;
+  const data = {
+    tipo: document.getElementById('movTipo').value,
+    valor: parseFloat(document.getElementById('movValor').value),
+    data: document.getElementById('movData').value,
+    observacao: document.getElementById('movObs').value || null
+  };
+  try {
+    await apiSend(`/contratos/${id}/movimentacoes`, 'POST', data);
+    // atualiza lista e indicadores
+    contratos = await apiGet(buildContratosQueryFromFilters());
+    updateTables(); updateStats(); checkAlerts();
+    closeModal('movModal');
+    showAlert('Movimentação lançada!', 'success');
+  } catch (err) {
+    console.error(err);
+    showAlert('Erro ao lançar movimentação.', 'danger');
+  }
+});
 
 /***********************
  * ALERTAS TEMPORÁRIOS
@@ -433,6 +547,7 @@ function showAlert(message, type = 'success') {
 document.getElementById('contratoForm')?.addEventListener('submit', async function (e) {
   e.preventDefault();
 
+  const ativo = document.getElementById('ativo').value === 'true';
   const data = {
     numero: document.getElementById('numeroContrato').value,
     fornecedor: document.getElementById('fornecedor').value,
@@ -442,18 +557,30 @@ document.getElementById('contratoForm')?.addEventListener('submit', async functi
     saldoUtilizado: parseFloat(document.getElementById('saldoUtilizado').value) || 0,
     dataInicio: document.getElementById('dataInicio').value,
     dataVencimento: document.getElementById('dataVencimento').value,
-    observacoes: document.getElementById('observacoes').value || null
+    observacoes: document.getElementById('observacoes').value || null,
+    ativo
   };
 
+  const fileInput = document.getElementById('anexo');
+  const hasFile = fileInput && fileInput.files && fileInput.files[0];
+
   try {
+    let saved;
     if (editingId) {
-      await apiSend(`/contratos/${editingId}`, 'PUT', data);
+      saved = await apiSend(`/contratos/${editingId}`, 'PUT', data);
       showAlert('Contrato atualizado com sucesso!', 'success');
     } else {
-      await apiSend('/contratos', 'POST', data);
+      saved = await apiSend('/contratos', 'POST', data);
       showAlert('Contrato criado com sucesso!', 'success');
     }
-    contratos = await apiGet('/contratos');
+
+    if (hasFile && saved && saved.id) {
+      const fd = new FormData();
+      fd.append('file', fileInput.files[0]);
+      await apiSendForm(`/contratos/${saved.id}/anexos`, fd);
+    }
+
+    contratos = await apiGet(buildContratosQueryFromFilters());
     updateTables(); updateStats(); checkAlerts();
     closeModal('contratoModal');
   } catch (err) {
@@ -481,6 +608,7 @@ document.getElementById('centroForm')?.addEventListener('submit', async function
       showAlert('Centro de custo criado!', 'success');
     }
     centrosCusto = await apiGet('/centros');
+    populateFiltroCentro();
     updateTables();
     closeModal('centroModal');
   } catch (err) {
@@ -527,3 +655,4 @@ window.editCentro = editCentro;
 window.deleteCentro = deleteCentro;
 window.editConta = editConta;
 window.deleteConta = deleteConta;
+window.openMovModal = openMovModal;

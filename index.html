@@ -47,6 +47,42 @@
     <!-- CONTRATOS -->
     <section id="contratos" class="tab-content active">
       <div class="card">
+
+        <!-- Filtros -->
+        <div class="card" style="margin-bottom:16px; padding:16px">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="filtroStatus">Status</label>
+              <select id="filtroStatus" class="form-control">
+                <option value="">Todos</option>
+                <option value="ativo">Ativo</option>
+                <option value="inativo">Inativo</option>
+                <option value="vencendo">Vencendo em 30 dias</option>
+                <option value="vencido">Vencido</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="filtroCentro">Centro de Custo</label>
+              <select id="filtroCentro" class="form-control">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="filtroInicio">Início a partir de</label>
+              <input type="date" id="filtroInicio" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="filtroFim">Vencimento até</label>
+              <input type="date" id="filtroFim" class="form-control">
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:8px">
+            <button class="btn btn-neutral" id="btnLimparFiltros">Limpar</button>
+            <button class="btn" id="btnAplicarFiltros">Aplicar</button>
+            <button class="btn" id="btnRelatorio" style="margin-left:auto">Relatório CSV</button>
+          </div>
+        </div>
+
         <div class="card-header">
           <h3>Gestão de Contratos</h3>
           <button class="btn" onclick="openModal('contratoModal')">+ Novo Contrato</button>
@@ -129,7 +165,7 @@
         <h2 id="contratoModalTitle">Novo Contrato</h2>
         <button class="close" onclick="closeModal('contratoModal')">&times;</button>
       </div>
-      <form id="contratoForm" class="form-grid">
+      <form id="contratoForm" class="form-grid" enctype="multipart/form-data">
         <div class="form-group">
           <label for="numeroContrato">Número do Contrato *</label>
           <input type="text" id="numeroContrato" class="form-control" required>
@@ -166,6 +202,20 @@
           <label for="dataVencimento">Data de Vencimento *</label>
           <input type="date" id="dataVencimento" class="form-control" required>
         </div>
+
+        <div class="form-group">
+          <label for="ativo">Status</label>
+          <select id="ativo" class="form-control">
+            <option value="true" selected>Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="anexo">Anexo</label>
+          <input type="file" id="anexo" class="form-control" />
+        </div>
+
         <div class="form-group form-group--full">
           <label for="observacoes">Observações</label>
           <textarea id="observacoes" class="form-control" rows="3"></textarea>
@@ -174,6 +224,44 @@
         <div class="form-actions">
           <button type="button" class="btn btn-neutral" onclick="closeModal('contratoModal')">Cancelar</button>
           <button type="submit" class="btn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL MOVIMENTAÇÃO -->
+  <div id="movModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Lançar Movimentação</h2>
+        <button class="close" onclick="closeModal('movModal')">&times;</button>
+      </div>
+      <form id="movForm" class="form-grid">
+        <input type="hidden" id="movContratoId" />
+        <div class="form-group">
+          <label for="movTipo">Tipo</label>
+          <select id="movTipo" class="form-control" required>
+            <option value="entrada">Entrada</option>
+            <option value="saida" selected>Saída</option>
+            <option value="ajuste">Ajuste</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="movValor">Valor (R$)</label>
+          <input type="number" id="movValor" class="form-control" step="0.01" required />
+        </div>
+        <div class="form-group">
+          <label for="movData">Data</label>
+          <input type="date" id="movData" class="form-control" required />
+        </div>
+        <div class="form-group form-group--full">
+          <label for="movObs">Observação</label>
+          <input type="text" id="movObs" class="form-control" />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-neutral" onclick="closeModal('movModal')">Cancelar</button>
+          <button type="submit" class="btn">Lançar</button>
         </div>
       </form>
     </div>
@@ -248,6 +336,6 @@
   </div>
 
   <!-- sempre no final do body -->
-<script src="./js/app.js?v=3" defer></script>
+  <script src="./js/app.js?v=4" defer></script>
 </body>
 </html>
