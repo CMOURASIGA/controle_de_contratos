@@ -1,645 +1,259 @@
-// server.js
-require('dotenv').config();
+// server.js – API Express para Controle de Contratos
+// Rotas: health/dbcheck, centros, contas, contratos (+movimentos, +arquivos)
 
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg');
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const multer = require('multer');
+const { Pool } = require('pg');
+
+require('dotenv').config();
 
 const app = express();
-
-/* ================= CORS ================= */
-const allowList = (process.env.CORS_ORIGIN || '')
-  .split(',')
-  .map(s => s.trim())
-  .filter(Boolean);
-
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // curl/postman
-      if (allowList.length === 0 || allowList.includes(origin)) return cb(null, true);
-      return cb(new Error('Not allowed by CORS'));
-    },
-  })
-);
-
+app.use(cors({ origin: true }));   // libere geral para validar; restrinja depois
 app.use(express.json());
 
-/* ========== Postgres (SSL por ambiente) ========== */
+// === Postgres (Railway) ===
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: { rejectUnauthorized: false }
 });
 
-/* -------- uploads (anexos) -------- */
-const uploadDir = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-const upload = multer({ dest: uploadDir });
-app.use('/files', express.static(uploadDir));
-
-/* ---- bootstrap de esquema (idempotente) ---- */
-async function ensureSchema() {
-  await pool.query(`
-    ALTER TABLE contratos
-      ADD COLUMN IF NOT EXISTS ativo boolean NOT NULL DEFAULT true;
-
-    ALTER TABLE contratos
-      ALTER COLUMN saldo_utilizado SET DEFAULT 0;
-
-    CREATE TABLE IF NOT EXISTS contrato_movimentos (
-      id           SERIAL PRIMARY KEY,
-      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
-      tipo         TEXT NOT NULL,  -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
-      observacao   TEXT,
-      valor        NUMERIC DEFAULT 0,
-      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_contrato_movimentos_contrato_id
-      ON contrato_movimentos (contrato_id);
-
-    CREATE TABLE IF NOT EXISTS contrato_arquivos (
-      id           SERIAL PRIMARY KEY,
-      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
-      nome_arquivo TEXT NOT NULL,
-      url          TEXT NOT NULL,
-      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_contrato_arquivos_contrato_id
-      ON contrato_arquivos (contrato_id);
-  `);
-}
-
-async function pingDB() {
-  const { rows } = await pool.query('SELECT 1 AS ok');
-  return rows[0].ok === 1;
-}
-
-/* ========== Helpers ========== */
-function httpErr(res, err, status = 500) {
-  console.error(err);
-  return res.status(status).json({
-    error: 'Erro interno',
-    detail: err.detail || err.message || String(err),
-  });
-}
-
-/* ========== Healthcheck ========== */
-app.get('/health', async (_req, res) => {
-  try {
-    await pingDB();
-    res.json({ ok: true });
-  } catch (err) {
-    httpErr(res, err);
+// === uploads em disco ===
+const UP = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(UP)) fs.mkdirSync(UP);
+const storage = multer.diskStorage({
+  destination: (req, file, cb)=> cb(null, UP),
+  filename: (req, file, cb)=> {
+    const ts = Date.now();
+    const safe = file.originalname.replace(/[^\w.\-]+/g,'_');
+    cb(null, `${ts}_${safe}`);
   }
 });
+const upload = multer({ storage });
 
-/* =================================================================== */
-/* =======================   CENTROS DE CUSTO   ====================== */
-/* =================================================================== */
-
-app.get('/centros', async (_req, res) => {
-  try {
-    const { rows } = await pool.query(
-      'SELECT id, codigo, nome, responsavel, email FROM centros_custo ORDER BY id DESC'
-    );
-    res.json(rows);
-  } catch (err) {
-    httpErr(res, err);
-  }
+// === Health ===
+app.get('/health', (req,res)=> res.json({ ok:true }));
+app.get('/dbcheck', async (req,res)=>{
+  try{
+    const r = await pool.query('select current_database() db, current_user usr');
+    res.json({ ok:true, db:r.rows[0].db, user:r.rows[0].usr });
+  }catch(e){ res.status(500).json({ ok:false, error:String(e) }); }
 });
 
-app.post('/centros', async (req, res) => {
-  try {
-    const { codigo, nome, responsavel, email } = req.body;
-    const sql = `
-      INSERT INTO centros_custo (codigo, nome, responsavel, email)
-      VALUES ($1, $2, $3, $4)
-      RETURNING id, codigo, nome, responsavel, email
-    `;
-    const { rows } = await pool.query(sql, [codigo, nome, responsavel || null, email || null]);
-    res.status(201).json(rows[0]);
-  } catch (err) {
-    if (err.code === '23505') {
-      return res.status(409).json({ error: 'Código de centro já existe', detail: err.detail });
-    }
-    httpErr(res, err);
-  }
+// === Arquivo estático /files/:name ===
+app.get('/files/:name', (req,res)=>{
+  const fp = path.join(UP, path.basename(req.params.name));
+  if (!fs.existsSync(fp)) return res.status(404).send('Arquivo não encontrado');
+  res.sendFile(fp);
 });
 
-app.put('/centros/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { codigo, nome, responsavel, email } = req.body;
-    const sql = `
-      UPDATE centros_custo
-         SET codigo = $1,
-             nome = $2,
-             responsavel = $3,
-             email = $4
-       WHERE id = $5
-      RETURNING id, codigo, nome, responsavel, email
-    `;
-    const { rows } = await pool.query(sql, [codigo, nome, responsavel || null, email || null, id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Centro não encontrado' });
-    res.json(rows[0]);
-  } catch (err) {
-    if (err.code === '23505') {
-      return res.status(409).json({ error: 'Código de centro já existe', detail: err.detail });
-    }
-    httpErr(res, err);
-  }
+/* ================= CENTROS ================= */
+app.get('/centros', async (req,res)=>{
+  const r = await pool.query('select id, codigo, nome, responsavel, email from centros_custo order by id desc');
+  res.json(r.rows);
+});
+app.post('/centros', async (req,res)=>{
+  const { codigo, nome, responsavel, email } = req.body;
+  const r = await pool.query(
+    'insert into centros_custo (codigo, nome, responsavel, email) values ($1,$2,$3,$4) returning *',
+    [codigo, nome, responsavel || null, email || null]
+  );
+  res.json(r.rows[0]);
+});
+app.delete('/centros/:id', async (req,res)=>{
+  await pool.query('delete from centros_custo where id=$1', [req.params.id]);
+  res.json({ ok:true });
 });
 
-app.delete('/centros/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const del = await pool.query('DELETE FROM centros_custo WHERE id=$1', [id]);
-    if (del.rowCount === 0) return res.status(404).json({ error: 'Centro não encontrado' });
-    res.json({ ok: true });
-  } catch (err) {
-    httpErr(res, err);
-  }
+/* ================= CONTAS ================= */
+app.get('/contas', async (req,res)=>{
+  const r = await pool.query('select id, codigo, descricao, tipo from contas_contabeis order by id desc');
+  res.json(r.rows);
+});
+app.post('/contas', async (req,res)=>{
+  const { codigo, descricao, tipo } = req.body;
+  const r = await pool.query(
+    'insert into contas_contabeis (codigo, descricao, tipo) values ($1,$2,$3) returning *',
+    [codigo, descricao, (tipo || 'DESPESA').toUpperCase()]
+  );
+  res.json(r.rows[0]);
+});
+app.delete('/contas/:id', async (req,res)=>{
+  await pool.query('delete from contas_contabeis where id=$1', [req.params.id]);
+  res.json({ ok:true });
 });
 
-/* =================================================================== */
-/* =======================   CONTAS CONTÁBEIS   ====================== */
-/* =================================================================== */
-
-app.get('/contas', async (_req, res) => {
-  try {
-    const { rows } = await pool.query(
-      'SELECT id, codigo, descricao, tipo FROM contas_contabeis ORDER BY id DESC'
-    );
-    res.json(rows);
-  } catch (err) {
-    httpErr(res, err);
-  }
-});
-
-app.post('/contas', async (req, res) => {
-  try {
-    const { codigo, descricao, tipo } = req.body;
-    const sql = `
-      INSERT INTO contas_contabeis (codigo, descricao, tipo)
-      VALUES ($1, $2, $3)
-      RETURNING id, codigo, descricao, tipo
-    `;
-    const { rows } = await pool.query(sql, [codigo, descricao, tipo]);
-    res.status(201).json(rows[0]);
-  } catch (err) {
-    if (err.code === '23505') {
-      return res.status(409).json({ error: 'Código de conta já existe', detail: err.detail });
-    }
-    httpErr(res, err);
-  }
-});
-
-app.put('/contas/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { codigo, descricao, tipo } = req.body;
-    const sql = `
-      UPDATE contas_contabeis
-         SET codigo = $1,
-             descricao = $2,
-             tipo = $3
-       WHERE id = $4
-      RETURNING id, codigo, descricao, tipo
-    `;
-    const { rows } = await pool.query(sql, [codigo, descricao, tipo, id]);
-    if (rows.length === 0) return res.status(404).json({ error: 'Conta não encontrada' });
-    res.json(rows[0]);
-  } catch (err) {
-    if (err.code === '23505') {
-      return res.status(409).json({ error: 'Código de conta já existe', detail: err.detail });
-    }
-    httpErr(res, err);
-  }
-});
-
-app.delete('/contas/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const del = await pool.query('DELETE FROM contas_contabeis WHERE id=$1', [id]);
-    if (del.rowCount === 0) return res.status(404).json({ error: 'Conta não encontrada' });
-    res.json({ ok: true });
-  } catch (err) {
-    httpErr(res, err);
-  }
-});
-
-/* =================================================================== */
-/* ============================   CONTRATOS   ========================= */
-/* =================================================================== */
-
-/** constrói WHERE e params para /contratos e /relatorios/contratos */
-function buildWhere(req) {
-  const q = {
-    ativo: req.query.ativo,
-    status: req.query.status || (req.query.vencendo30 ? 'VENCE_EM_30_DIAS' : undefined),
-    centro: req.query.centro,
-    conta: req.query.conta,
-    fornecedor: req.query.fornecedor,
-    q: req.query.q,
-    vencimentoDe: req.query.vencimentoDe || req.query.inicioDesde, // compat
-    vencimentoAte: req.query.vencimentoAte,
-  };
-
+/* ================= CONTRATOS =================
+   Schema esperado (colunas principais):
+   - id serial, numero text, fornecedor text, centro_custo_id int,
+     conta_contabil_id int, valor numeric, saldo_utilizado numeric,
+     data_inicio date, data_fim date, observacoes text, ativo boolean
+*/
+function buildContratosWhere(q){
   const where = [];
   const params = [];
+  let p = 1;
 
-  if (typeof q.ativo !== 'undefined') {
-    params.push(String(q.ativo).toLowerCase() === 'true');
-    where.push(`c.ativo = $${params.length}`);
+  if (q.status && q.status !== 'todos'){
+    // status: ativos | vencendo30 | estouro | inativos
+    if (q.status === 'ativos') {
+      where.push(`ativo = true`);
+    } else if (q.status === 'vencendo30'){
+      where.push(`ativo = true AND data_fim <= (current_date + interval '30 days')`);
+    } else if (q.status === 'estouro'){
+      where.push(`COALESCE(saldo_utilizado,0) > COALESCE(valor,0)`);
+    } else if (q.status === 'inativos'){
+      where.push(`ativo = false`);
+    }
   }
+  if (q.centroId){ where.push(`centro_custo_id = $${p++}`); params.push(q.centroId); }
+  if (q.inicioDe){ where.push(`data_inicio >= $${p++}`); params.push(q.inicioDe); }
+  if (q.vencAte){ where.push(`data_fim <= $${p++}`); params.push(q.vencAte); }
 
-  if (q.status) {
-    const idx = params.push(String(q.status).toUpperCase());
-    where.push(`
-      CASE
-        WHEN NOT c.ativo THEN 'INATIVO'
-        WHEN c.data_fim < CURRENT_DATE THEN 'VENCIDO'
-        WHEN c.data_fim <= CURRENT_DATE + INTERVAL '30 days' THEN 'VENCE_EM_30_DIAS'
-        ELSE 'ATIVO'
-      END = $${idx}
-    `);
-  }
-
-  if (q.centro) {
-    params.push(Number(q.centro));
-    where.push(`c.centro_custo_id = $${params.length}`);
-  }
-  if (q.conta) {
-    params.push(Number(q.conta));
-    where.push(`c.conta_contabil_id = $${params.length}`);
-  }
-  if (q.fornecedor) {
-    params.push(`%${q.fornecedor}%`);
-    where.push(`c.fornecedor ILIKE $${params.length}`);
-  }
-  if (q.q) {
-    params.push(`%${q.q}%`);
-    where.push(
-      `(c.numero ILIKE $${params.length} OR c.descricao ILIKE $${params.length} OR c.fornecedor ILIKE $${params.length})`
-    );
-  }
-  if (q.vencimentoDe) {
-    params.push(q.vencimentoDe);
-    where.push(`c.data_fim >= $${params.length}`);
-  }
-  if (q.vencimentoAte) {
-    params.push(q.vencimentoAte);
-    where.push(`c.data_fim <= $${params.length}`);
-  }
-
-  return { whereSQL: where.length ? `WHERE ${where.join(' AND ')}` : '', params };
+  const sql = where.length ? (' WHERE ' + where.join(' AND ')) : '';
+  return { sql, params };
 }
 
-/** GET /contratos (lista + filtros) */
-app.get('/contratos', async (req, res) => {
-  try {
-    const { whereSQL, params } = buildWhere(req);
-    const qres = await pool.query(
-      `
-      SELECT
-        c.id,
-        c.numero,
-        c.fornecedor,
-        c.centro_custo_id   AS "centroCusto",
-        c.conta_contabil_id  AS "contaContabil",
-        c.valor              AS "valorTotal",
-        c.saldo_utilizado    AS "saldoUtilizado",
-        c.data_inicio        AS "dataInicio",
-        c.data_fim           AS "dataVencimento",
-        c.descricao          AS "observacoes",
-        c.ativo              AS "ativo",
-        CASE
-          WHEN NOT c.ativo THEN 'INATIVO'
-          WHEN c.data_fim < CURRENT_DATE THEN 'VENCIDO'
-          WHEN c.data_fim <= CURRENT_DATE + INTERVAL '30 days' THEN 'VENCE_EM_30_DIAS'
-          ELSE 'ATIVO'
-        END                  AS "status"
-      FROM contratos c
-      ${whereSQL}
-      ORDER BY c.id DESC
-      `,
-      params
-    );
-    res.json(qres.rows);
-  } catch (err) {
-    httpErr(res, err);
-  }
+app.get('/contratos', async (req,res)=>{
+  const { sql, params } = buildContratosWhere(req.query);
+  const r = await pool.query(
+    `select id, numero, fornecedor, centro_custo_id, conta_contabil_id,
+            coalesce(valor,0) valor, coalesce(saldo_utilizado,0) saldo_utilizado,
+            data_inicio, data_fim, observacoes, coalesce(ativo,true) ativo
+       from contratos
+     ${sql}
+     order by id desc`,
+    params
+  );
+  res.json(r.rows);
 });
 
-/** POST /contratos */
-app.post('/contratos', async (req, res) => {
-  try {
-    const {
-      numero, fornecedor, centroCusto, contaContabil,
-      valorTotal, saldoUtilizado, dataInicio, dataVencimento,
-      observacoes, ativo,
-    } = req.body;
-
-    const ins = await pool.query(
-      `INSERT INTO contratos
-         (numero, fornecedor, centro_custo_id, conta_contabil_id, valor, saldo_utilizado, data_inicio, data_fim, descricao, ativo)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-       RETURNING id`,
-      [
-        numero || null, fornecedor || null,
-        centroCusto || null, contaContabil || null,
-        valorTotal || 0, saldoUtilizado || 0,
-        dataInicio || null, dataVencimento || null,
-        observacoes || null,
-        typeof ativo === 'boolean' ? ativo : true,
-      ]
-    );
-
-    res.status(201).json({ ok: true, id: ins.rows[0].id });
-  } catch (err) {
-    httpErr(res, err);
-  }
+app.get('/contratos/report', async (req,res)=>{
+  const { sql, params } = buildContratosWhere(req.query);
+  const r = await pool.query(
+    `select numero, fornecedor,
+            (select codigo||' - '||nome from centros_custo c where c.id = contratos.centro_custo_id) as centro,
+            valor, saldo_utilizado, data_inicio, data_fim, case when ativo then 'ATIVO' else 'INATIVO' end as status
+       from contratos
+     ${sql}
+     order by id desc`,
+    params
+  );
+  res.setHeader('Content-Type','text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition','attachment; filename="contratos.csv"');
+  res.write('numero,fornecedor,centro,valor,saldo_utilizado,data_inicio,data_fim,status\n');
+  r.rows.forEach(row=>{
+    const line = [
+      row.numero, row.fornecedor, row.centro,
+      row.valor, row.saldo_utilizado, row.data_inicio?.toISOString?.().slice(0,10) || row.data_inicio,
+      row.data_fim?.toISOString?.().slice(0,10) || row.data_fim, row.status
+    ].map(v => (v==null?'':String(v).replace(/"/g,'""')));
+    res.write(line.join(',')+'\n');
+  });
+  res.end();
 });
 
-/** PUT /contratos/:id */
-app.put('/contratos/:id', async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const {
-      numero, fornecedor, centroCusto, contaContabil,
-      valorTotal, saldoUtilizado, dataInicio, dataVencimento,
-      observacoes, ativo,
-    } = req.body;
-
-    await pool.query(
-      `UPDATE contratos
-          SET numero=$1, fornecedor=$2, centro_custo_id=$3, conta_contabil_id=$4,
-              valor=$5, saldo_utilizado=$6, data_inicio=$7, data_fim=$8, descricao=$9, ativo=$10
-        WHERE id=$11`,
-      [
-        numero || null, fornecedor || null,
-        centroCusto || null, contaContabil || null,
-        valorTotal || 0, saldoUtilizado || 0,
-        dataInicio || null, dataVencimento || null,
-        observacoes || null,
-        typeof ativo === 'boolean' ? ativo : true,
-        id,
-      ]
-    );
-
-    res.json({ ok: true });
-  } catch (err) {
-    httpErr(res, err);
-  }
+app.post('/contratos', async (req,res)=>{
+  const {
+    numero, fornecedor, centro_custo_id, conta_contabil_id,
+    valor, data_inicio, data_fim, observacoes, ativo
+  } = req.body;
+  const r = await pool.query(
+    `insert into contratos
+      (numero, fornecedor, centro_custo_id, conta_contabil_id, valor, saldo_utilizado,
+       data_inicio, data_fim, observacoes, ativo)
+     values ($1,$2,$3,$4,$5,0,$6,$7,$8,$9) returning *`,
+    [numero, fornecedor, centro_custo_id, conta_contabil_id, valor || 0,
+     data_inicio, data_fim, observacoes || null, (ativo !== false)]
+  );
+  res.json(r.rows[0]);
 });
 
-/** DELETE /contratos/:id */
-app.delete('/contratos/:id', async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    await pool.query('DELETE FROM contratos WHERE id=$1', [id]);
-    res.json({ ok: true });
-  } catch (err) {
-    httpErr(res, err);
-  }
+app.put('/contratos/:id', async (req,res)=>{
+  const { id } = req.params;
+  const {
+    numero, fornecedor, centro_custo_id, conta_contabil_id,
+    valor, saldo_utilizado, data_inicio, data_fim, observacoes, ativo
+  } = req.body;
+  const r = await pool.query(
+    `update contratos set
+        numero=$1, fornecedor=$2, centro_custo_id=$3, conta_contabil_id=$4,
+        valor=$5, saldo_utilizado=$6, data_inicio=$7, data_fim=$8,
+        observacoes=$9, ativo=$10
+      where id=$11 returning *`,
+    [numero, fornecedor, centro_custo_id, conta_contabil_id,
+     valor, saldo_utilizado, data_inicio, data_fim, observacoes || null, !!ativo, id]
+  );
+  res.json(r.rows[0]);
 });
 
-/* --------- Ações de status --------- */
-app.post('/contratos/:id/inativar', async (req, res) => {
-  const id = Number(req.params.id);
-  const { motivo } = req.body || {};
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    await client.query('UPDATE contratos SET ativo=false WHERE id=$1', [id]);
-    await client.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
-       VALUES ($1, 'INATIVACAO', $2, 0)`,
-      [id, motivo || null]
-    );
-    await client.query('COMMIT');
-    res.json({ ok: true });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    httpErr(res, err);
-  } finally {
-    client.release();
-  }
+app.delete('/contratos/:id', async (req,res)=>{
+  await pool.query('delete from contratos where id=$1', [req.params.id]);
+  res.json({ ok:true });
 });
 
-app.post('/contratos/:id/ativar', async (req, res) => {
-  const id = Number(req.params.id);
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    await client.query('UPDATE contratos SET ativo=true WHERE id=$1', [id]);
-    await client.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
-       VALUES ($1, 'ATIVACAO', NULL, 0)`,
-      [id]
-    );
-    await client.query('COMMIT');
-    res.json({ ok: true });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    httpErr(res, err);
-  } finally {
-    client.release();
+/* ===== Movimentos =====
+   tabela contrato_movimentos (id, contrato_id, tipo, valor, observacao, data_movimento, criado_em)
+*/
+app.get('/contratos/:id/movimentos', async (req,res)=>{
+  const r = await pool.query(
+    'select id, contrato_id, tipo, valor, observacao, data_movimento, criado_em from contrato_movimentos where contrato_id=$1 order by id desc',
+    [req.params.id]
+  );
+  res.json(r.rows);
+});
+app.post('/contratos/:id/movimentos', async (req,res)=>{
+  const { tipo, valor, observacao, data_movimento } = req.body;
+  const id = req.params.id;
+  const r = await pool.query(
+    `insert into contrato_movimentos (contrato_id, tipo, valor, observacao, data_movimento, criado_em)
+     values ($1,$2,$3,$4,$5, now()) returning *`,
+    [id, (tipo||'USO').toUpperCase(), valor||0, observacao||null, data_movimento||new Date()]
+  );
+  // atualiza saldo_utilizado quando o tipo é USO/ESTORNO
+  if ((tipo||'').toUpperCase() === 'USO') {
+    await pool.query('update contratos set saldo_utilizado = coalesce(saldo_utilizado,0) + $1 where id=$2', [valor||0, id]);
+  } else if ((tipo||'').toUpperCase() === 'ESTORNO') {
+    await pool.query('update contratos set saldo_utilizado = greatest(0, coalesce(saldo_utilizado,0) - $1) where id=$2', [valor||0, id]);
   }
+  res.json(r.rows[0]);
 });
 
-app.post('/contratos/:id/renovar', async (req, res) => {
-  const id = Number(req.params.id);
-  const { novaDataFim, valorAdicional, observacao } = req.body || {};
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    if (valorAdicional && Number(valorAdicional) !== 0) {
-      await client.query('UPDATE contratos SET valor = COALESCE(valor,0) + $1 WHERE id=$2', [
-        Number(valorAdicional), id,
-      ]);
-    }
-    if (novaDataFim) {
-      await client.query('UPDATE contratos SET data_fim = $1 WHERE id=$2', [novaDataFim, id]);
-    }
-
-    await client.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
-       VALUES ($1, 'RENOVACAO', $2, 0)`,
-      [id, observacao || null]
-    );
-
-    await client.query('COMMIT');
-    res.json({ ok: true });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    httpErr(res, err);
-  } finally {
-    client.release();
+/* ===== Arquivos =====
+   tabela contrato_arquivos (id, contrato_id, nome_arquivo, url, criado_em)
+*/
+app.get('/contratos/:id/arquivos', async (req,res)=>{
+  const id = req.params.id;
+  const r = await pool.query(
+    'select id, contrato_id, nome_arquivo, url, criado_em from contrato_arquivos where contrato_id=$1 order by id desc',
+    [id]
+  );
+  // se aceitou "visualizar anexos" via nova aba, render simples:
+  if (req.headers.accept && req.headers.accept.includes('text/html')) {
+    const list = r.rows.map(a => `<li><a href="${a.url}" target="_blank" rel="noopener">${a.nome_arquivo}</a></li>`).join('');
+    res.send(`<!doctype html><meta charset="utf-8"><title>Anexos</title><h3>Anexos do Contrato ${id}</h3><ul>${list||'<li>Nenhum anexo</li>'}</ul>`);
+    return;
   }
+  res.json(r.rows);
 });
-
-/* --------- Movimentações --------- */
-const getMovements = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const { rows } = await pool.query(
-      `SELECT id, contrato_id, tipo, observacao, valor AS "valorDelta",
-               criado_em AS "criadoEm"
-         FROM contrato_movimentos
-        WHERE contrato_id = $1
-        ORDER BY id DESC`,
-      [id]
-    );
-    res.json(rows);
-  } catch (err) {
-    httpErr(res, err);
-  }
-};
-
-const postMovement = async (req, res) => {
-  const id = Number(req.params.id);
-  const { tipo, observacao, valorDelta } = req.body || {};
-  if (!tipo) return res.status(400).json({ error: 'Campo "tipo" é obrigatório' });
-
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
-    const { rows } = await client.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
-       VALUES ($1,$2,$3,$4)
-       RETURNING id`,
-      [id, tipo, observacao || null, Number(valorDelta || 0)]
-    );
-
-    if (valorDelta && Number(valorDelta) !== 0) {
-      await client.query(
-        'UPDATE contratos SET saldo_utilizado = COALESCE(saldo_utilizado,0) + $1 WHERE id=$2',
-        [Number(valorDelta), id]
-      );
-    }
-
-    await client.query('COMMIT');
-    res.status(201).json({ ok: true, id: rows[0].id });
-  } catch (err) {
-    await client.query('ROLLBACK');
-    httpErr(res, err);
-  } finally {
-    client.release();
-  }
-};
-
-app.get('/contratos/:id/movimentos', getMovements);
-app.post('/contratos/:id/movimentos', postMovement);
-/* compat com rotas antigas */
-app.get('/contratos/:id/movimentacoes', getMovements);
-app.post('/contratos/:id/movimentacoes', postMovement);
-
-/* --------- Upload de anexo --------- */
-app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    if (!req.file) return res.status(400).json({ error: 'Arquivo não enviado' });
-
-    const url = `/files/${req.file.filename}`;
-    const nome = req.file.originalname || req.file.filename;
-
-    await pool.query(
-      `INSERT INTO contrato_arquivos (contrato_id, nome_arquivo, url)
-       VALUES ($1,$2,$3)`,
+app.post('/contratos/:id/arquivos', upload.array('arquivos', 10), async (req,res)=>{
+  const id = req.params.id;
+  const files = req.files || [];
+  const inserted = [];
+  for (const f of files){
+    const url = `/files/${f.filename}`;
+    const nome = f.originalname;
+    const r = await pool.query(
+      'insert into contrato_arquivos (contrato_id, nome_arquivo, url, criado_em) values ($1,$2,$3, now()) returning *',
       [id, nome, url]
     );
-
-    await pool.query(
-      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
-       VALUES ($1, 'ANEXO', $2, 0)`,
-      [id, `Upload de anexo: ${nome}`]
-    );
-
-    res.status(201).json({ ok: true, url, nome });
-  } catch (err) {
-    httpErr(res, err);
+    inserted.push(r.rows[0]);
   }
+  res.json({ ok:true, files: inserted });
 });
 
-/* --------- Lista de anexos --------- */
-app.get('/contratos/:id/arquivos', async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-    const { rows } = await pool.query(
-      `SELECT id, contrato_id, nome_arquivo, url, criado_em
-         FROM contrato_arquivos
-        WHERE contrato_id = $1
-        ORDER BY id DESC`,
-      [id]
-    );
-    res.json(rows);
-  } catch (err) {
-    httpErr(res, err);
-  }
-});
-
-/* --------- Relatório CSV --------- */
-app.get('/relatorios/contratos', async (req, res) => {
-  try {
-    const { whereSQL, params } = buildWhere(req);
-    const { rows } = await pool.query(
-      `
-      SELECT
-        c.id, c.numero, c.fornecedor,
-        c.valor AS valor_total, c.saldo_utilizado,
-        c.data_inicio, c.data_fim, c.ativo
-      FROM contratos c
-      ${whereSQL}
-      ORDER BY c.id DESC
-      `,
-      params
-    );
-
-    const head = ['id','numero','fornecedor','valor_total','saldo_utilizado','data_inicio','data_fim','ativo'];
-    const csv = [
-      head.join(';'),
-      ...rows.map(r =>
-        [
-          r.id,
-          r.numero ?? '',
-          r.fornecedor ?? '',
-          r.valor_total ?? 0,
-          r.saldo_utilizado ?? 0,
-          r.data_inicio ? new Date(r.data_inicio).toISOString().slice(0, 10) : '',
-          r.data_fim ? new Date(r.data_fim).toISOString().slice(0, 10) : '',
-          r.ativo ? 'true' : 'false',
-        ].join(';')
-      ),
-    ].join('\n');
-
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="contratos.csv"');
-    res.send(csv);
-  } catch (err) {
-    httpErr(res, err);
-  }
-});
-
-/* ========== 404 padrão ========== */
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Rota não encontrada' });
-});
-
-/* ========== Start ========== */
+// start
 const PORT = process.env.PORT || 8080;
-ensureSchema()
-  .then(() => {
-    app.listen(PORT, () => console.log(`API rodando na porta ${PORT}`));
-  })
-  .catch(err => {
-    console.error('Falha ao iniciar por erro de schema:', err);
-    process.exit(1);
-  });
+app.listen(PORT, ()=> console.log('API rodando na porta', PORT));
