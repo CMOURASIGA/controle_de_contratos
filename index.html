@@ -7,256 +7,205 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background:#f7f9fc }
-    .card-kpi h2 { font-size: 32px; margin: 0 }
-    .tabs .nav-tab.active { background:#0d3b77; color:#fff }
-    .tab-content { display:none }
-    .tab-content.active { display:block }
-    .table thead th { white-space:nowrap }
+    .card-kpi h2 { margin:0;font-size:32px }
+    .nav-tab.active { background:#0d3b77; color:#fff }
+    .tab-content{ display:none }
+    .tab-content.active{ display:block }
+    .pointer{ cursor:pointer }
+    .break-word{ word-break:break-word }
   </style>
 </head>
 <body>
-  <div class="container py-4">
-    <h3 class="mb-3">Sistema de Controle de Contratos</h3>
-    <!-- KPIs -->
-    <div class="row g-3 mb-3">
-      <div class="col-12 col-md-3">
-        <div class="card card-kpi shadow-sm">
-          <div class="card-body text-center">
-            <div>Total de Contratos</div>
-            <h2 id="kpiTotal">0</h2>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-md-3">
-        <div class="card card-kpi shadow-sm">
-          <div class="card-body text-center">
-            <div>Contratos Ativos</div>
-            <h2 id="kpiAtivos">0</h2>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-md-3">
-        <div class="card card-kpi shadow-sm">
-          <div class="card-body text-center">
-            <div>Vencendo em 30 dias</div>
-            <h2 id="kpiVenc30">0</h2>
-          </div>
-        </div>
-      </div>
-      <div class="col-12 col-md-3">
-        <div class="card card-kpi shadow-sm">
-          <div class="card-body text-center">
-            <div>Com Estouro de Saldo</div>
-            <h2 id="kpiEstouro">0</h2>
-          </div>
-        </div>
-      </div>
+<div class="container py-4">
+
+  <h3 class="mb-3">Sistema de Controle de Contratos</h3>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-md-3">
+      <div class="card card-kpi shadow-sm"><div class="card-body text-center">
+        <div>Total de Contratos</div><h2 id="kpiTotal">0</h2>
+      </div></div>
     </div>
-
-    <!-- Tabs -->
-    <div class="tabs mb-3">
-      <div class="btn-group">
-        <button class="btn btn-outline-primary nav-tab active">Contratos</button>
-        <button class="btn btn-outline-primary nav-tab">Centros de Custo</button>
-        <button class="btn btn-outline-primary nav-tab">Contas Contábeis</button>
-      </div>
+    <div class="col-12 col-md-3">
+      <div class="card card-kpi shadow-sm"><div class="card-body text-center">
+        <div>Contratos Ativos</div><h2 id="kpiAtivos">0</h2>
+      </div></div>
     </div>
-
-    <!-- CONTRATOS -->
-    <div id="tab-contratos" class="tab-content active">
-      <div class="card shadow-sm mb-3">
-        <div class="card-body">
-          <div class="row g-2 align-items-end">
-            <div class="col-12 col-md-3">
-              <label class="form-label">Status</label>
-              <select id="fStatus" class="form-select">
-                <option value="todos">Todos</option>
-                <option value="ativos">Ativos</option>
-                <option value="vencendo30">Vencendo em 30 dias</option>
-                <option value="estouro">Com Estouro de Saldo</option>
-                <option value="inativos">Inativos</option>
-              </select>
-            </div>
-            <div class="col-12 col-md-3">
-              <label class="form-label">Centro de Custo</label>
-              <select id="fCentro" class="form-select">
-                <option value="">Todos</option>
-              </select>
-            </div>
-            <div class="col-12 col-md-3">
-              <label class="form-label">Início a partir de</label>
-              <input type="date" id="fInicio" class="form-control">
-            </div>
-            <div class="col-12 col-md-3">
-              <label class="form-label">Vencimento até</label>
-              <input type="date" id="fVenc" class="form-control">
-            </div>
-            <div class="col-12 d-flex gap-2 mt-2">
-              <button id="btnLimpar" class="btn btn-secondary">Limpar</button>
-              <button id="btnAplicar" class="btn btn-primary">Aplicar</button>
-              <button id="btnCsv" class="btn btn-outline-primary ms-auto">Relatório CSV</button>
-              <button id="btnNovoContrato" class="btn btn-success">+ Novo Contrato</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card shadow-sm">
-        <div class="card-body table-responsive">
-          <table class="table table-hover align-middle" id="tblContratos">
-            <thead>
-              <tr>
-                <th>Número</th>
-                <th>Fornecedor</th>
-                <th>Centro de Custo</th>
-                <th>Valor Total</th>
-                <th>Saldo Utilizado</th>
-                <th>Vencimento</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
+    <div class="col-12 col-md-3">
+      <div class="card card-kpi shadow-sm"><div class="card-body text-center">
+        <div>Vencendo em 30 dias</div><h2 id="kpiVenc30">0</h2>
+      </div></div>
     </div>
-
-    <!-- CENTROS -->
-    <div id="tab-centros" class="tab-content">
-      <div class="d-flex mb-2">
-        <button id="btnNovoCentro" class="btn btn-success ms-auto">+ Novo Centro</button>
-      </div>
-      <div class="card shadow-sm">
-        <div class="card-body table-responsive">
-          <table class="table table-hover" id="tblCentros">
-            <thead><tr><th>Código</th><th>Nome</th><th>Responsável</th><th>Email</th><th>Ações</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
+    <div class="col-12 col-md-3">
+      <div class="card card-kpi shadow-sm"><div class="card-body text-center">
+        <div>Com Estouro de Saldo</div><h2 id="kpiEstouro">0</h2>
+      </div></div>
     </div>
-
-    <!-- CONTAS -->
-    <div id="tab-contas" class="tab-content">
-      <div class="d-flex mb-2">
-        <button id="btnNovaConta" class="btn btn-success ms-auto">+ Nova Conta</button>
-      </div>
-      <div class="card shadow-sm">
-        <div class="card-body table-responsive">
-          <table class="table table-hover" id="tblContas">
-            <thead><tr><th>Código</th><th>Descrição</th><th>Tipo</th><th>Ações</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
   </div>
 
-  <!-- Modais básicos (novo contrato / centro / conta) -->
-  <div class="modal fade" id="mdlContrato" tabindex="-1">
-    <div class="modal-dialog modal-lg"><div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Novo Contrato</h5>
-        <button class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-      </div>
-      <div class="modal-body">
-        <form id="formContrato" class="row g-2">
-          <div class="col-md-4">
-            <label class="form-label">Número</label>
-            <input name="numero" class="form-control" required>
-          </div>
-        <div class="col-md-8">
-            <label class="form-label">Fornecedor</label>
-            <input name="fornecedor" class="form-control" required>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Centro de Custo</label>
-            <select name="centro_custo_id" id="ctrContratoCentro" class="form-select" required></select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">Conta Contábil</label>
-            <select name="conta_contabil_id" id="ctrContratoConta" class="form-select" required></select>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Valor Total</label>
-            <input type="number" step="0.01" name="valor" class="form-control" required>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Início</label>
-            <input type="date" name="data_inicio" class="form-control" required>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label">Vencimento</label>
-            <input type="date" name="data_fim" class="form-control" required>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Observações</label>
-            <textarea name="observacoes" class="form-control" rows="2"></textarea>
-          </div>
-          <div class="col-12">
-            <label class="form-label">Anexos (opcional)</label>
-            <input type="file" id="anexosContrato" class="form-control" multiple>
-          </div>
-          <div class="col-12 form-check mt-2">
-            <input type="checkbox" class="form-check-input" id="contratoAtivo" checked>
-            <label for="contratoAtivo" class="form-check-label">Ativo</label>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button id="btnSalvarContrato" class="btn btn-primary">Salvar</button>
+  <!-- NAV -->
+  <div class="btn-group mb-3">
+    <button class="btn btn-outline-primary nav-tab active">Contratos</button>
+    <button class="btn btn-outline-primary nav-tab">Centros de Custo</button>
+    <button class="btn btn-outline-primary nav-tab">Contas Contábeis</button>
+  </div>
+
+  <!-- CONTRATOS -->
+  <div id="tab-contratos" class="tab-content active">
+    <div class="card shadow-sm mb-3"><div class="card-body">
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-3">
+          <label class="form-label">Status</label>
+          <select id="fStatus" class="form-select">
+            <option value="todos">Todos</option>
+            <option value="ativos">Ativos</option>
+            <option value="vencendo30">Vencendo em 30 dias</option>
+            <option value="estouro">Com Estouro de Saldo</option>
+            <option value="inativos">Inativos</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Centro de Custo</label>
+          <select id="fCentro" class="form-select">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Início a partir de</label>
+          <input type="date" id="fInicio" class="form-control">
+        </div>
+        <div class="col-12 col-md-3">
+          <label class="form-label">Vencimento até</label>
+          <input type="date" id="fVenc" class="form-control">
+        </div>
+        <div class="col-12 d-flex gap-2 mt-2">
+          <button id="btnLimpar" class="btn btn-secondary">Limpar</button>
+          <button id="btnAplicar" class="btn btn-primary">Aplicar</button>
+          <button id="btnCsv" class="btn btn-outline-primary ms-auto">Relatório CSV</button>
+          <button id="btnNovoContrato" class="btn btn-success">+ Novo Contrato</button>
+        </div>
       </div>
     </div></div>
+
+    <div class="card shadow-sm">
+      <div class="card-body table-responsive">
+        <table class="table table-hover align-middle" id="tblContratos">
+          <thead>
+            <tr>
+              <th>Número</th><th>Fornecedor</th><th>Centro de Custo</th>
+              <th>Valor Total</th><th>Saldo Utilizado</th><th>Vencimento</th>
+              <th>Status</th><th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <div class="modal fade" id="mdlCentro" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Novo Centro de Custo</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
+  <!-- CENTROS -->
+  <div id="tab-centros" class="tab-content">
+    <div class="d-flex mb-2">
+      <button id="btnNovoCentro" class="btn btn-success ms-auto">+ Novo Centro</button>
+    </div>
+    <div class="card shadow-sm">
+      <div class="card-body table-responsive">
+        <table class="table table-hover" id="tblCentros">
+          <thead><tr><th>Código</th><th>Nome</th><th>Responsável</th><th>Email</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <div class="modal-body">
-        <form id="formCentro" class="row g-2">
-          <div class="col-md-4"><label class="form-label">Código</label><input name="codigo" class="form-control" required></div>
-          <div class="col-md-8"><label class="form-label">Nome</label><input name="nome" class="form-control" required></div>
-          <div class="col-md-6"><label class="form-label">Responsável</label><input name="responsavel" class="form-control"></div>
-          <div class="col-md-6"><label class="form-label">Email</label><input name="email" type="email" class="form-control"></div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button id="btnSalvarCentro" class="btn btn-primary">Salvar</button>
-      </div>
-    </div></div>
+    </div>
   </div>
 
-  <div class="modal fade" id="mdlConta" tabindex="-1">
-    <div class="modal-dialog"><div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Nova Conta Contábil</h5>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
+  <!-- CONTAS -->
+  <div id="tab-contas" class="tab-content">
+    <div class="d-flex mb-2">
+      <button id="btnNovaConta" class="btn btn-success ms-auto">+ Nova Conta</button>
+    </div>
+    <div class="card shadow-sm">
+      <div class="card-body table-responsive">
+        <table class="table table-hover" id="tblContas">
+          <thead><tr><th>Código</th><th>Descrição</th><th>Tipo</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <div class="modal-body">
-        <form id="formConta" class="row g-2">
-          <div class="col-md-4"><label class="form-label">Código</label><input name="codigo" class="form-control" required></div>
-          <div class="col-md-6"><label class="form-label">Descrição</label><input name="descricao" class="form-control" required></div>
-          <div class="col-md-2">
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: CONTRATO (criar/editar) -->
+<div class="modal fade" id="mdlContrato" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title" id="tituloContrato">Novo Contrato</h5>
+      <button class="btn-close" data-bs-dismiss="modal"></button>
+    </div>
+    <div class="modal-body">
+      <form id="formContrato" class="row g-2">
+        <input type="hidden" name="id" />
+        <div class="col-md-4"><label class="form-label">Número</label><input name="numero" class="form-control" required></div>
+        <div class="col-md-8"><label class="form-label">Fornecedor</label><input name="fornecedor" class="form-control" required></div>
+        <div class="col-md-6"><label class="form-label">Centro de Custo</label><select name="centro_custo_id" id="ctrContratoCentro" class="form-select" required></select></div>
+        <div class="col-md-6"><label class="form-label">Conta Contábil</label><select name="conta_contabil_id" id="ctrContratoConta" class="form-select" required></select></div>
+        <div class="col-md-4"><label class="form-label">Valor Total</label><input type="number" step="0.01" name="valor" class="form-control" required></div>
+        <div class="col-md-4"><label class="form-label">Início</label><input type="date" name="data_inicio" class="form-control" required></div>
+        <div class="col-md-4"><label class="form-label">Vencimento</label><input type="date" name="data_fim" class="form-control" required></div>
+        <div class="col-12"><label class="form-label">Observações</label><textarea name="observacoes" class="form-control" rows="2"></textarea></div>
+        <div class="col-12"><label class="form-label">Anexos (opcional)</label><input type="file" id="anexosContrato" class="form-control" multiple></div>
+        <div class="col-12 form-check mt-2">
+          <input type="checkbox" id="contratoAtivo" class="form-check-input" checked>
+          <label for="contratoAtivo" class="form-check-label">Ativo</label>
+        </div>
+      </form>
+      <div id="areaAnexosExistentes" class="mt-3" style="display:none">
+        <h6 class="mb-2">Anexos existentes</h6>
+        <ul id="listaAnexos" class="list-group"></ul>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline-secondary" id="btnMovimentos" style="display:none">Movimentos</button>
+      <button class="btn btn-outline-warning" id="btnInativar" style="display:none"></button>
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+      <button class="btn btn-primary" id="btnSalvarContrato">Salvar</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- MODAL: MOVIMENTOS -->
+<div class="modal fade" id="mdlMov" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Movimentos do Contrato</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="mb-3">
+        <form id="formMov" class="row g-2">
+          <div class="col-4">
             <label class="form-label">Tipo</label>
             <select name="tipo" class="form-select">
-              <option value="DESPESA">DESPESA</option>
-              <option value="RECEITA">RECEITA</option>
+              <option value="USO">USO</option>
+              <option value="ESTORNO">ESTORNO</option>
+              <option value="AJUSTE">AJUSTE</option>
             </select>
           </div>
+          <div class="col-4"><label class="form-label">Valor</label><input name="valor" type="number" step="0.01" class="form-control" required></div>
+          <div class="col-4"><label class="form-label">Data</label><input name="data_movimento" type="date" class="form-control" required></div>
+          <div class="col-12"><label class="form-label">Observação</label><input name="observacao" class="form-control"></div>
         </form>
+        <button class="btn btn-primary mt-2" id="btnAddMov">Adicionar</button>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button id="btnSalvarConta" class="btn btn-primary">Salvar</button>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Observação</th></tr></thead>
+          <tbody id="tbMov"></tbody>
+        </table>
       </div>
-    </div></div>
-  </div>
+    </div>
+  </div></div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="./app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>
