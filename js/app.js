@@ -404,7 +404,7 @@ function updateContratosTable() {
 async function viewAnexos(id) {
   try {
     const anexos = await apiGet(`/contratos/${id}/arquivos`);
-    const lista = document.getElementById('listaAnexos');
+    const lista = document.getElementById('listaAnexosModal');
     if (!lista) return;
 
     lista.innerHTML = '';
@@ -418,7 +418,7 @@ async function viewAnexos(id) {
         const li = document.createElement('li');
         const link = document.createElement('a');
         link.href = `${API}${arq.url}`;
-        link.textContent = arq.nome || 'Arquivo';
+        link.textContent = arq.nome_arquivo || 'Arquivo';
         link.target = '_blank';
         li.appendChild(link);
         lista.appendChild(li);
@@ -569,7 +569,7 @@ function checkAlerts() {
  * CRUD CONTRATOS
  ***********************/
 async function updateListaAnexos(contratoId) {
-  const ul = document.getElementById('listaAnexos');
+  const ul = document.getElementById('listaAnexosContrato');
   if (!ul) return;
 
   ul.innerHTML = '<li>Carregando...</li>';
@@ -616,6 +616,7 @@ async function editContrato(id) {
 
   editingId = id;
   document.getElementById('contratoModalTitle').textContent = 'Editar Contrato';
+  openModal('contratoModal');  
   document.getElementById('numeroContrato').value = c.numero || '';
   document.getElementById('fornecedor').value = c.fornecedor || '';
   document.getElementById('centroCustoContrato').value = c.centroCusto || '';
@@ -629,8 +630,6 @@ async function editContrato(id) {
 
   await updateListaAnexos(id);
 
-  
-  openModal('contratoModal');
 }
 
 async function removeAnexo(contratoId, arquivoId) {
