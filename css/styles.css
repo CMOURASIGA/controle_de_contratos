@@ -216,6 +216,26 @@ label{ font-weight: 600; font-size: .95rem; }
 }
 .close:hover{ color: var(--danger-color); }
 
+/* Histórico de movimentações */
+.history-table{
+  max-height: 220px;
+  overflow-y: auto;
+}
+.history-table thead th{
+  position: sticky;
+  top: 0;
+  background: var(--bg-light);
+  z-index: 1;
+}
+.history-table tr.entrada{
+  color: var(--accent-color);
+  background: #ecfdf5;
+}
+.history-table tr.saida{
+  color: var(--danger-color);
+  background: #fef2f2;
+}
+
 /* Responsivo */
 @media (max-width: 900px){
   .stats-grid{ grid-template-columns: repeat(2, 1fr); }

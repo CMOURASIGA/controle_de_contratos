@@ -652,6 +652,12 @@ function openMovModal(contratoId) {
   document.getElementById('movData').value = new Date().toISOString().slice(0, 10);
   document.getElementById('movObs').value = '';
   
+  
+  const contrato = contratos.find(c => c.id === Number(contratoId));
+  const infoEl = document.getElementById('movModalInfo');
+  if (infoEl) {
+    infoEl.textContent = contrato ? `${contrato.numero || 'S/N'} - ${contrato.fornecedor || 'N/A'}` : '';
+  }
   // Carrega movimentações existentes
   loadMovimentacoes(contratoId);
   
@@ -671,9 +677,12 @@ async function loadMovimentacoes(contratoId) {
       return;
     }
 
-    movimentos.forEach(mov => {
-      tbody.innerHTML += `
-        <tr>
+    movimentos
+      .sort((a, b) => new Date(b.criadoEm || b.data) - new Date(a.criadoEm || a.data))
+      .forEach(mov => {
+        const classe = mov.tipo === 'saida' || mov.valorDelta < 0 ? 'saida' : 'entrada';
+        tbody.innerHTML += `
+        <tr class="${classe}">
           <td>${mov.criadoEm ? new Date(mov.criadoEm).toLocaleDateString('pt-BR') : 'N/A'}</td>
           <td>${mov.tipo || 'N/A'}</td>
           <td>R$ ${toBRL(mov.valorDelta)}</td>
