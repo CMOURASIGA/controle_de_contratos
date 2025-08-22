@@ -310,26 +310,31 @@
           <div>
             <label>Número do Contrato *</label>
             <input id="numeroContrato" class="form-control" required />
+            <span class="error"></span>            
           </div>
           <div>
             <label>Fornecedor *</label>
             <input id="fornecedor" class="form-control" required />
+            <span class="error"></span>            
           </div>
           <div>
             <label>Centro de Custo *</label>
             <select id="centroCustoContrato" class="form-control" required>
               <option value="">Selecione</option>
             </select>
+            <span class="error"></span>            
           </div>
           <div>
             <label>Conta Contábil *</label>
             <select id="contaContabil" class="form-control" required>
               <option value="">Selecione</option>
             </select>
+            <span class="error"></span>            
           </div>
           <div>
             <label>Valor Total (R$) *</label>
             <input id="valorTotal" type="number" step="0.01" class="form-control" required />
+            <span class="error"></span>            
           </div>
           <div>
             <label>Saldo Utilizado (R$)</label>
@@ -338,10 +343,12 @@
           <div>
             <label>Data de Início *</label>
             <input id="dataInicio" type="date" class="form-control" required />
+            <span class="error"></span>            
           </div>
           <div>
             <label>Data de Vencimento *</label>
             <input id="dataVencimento" type="date" class="form-control" required />
+            <span class="error"></span>            
           </div>
           <div style="grid-column:1/-1">
             <label>Observações</label>
@@ -354,6 +361,7 @@
           <div style="grid-column:1/-1">
             <label>Anexos do contrato</label>
             <input id="anexosContrato" type="file" class="form-control" multiple />
+            <ul id="listaAnexos"></ul>
           </div>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
@@ -488,6 +496,20 @@
           <button type="submit" class="btn">Salvar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+    <!-- Modal ANEXOS -->
+  <div id="anexosModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Anexos</h2>
+        <button class="close" onclick="closeModal('anexosModal')">&times;</button>
+      </div>
+      <ul id="listaAnexos"></ul>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+        <button type="button" class="btn ghost" onclick="closeModal('anexosModal')">Fechar</button>
+      </div>
     </div>
   </div>
 

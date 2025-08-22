@@ -586,6 +586,34 @@ app.get('/contratos/:id/arquivos', async (req, res) => {
   }
 });
 
+app.delete('/contratos/:id/arquivos/:arquivoId', async (req, res) => {
+  try {
+    const contratoId = Number(req.params.id);
+    const arquivoId = Number(req.params.arquivoId);
+
+    const { rows } = await pool.query(
+      'DELETE FROM contrato_arquivos WHERE id=$1 AND contrato_id=$2 RETURNING url, nome_arquivo',
+      [arquivoId, contratoId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Arquivo não encontrado' });
+    }
+
+    const filePath = path.join(uploadDir, path.basename(rows[0].url));
+    fs.unlink(filePath, () => {});
+
+    await pool.query(
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
+       VALUES ($1, 'ANEXO', $2, 0)`,
+      [contratoId, `Remoção de anexo: ${rows[0].nome_arquivo}`]
+    );
+
+    res.status(204).end();
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
 /* =========== Relatório CSV =========== */
 app.get('/relatorios/contratos', async (req, res) => {
   try {

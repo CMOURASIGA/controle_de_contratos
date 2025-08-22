@@ -125,7 +125,11 @@ function setupEventListeners() {
   // Validação e pré-visualização de anexos
   document.getElementById('anexosContrato')?.addEventListener('change', updateAnexosPreview);
   document.querySelectorAll('#contratoForm input, #contratoForm select, #contratoForm textarea').forEach(el => {
-    el.addEventListener('input', () => el.classList.remove('invalid'));
+    el.addEventListener('input', () => {
+      el.classList.remove('invalid');
+      const err = el.nextElementSibling;
+      if (err && err.classList.contains('error')) err.textContent = '';
+    });
   });
 }
 
@@ -387,6 +391,7 @@ function updateContratosTable() {
         <td><span class="badge ${statusClass}">${statusText}</span></td>
         <td>
           <div class="action-buttons">
+            <button class="btn" onclick="viewAnexos(${contrato.id})">Visualizar</button>          
             <button class="btn" onclick="editContrato(${contrato.id})">Editar</button>
             <button class="btn danger" onclick="deleteContrato(${contrato.id})">Excluir</button>
             <button class="btn success" onclick="openMovModal(${contrato.id})">Movimentar</button>
@@ -394,6 +399,37 @@ function updateContratosTable() {
         </td>
       </tr>`;
   });
+}
+
+async function viewAnexos(id) {
+  try {
+    const anexos = await apiGet(`/contratos/${id}/arquivos`);
+    const lista = document.getElementById('listaAnexos');
+    if (!lista) return;
+
+    lista.innerHTML = '';
+
+    if (!anexos || anexos.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = 'Nenhum anexo encontrado';
+      lista.appendChild(li);
+    } else {
+      anexos.forEach(arq => {
+        const li = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = `${API}${arq.url}`;
+        link.textContent = arq.nome || 'Arquivo';
+        link.target = '_blank';
+        li.appendChild(link);
+        lista.appendChild(li);
+      });
+    }
+
+    openModal('anexosModal');
+  } catch (err) {
+    console.error('Erro ao carregar anexos:', err);
+    showAlert('Erro ao carregar anexos.', 'danger');
+  }
 }
 
 function updateCentrosTable() {
@@ -532,7 +568,49 @@ function checkAlerts() {
 /***********************
  * CRUD CONTRATOS
  ***********************/
-function editContrato(id) {
+async function updateListaAnexos(contratoId) {
+  const ul = document.getElementById('listaAnexos');
+  if (!ul) return;
+
+  ul.innerHTML = '<li>Carregando...</li>';
+
+  try {
+    const anexos = await apiGet(`/contratos/${contratoId}/arquivos`);
+    ul.innerHTML = '';
+
+    if (!anexos.length) {
+      const li = document.createElement('li');
+      li.textContent = 'Nenhum anexo';
+      ul.appendChild(li);
+      return;
+    }
+
+    anexos.forEach(a => {
+      const li = document.createElement('li');
+
+      const link = document.createElement('a');
+      link.href = `${API}${a.url}`;
+      link.textContent = a.nome_arquivo || 'arquivo';
+      link.target = '_blank';
+      li.appendChild(link);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn ghost';
+      btn.style.marginLeft = '8px';
+      btn.textContent = 'Remover';
+      btn.onclick = () => removeAnexo(contratoId, a.id);
+      li.appendChild(btn);
+
+      ul.appendChild(li);
+    });
+  } catch (err) {
+    console.error('Erro ao carregar anexos:', err);
+    ul.innerHTML = '<li>Erro ao carregar anexos</li>';
+  }
+}
+
+async function editContrato(id) {
   const c = contratos.find(x => x.id === id);
   if (!c) return;
 
@@ -548,8 +626,23 @@ function editContrato(id) {
   document.getElementById('dataVencimento').value = c.dataVencimento?.slice(0, 10) || '';
   document.getElementById('observacoes').value = c.observacoes || '';
   document.getElementById('contratoAtivo').checked = c.ativo !== false;
+
+  await updateListaAnexos(id);
+
   
   openModal('contratoModal');
+}
+
+async function removeAnexo(contratoId, arquivoId) {
+  if (!confirm('Remover este anexo?')) return;
+  try {
+    await apiSend(`/contratos/${contratoId}/arquivos/${arquivoId}`, 'DELETE');
+    showAlert('Anexo removido!', 'success');
+    await updateListaAnexos(contratoId);
+  } catch (err) {
+    console.error('Erro ao remover anexo:', err);
+    showAlert('Erro ao remover anexo.', 'danger');
+  }
 }
 
 async function deleteContrato(id) {
@@ -701,8 +794,42 @@ async function loadMovimentacoes(contratoId) {
 /***********************
  * MANIPULADORES DE FORMULÁRIO
  ***********************/
+function validateContratoForm() {
+  let valid = true;
+  const fields = [
+    { id: 'numeroContrato', msg: 'Informe o número do contrato.' },
+    { id: 'fornecedor', msg: 'Informe o fornecedor.' },
+    { id: 'centroCustoContrato', msg: 'Selecione o centro de custo.' },
+    { id: 'contaContabil', msg: 'Selecione a conta contábil.' },
+    { id: 'valorTotal', msg: 'Informe o valor total.' },
+    { id: 'dataInicio', msg: 'Informe a data de início.' },
+    { id: 'dataVencimento', msg: 'Informe a data de vencimento.' }
+  ];
+
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (!el) return;
+    const err = el.nextElementSibling;
+    if (err && err.classList.contains('error')) err.textContent = '';
+    el.classList.remove('invalid');
+
+    const value = (el.value || '').trim();
+    if (!value) {
+      el.classList.add('invalid');
+      if (err && err.classList.contains('error')) err.textContent = f.msg;
+      valid = false;
+    }
+  });
+
+  return valid;
+}
 async function handleContratoSubmit(e) {
   e.preventDefault();
+
+  if (!validateContratoForm()) {
+    showAlert('Preencha os campos obrigatórios.', 'danger');
+    return;
+  }
 
   const ativo = document.getElementById('contratoAtivo').checked;
   const data = {
@@ -719,14 +846,24 @@ async function handleContratoSubmit(e) {
   };
 
   try {
+    let id;
     if (editingId) {
       await apiSend(`/contratos/${editingId}`, 'PUT', data);
+      id = editingId;      
       showAlert('Contrato atualizado com sucesso!', 'success');
     } else {
-      await apiSend('/contratos', 'POST', data);
+      const created = await apiSend('/contratos', 'POST', data);
+      id = created?.id;
       showAlert('Contrato criado com sucesso!', 'success');
     }
 
+    const files = document.getElementById('anexosContrato').files;
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      await apiSendForm(`/contratos/${id}/anexos`, formData);
+    }
+        
     // Recarrega dados
     const path = buildContratosQueryFromFilters();
     contratos = await apiGet(path);
@@ -859,8 +996,10 @@ window.openModal = openModal;
 window.closeModal = closeModal;
 window.editContrato = editContrato;
 window.deleteContrato = deleteContrato;
+window.removeAnexo = removeAnexo;
 window.editCentro = editCentro;
 window.deleteCentro = deleteCentro;
 window.editConta = editConta;
 window.deleteConta = deleteConta;
 window.openMovModal = openMovModal;
+window.viewAnexos = viewAnexos;
