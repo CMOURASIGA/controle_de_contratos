@@ -72,6 +72,38 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 });
 
+function updateAnexosPreview(e) {
+  const input = e.target;
+  if (!input) return;
+
+  const previewId = 'anexosPreview';
+  let preview = document.getElementById(previewId);
+
+  if (!preview) {
+    preview = document.createElement('ul');
+    preview.id = previewId;
+    preview.style.marginTop = '8px';
+    input.insertAdjacentElement('afterend', preview);
+  }
+
+  preview.innerHTML = '';
+
+  const files = Array.from(input.files || []);
+  if (files.length === 0) {
+    const li = document.createElement('li');
+    li.textContent = 'Nenhum arquivo selecionado';
+    preview.appendChild(li);
+    return;
+  }
+
+  files.forEach(file => {
+    const li = document.createElement('li');
+    const sizeKB = (file.size / 1024).toFixed(1);
+    li.textContent = `${file.name} (${sizeKB} KB)`;
+    preview.appendChild(li);
+  });
+}
+
 function setupEventListeners() {
   // Filtros
   document.getElementById('btnAplicarFiltros')?.addEventListener('click', applyFilters);
