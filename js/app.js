@@ -1,379 +1,645 @@
-// ===== API base autodetect (local usa a URL do Railway para testes rápidos) =====
-const API_BASE = (() => {
-  const isLocal = location.origin.startsWith('file:') ||
-                  location.hostname === 'localhost' ||
-                  location.hostname === '127.0.0.1';
-  // TROQUE pelo seu domínio da API no Railway
-  const PROD = 'https://controledecontratos-production.up.railway.app';
-  return isLocal ? PROD : '';
-})();
 
-// ===== util de request =====
-async function api(path, opts = {}) {
-  const r = await fetch(API_BASE + path, opts);
-  if (!r.ok) {
-    let txt;
-    try { txt = await r.text(); } catch { txt = String(r.status); }
-    throw new Error(`${opts.method || 'GET'} ${path} -> ${r.status} ${txt}`);
-  }
-  const ct = r.headers.get('content-type') || '';
-  if (ct.includes('application/json')) return r.json();
-  return r.text();
-}
-const apiGet = (p) => api(p);
-const apiPost = (p, body) => api(p, {
-  method: 'POST',
-  headers: body instanceof FormData ? undefined : { 'Content-Type': 'application/json' },
-  body: body instanceof FormData ? body : JSON.stringify(body)
+require('dotenv').config();
+
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+
+/* ================= CORS ================= */
+const allowList = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // curl/postman
+      if (allowList.length === 0 || allowList.includes(origin)) return cb(null, true);
+      return cb(new Error('Not allowed by CORS'));
+    },
+  })
+);
+
+app.use(express.json());
+
+/* ========== Postgres (SSL por ambiente) ========== */
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
-const apiPut  = (p, body) => api(p, {
-  method: 'PUT',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(body)
-});
-const apiDel  = (p) => api(p, { method:'DELETE' });
 
-// ===== estado =====
-let centros = [];
-let contas  = [];
-let contratos = [];
-let contratoAtivoId = null; // para modais
+/* -------- uploads (anexos) -------- */
+const uploadDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+const upload = multer({ dest: uploadDir });
+app.use('/files', express.static(uploadDir));
 
-// ===== helpers =====
-const fmtMoney = (v) => (v==null ? '-' : Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}));
-const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => document.querySelectorAll(sel);
-const el = (t, a={}, ...c) => {
-  const e = document.createElement(t);
-  for (const k in a) {
-    if (k === 'class') e.className = a[k];
-    else if (k === 'html') e.innerHTML = a[k];
-    else e.setAttribute(k, a[k]);
-  }
-  c.forEach(x => e.appendChild(typeof x === 'string' ? document.createTextNode(x) : x));
-  return e;
-};
+/* ---- bootstrap de esquema (idempotente) ---- */
+async function ensureSchema() {
+  await pool.query(`
+    ALTER TABLE contratos
+      ADD COLUMN IF NOT EXISTS ativo boolean NOT NULL DEFAULT true;
 
-// ===== navegação entre abas =====
-function wireTabs(){
-  const ids = ['tab-contratos','tab-centros','tab-contas'];
-  $$('.nav-tab').forEach((btn, i)=>{
-    btn.addEventListener('click', (ev)=>{
-      $$('.nav-tab').forEach(b=>b.classList.remove('active'));
-      $$('.tab-content').forEach(c=>c.classList.remove('active'));
-      ev.currentTarget.classList.add('active');
-      $('#'+ids[i]).classList.add('active');
-    });
-  });
-}
+    ALTER TABLE contratos
+      ALTER COLUMN saldo_utilizado SET DEFAULT 0;
 
-// ===== KPIs =====
-function updateKpis() {
-  $('#kpiTotal').textContent  = contratos.length;
-  $('#kpiAtivos').textContent = contratos.filter(c => c.ativo).length;
-  const hoje = new Date();
-  const em30 = new Date(); em30.setDate(hoje.getDate()+30);
-  $('#kpiVenc30').textContent = contratos.filter(c => c.ativo && new Date(c.data_fim) <= em30).length;
-  $('#kpiEstouro').textContent = contratos.filter(c => Number(c.saldo_utilizado) > Number(c.valor)).length;
-}
-
-// ===== filtros + carregamento =====
-async function loadStatic(){
-  [centros, contas] = await Promise.all([ apiGet('/centros'), apiGet('/contas') ]);
-
-  // selects de filtros e do modal de contrato
-  const sCentro = $('#fCentro');
-  sCentro.innerHTML = `<option value="">Todos</option>` +
-    centros.map(c=>`<option value="${c.id}">${c.codigo} - ${c.nome}</option>`).join('');
-
-  $('#ctrContratoCentro').innerHTML = centros.map(c=>`<option value="${c.id}">${c.codigo} - ${c.nome}</option>`).join('');
-  $('#ctrContratoConta').innerHTML  = contas.map(c=>`<option value="${c.id}">${c.codigo} - ${c.descricao}</option>`).join('');
-
-  renderCentros();
-  renderContas();
-}
-
-async function loadContratos(){
-  const qs = new URLSearchParams();
-  const st = $('#fStatus').value;
-  const c  = $('#fCentro').value;
-  const i  = $('#fInicio').value;
-  const v  = $('#fVenc').value;
-  if (st && st!=='todos') qs.set('status', st);
-  if (c) qs.set('centroId', c);
-  if (i) qs.set('inicioDe', i);
-  if (v) qs.set('vencAte', v);
-
-  contratos = await apiGet('/contratos' + (qs.toString()? ('?'+qs.toString()):''));
-  renderContratos();
-  updateKpis();
-}
-
-function wireFilters(){
-  $('#btnAplicar').addEventListener('click', loadContratos);
-  $('#btnLimpar').addEventListener('click', async ()=>{
-    $('#fStatus').value='todos'; $('#fCentro').value='';
-    $('#fInicio').value=''; $('#fVenc').value='';
-    await loadContratos();
-  });
-  $('#btnCsv').addEventListener('click', ()=>{
-    const qs = new URLSearchParams();
-    const st = $('#fStatus').value;
-    const c  = $('#fCentro').value;
-    const i  = $('#fInicio').value;
-    const v  = $('#fVenc').value;
-    if (st && st!=='todos') qs.set('status', st);
-    if (c) qs.set('centroId', c);
-    if (i) qs.set('inicioDe', i);
-    if (v) qs.set('vencAte', v);
-    window.open(API_BASE + '/contratos/report' + (qs.toString()?('?'+qs.toString()):''), '_blank');
-  });
-}
-
-// ===== renderizações =====
-function renderContratos(){
-  const tb = $('#tblContratos tbody');
-  tb.innerHTML = '';
-  contratos.forEach(ct=>{
-    const cc = centros.find(z=>z.id===ct.centro_custo_id);
-    const tr = el('tr',{},
-      el('td',{}, ct.numero || '-'),
-      el('td',{}, ct.fornecedor || '-'),
-      el('td',{}, cc? `${cc.codigo} - ${cc.nome}` : '-'),
-      el('td',{}, fmtMoney(ct.valor)),
-      el('td',{}, fmtMoney(ct.saldo_utilizado)),
-      el('td',{}, (ct.data_fim||'').toString().slice(0,10)),
-      el('td',{}, ct.ativo ? 'Ativo' : 'Inativo'),
-      el('td',{},
-        el('div',{class:'btn-group btn-group-sm'},
-          el('button',{class:'btn btn-outline-primary',title:'Visualizar/Editar',
-                       onclick:`openContrato(${ct.id})`},'Abrir'),
-          el('button',{class:'btn btn-outline-secondary',title:'Anexos',
-                       onclick:`window.open('${API_BASE}/contratos/${ct.id}/arquivos','_blank')`},'Anexos'),
-          el('button',{class:'btn btn-outline-danger',title:'Excluir',
-                       onclick:`deleteContrato(${ct.id})`},'Excluir')
-        )
-      )
+    CREATE TABLE IF NOT EXISTS contrato_movimentos (
+      id           SERIAL PRIMARY KEY,
+      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
+      tipo         TEXT NOT NULL,  -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
+      observacao   TEXT,
+      valor        NUMERIC DEFAULT 0,
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
-    tb.appendChild(tr);
+
+    CREATE INDEX IF NOT EXISTS idx_contrato_movimentos_contrato_id
+      ON contrato_movimentos (contrato_id);
+
+    CREATE TABLE IF NOT EXISTS contrato_arquivos (
+      id           SERIAL PRIMARY KEY,
+      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
+      nome_arquivo TEXT NOT NULL,
+      url          TEXT NOT NULL,
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_contrato_arquivos_contrato_id
+      ON contrato_arquivos (contrato_id);
+  `);
+}
+
+async function pingDB() {
+  const { rows } = await pool.query('SELECT 1 AS ok');
+  return rows[0].ok === 1;
+}
+
+/* ========== Helpers ========== */
+function httpErr(res, err, status = 500) {
+  console.error(err);
+  return res.status(status).json({
+    error: 'Erro interno',
+    detail: err.detail || err.message || String(err),
   });
 }
 
-function renderCentros(){
-  const tb = $('#tblCentros tbody');
-  tb.innerHTML = centros.map(c=>`
-    <tr>
-      <td>${c.codigo}</td><td>${c.nome}</td><td>${c.responsavel||'-'}</td><td>${c.email||'-'}</td>
-      <td>
-        <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-primary" onclick="editCentro(${c.id})">Editar</button>
-          <button class="btn btn-outline-danger" onclick="deleteCentro(${c.id})">Excluir</button>
-        </div>
-      </td>
-    </tr>`).join('');
-}
-
-function renderContas(){
-  const tb = $('#tblContas tbody');
-  tb.innerHTML = contas.map(c=>`
-    <tr>
-      <td>${c.codigo}</td><td>${c.descricao}</td><td>${c.tipo}</td>
-      <td>
-        <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-primary" onclick="editConta(${c.id})">Editar</button>
-          <button class="btn btn-outline-danger" onclick="deleteConta(${c.id})">Excluir</button>
-        </div>
-      </td>
-    </tr>`).join('');
-}
-
-// ===== contratos: criar/editar/abrir =====
-const mdlContrato = () => bootstrap.Modal.getOrCreateInstance('#mdlContrato');
-const mdlMov = () => bootstrap.Modal.getOrCreateInstance('#mdlMov');
-
-$('#btnNovoContrato').addEventListener('click', ()=> {
-  $('#tituloContrato').textContent = 'Novo Contrato';
-  $('#formContrato').reset();
-  $('#areaAnexosExistentes').style.display = 'none';
-  $('#btnMovimentos').style.display = 'none';
-  $('#btnInativar').style.display = 'none';
-  contratoAtivoId = null;
-  $('#contratoAtivo').checked = true;
-  mdlContrato().show();
+/* ========== Healthcheck ========== */
+app.get('/health', async (_req, res) => {
+  try {
+    await pingDB();
+    res.json({ ok: true });
+  } catch (err) {
+    httpErr(res, err);
+  }
 });
 
-$('#btnSalvarContrato').addEventListener('click', async ()=>{
-  const f = $('#formContrato');
-  const data = Object.fromEntries(new FormData(f).entries());
-  data.ativo = $('#contratoAtivo').checked;
+/* =================================================================== */
+/* =======================   CENTROS DE CUSTO   ====================== */
+/* =================================================================== */
 
-  let saved;
-  if (data.id) {
-    saved = await apiPut('/contratos/'+data.id, data);
-  } else {
-    saved = await apiPost('/contratos', data);
+app.get('/centros', async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, codigo, nome, responsavel, email FROM centros_custo ORDER BY id DESC'
+    );
+    res.json(rows);
+  } catch (err) {
+    httpErr(res, err);
   }
-
-  // upload anexos (se houver)
-  const files = $('#anexosContrato').files;
-  if (files && files.length){
-    const fd = new FormData();
-    [...files].forEach(f => fd.append('arquivos', f, f.name));
-    await apiPost(`/contratos/${saved.id}/arquivos`, fd);
-  }
-
-  mdlContrato().hide();
-  await loadContratos();
 });
 
-async function openContrato(id){
-  const ct = await apiGet('/contratos/'+id);
-  contratoAtivoId = id;
+app.post('/centros', async (req, res) => {
+  try {
+    const { codigo, nome, responsavel, email } = req.body;
+    const sql = `
+      INSERT INTO centros_custo (codigo, nome, responsavel, email)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id, codigo, nome, responsavel, email
+    `;
+    const { rows } = await pool.query(sql, [codigo, nome, responsavel || null, email || null]);
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Código de centro já existe', detail: err.detail });
+    }
+    httpErr(res, err);
+  }
+});
 
-  // preencher modal
-  $('#tituloContrato').textContent = `Contrato #${ct.id}`;
-  const f = $('#formContrato');
-  f.reset();
-  f.id.value = ct.id;
-  f.numero.value = ct.numero || '';
-  f.fornecedor.value = ct.fornecedor || '';
-  f.centro_custo_id.value = ct.centro_custo_id || '';
-  f.conta_contabil_id.value = ct.conta_contabil_id || '';
-  f.valor.value = ct.valor || 0;
-  f.data_inicio.value = (ct.data_inicio || '').toString().slice(0,10);
-  f.data_fim.value    = (ct.data_fim    || '').toString().slice(0,10);
-  f.observacoes.value = ct.observacoes || '';
-  $('#contratoAtivo').checked = !!ct.ativo;
+app.put('/centros/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { codigo, nome, responsavel, email } = req.body;
+    const sql = `
+      UPDATE centros_custo
+         SET codigo = $1,
+             nome = $2,
+             responsavel = $3,
+             email = $4
+       WHERE id = $5
+      RETURNING id, codigo, nome, responsavel, email
+    `;
+    const { rows } = await pool.query(sql, [codigo, nome, responsavel || null, email || null, id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Centro não encontrado' });
+    res.json(rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Código de centro já existe', detail: err.detail });
+    }
+    httpErr(res, err);
+  }
+});
 
-  // botões especiais
-  const btnInativar = $('#btnInativar');
-  btnInativar.style.display = '';
-  btnInativar.textContent = ct.ativo ? 'Inativar' : 'Reativar';
-  btnInativar.onclick = async ()=>{
-    await apiPut('/contratos/'+id, { ...ct, ativo: !ct.ativo });
-    mdlContrato().hide();
-    await loadContratos();
+app.delete('/centros/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const del = await pool.query('DELETE FROM centros_custo WHERE id=$1', [id]);
+    if (del.rowCount === 0) return res.status(404).json({ error: 'Centro não encontrado' });
+    res.json({ ok: true });
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/* =================================================================== */
+/* =======================   CONTAS CONTÁBEIS   ====================== */
+/* =================================================================== */
+
+app.get('/contas', async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, codigo, descricao, tipo FROM contas_contabeis ORDER BY id DESC'
+    );
+    res.json(rows);
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+app.post('/contas', async (req, res) => {
+  try {
+    const { codigo, descricao, tipo } = req.body;
+    const sql = `
+      INSERT INTO contas_contabeis (codigo, descricao, tipo)
+      VALUES ($1, $2, $3)
+      RETURNING id, codigo, descricao, tipo
+    `;
+    const { rows } = await pool.query(sql, [codigo, descricao, tipo]);
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Código de conta já existe', detail: err.detail });
+    }
+    httpErr(res, err);
+  }
+});
+
+app.put('/contas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { codigo, descricao, tipo } = req.body;
+    const sql = `
+      UPDATE contas_contabeis
+         SET codigo = $1,
+             descricao = $2,
+             tipo = $3
+       WHERE id = $4
+      RETURNING id, codigo, descricao, tipo
+    `;
+    const { rows } = await pool.query(sql, [codigo, descricao, tipo, id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Conta não encontrada' });
+    res.json(rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Código de conta já existe', detail: err.detail });
+    }
+    httpErr(res, err);
+  }
+});
+
+app.delete('/contas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const del = await pool.query('DELETE FROM contas_contabeis WHERE id=$1', [id]);
+    if (del.rowCount === 0) return res.status(404).json({ error: 'Conta não encontrada' });
+    res.json({ ok: true });
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/* =================================================================== */
+/* ============================   CONTRATOS   ========================= */
+/* =================================================================== */
+
+/** constrói WHERE e params para /contratos e /relatorios/contratos */
+function buildWhere(req) {
+  const q = {
+    ativo: req.query.ativo,
+    status: req.query.status || (req.query.vencendo30 ? 'VENCE_EM_30_DIAS' : undefined),
+    centro: req.query.centro,
+    conta: req.query.conta,
+    fornecedor: req.query.fornecedor,
+    q: req.query.q,
+    vencimentoDe: req.query.vencimentoDe || req.query.inicioDesde, // compat
+    vencimentoAte: req.query.vencimentoAte,
   };
 
-  // movimentos
-  $('#btnMovimentos').style.display = '';
-  $('#btnMovimentos').onclick = ()=> openMovimentos(id);
+  const where = [];
+  const params = [];
 
-  // anexos existentes
-  await loadAnexosExistentes(id);
+  if (typeof q.ativo !== 'undefined') {
+    params.push(String(q.ativo).toLowerCase() === 'true');
+    where.push(`c.ativo = $${params.length}`);
+  }
 
-  mdlContrato().show();
-}
+  if (q.status) {
+    const idx = params.push(String(q.status).toUpperCase());
+    where.push(`
+      CASE
+        WHEN NOT c.ativo THEN 'INATIVO'
+        WHEN c.data_fim < CURRENT_DATE THEN 'VENCIDO'
+        WHEN c.data_fim <= CURRENT_DATE + INTERVAL '30 days' THEN 'VENCE_EM_30_DIAS'
+        ELSE 'ATIVO'
+      END = $${idx}
+    `);
+  }
 
-async function deleteContrato(id){
-  if(!confirm('Excluir contrato?')) return;
-  await apiDel('/contratos/'+id);
-  await loadContratos();
-}
-
-// ===== anexos (listagem e remover) =====
-async function loadAnexosExistentes(id){
-  const area = $('#areaAnexosExistentes');
-  const ul = $('#listaAnexos');
-  const list = await apiGet(`/contratos/${id}/arquivos`);
-  ul.innerHTML = '';
-  if(!list.length){ area.style.display='none'; return; }
-  list.forEach(a=>{
-    const li = el('li',{class:'list-group-item d-flex justify-content-between align-items-center break-word'},
-      el('a',{href:a.url, target:'_blank', rel:'noopener'}, a.nome_arquivo),
-      el('button',{class:'btn btn-sm btn-outline-danger', onclick:`removeAnexo(${id},${a.id})`},'Remover')
+  if (q.centro) {
+    params.push(Number(q.centro));
+    where.push(`c.centro_custo_id = $${params.length}`);
+  }
+  if (q.conta) {
+    params.push(Number(q.conta));
+    where.push(`c.conta_contabil_id = $${params.length}`);
+  }
+  if (q.fornecedor) {
+    params.push(`%${q.fornecedor}%`);
+    where.push(`c.fornecedor ILIKE $${params.length}`);
+  }
+  if (q.q) {
+    params.push(`%${q.q}%`);
+    where.push(
+      `(c.numero ILIKE $${params.length} OR c.descricao ILIKE $${params.length} OR c.fornecedor ILIKE $${params.length})`
     );
-    ul.appendChild(li);
-  });
-  area.style.display='';
-}
-async function removeAnexo(contratoId, arqId){
-  if(!confirm('Remover anexo?')) return;
-  await apiDel(`/contratos/${contratoId}/arquivos/${arqId}`);
-  await loadAnexosExistentes(contratoId);
+  }
+  if (q.vencimentoDe) {
+    params.push(q.vencimentoDe);
+    where.push(`c.data_fim >= $${params.length}`);
+  }
+  if (q.vencimentoAte) {
+    params.push(q.vencimentoAte);
+    where.push(`c.data_fim <= $${params.length}`);
+  }
+
+  return { whereSQL: where.length ? `WHERE ${where.join(' AND ')}` : '', params };
 }
 
-// ===== movimentos =====
-async function openMovimentos(id){
-  contratoAtivoId = id;
-  $('#tbMov').innerHTML = '';
-  const movs = await apiGet(`/contratos/${id}/movimentos`);
-  movs.forEach(m=>{
-    $('#tbMov').appendChild(
-      el('tr',{},
-        el('td',{}, (m.data_movimento || '').toString().slice(0,10)),
-        el('td',{}, m.tipo),
-        el('td',{}, fmtMoney(m.valor)),
-        el('td',{}, m.observacao || '')
-      )
+/** GET /contratos (lista + filtros) */
+app.get('/contratos', async (req, res) => {
+  try {
+    const { whereSQL, params } = buildWhere(req);
+    const qres = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.numero,
+        c.fornecedor,
+        c.centro_custo_id   AS "centroCusto",
+        c.conta_contabil_id  AS "contaContabil",
+        c.valor              AS "valorTotal",
+        c.saldo_utilizado    AS "saldoUtilizado",
+        c.data_inicio        AS "dataInicio",
+        c.data_fim           AS "dataVencimento",
+        c.descricao          AS "observacoes",
+        c.ativo              AS "ativo",
+        CASE
+          WHEN NOT c.ativo THEN 'INATIVO'
+          WHEN c.data_fim < CURRENT_DATE THEN 'VENCIDO'
+          WHEN c.data_fim <= CURRENT_DATE + INTERVAL '30 days' THEN 'VENCE_EM_30_DIAS'
+          ELSE 'ATIVO'
+        END                  AS "status"
+      FROM contratos c
+      ${whereSQL}
+      ORDER BY c.id DESC
+      `,
+      params
     );
+    res.json(qres.rows);
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/** POST /contratos */
+app.post('/contratos', async (req, res) => {
+  try {
+    const {
+      numero, fornecedor, centroCusto, contaContabil,
+      valorTotal, saldoUtilizado, dataInicio, dataVencimento,
+      observacoes, ativo,
+    } = req.body;
+
+    const ins = await pool.query(
+      `INSERT INTO contratos
+         (numero, fornecedor, centro_custo_id, conta_contabil_id, valor, saldo_utilizado, data_inicio, data_fim, descricao, ativo)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       RETURNING id`,
+      [
+        numero || null, fornecedor || null,
+        centroCusto || null, contaContabil || null,
+        valorTotal || 0, saldoUtilizado || 0,
+        dataInicio || null, dataVencimento || null,
+        observacoes || null,
+        typeof ativo === 'boolean' ? ativo : true,
+      ]
+    );
+
+    res.status(201).json({ ok: true, id: ins.rows[0].id });
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/** PUT /contratos/:id */
+app.put('/contratos/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const {
+      numero, fornecedor, centroCusto, contaContabil,
+      valorTotal, saldoUtilizado, dataInicio, dataVencimento,
+      observacoes, ativo,
+    } = req.body;
+
+    await pool.query(
+      `UPDATE contratos
+          SET numero=$1, fornecedor=$2, centro_custo_id=$3, conta_contabil_id=$4,
+              valor=$5, saldo_utilizado=$6, data_inicio=$7, data_fim=$8, descricao=$9, ativo=$10
+        WHERE id=$11`,
+      [
+        numero || null, fornecedor || null,
+        centroCusto || null, contaContabil || null,
+        valorTotal || 0, saldoUtilizado || 0,
+        dataInicio || null, dataVencimento || null,
+        observacoes || null,
+        typeof ativo === 'boolean' ? ativo : true,
+        id,
+      ]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/** DELETE /contratos/:id */
+app.delete('/contratos/:id', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    await pool.query('DELETE FROM contratos WHERE id=$1', [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/* --------- Ações de status --------- */
+app.post('/contratos/:id/inativar', async (req, res) => {
+  const id = Number(req.params.id);
+  const { motivo } = req.body || {};
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('UPDATE contratos SET ativo=false WHERE id=$1', [id]);
+    await client.query(
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
+       VALUES ($1, 'INATIVACAO', $2, 0)`,
+      [id, motivo || null]
+    );
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    httpErr(res, err);
+  } finally {
+    client.release();
+  }
+});
+
+app.post('/contratos/:id/ativar', async (req, res) => {
+  const id = Number(req.params.id);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('UPDATE contratos SET ativo=true WHERE id=$1', [id]);
+    await client.query(
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
+       VALUES ($1, 'ATIVACAO', NULL, 0)`,
+      [id]
+    );
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    httpErr(res, err);
+  } finally {
+    client.release();
+  }
+});
+
+app.post('/contratos/:id/renovar', async (req, res) => {
+  const id = Number(req.params.id);
+  const { novaDataFim, valorAdicional, observacao } = req.body || {};
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    if (valorAdicional && Number(valorAdicional) !== 0) {
+      await client.query('UPDATE contratos SET valor = COALESCE(valor,0) + $1 WHERE id=$2', [
+        Number(valorAdicional), id,
+      ]);
+    }
+    if (novaDataFim) {
+      await client.query('UPDATE contratos SET data_fim = $1 WHERE id=$2', [novaDataFim, id]);
+    }
+
+    await client.query(
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
+       VALUES ($1, 'RENOVACAO', $2, 0)`,
+      [id, observacao || null]
+    );
+
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    httpErr(res, err);
+  } finally {
+    client.release();
+  }
+});
+
+/* --------- Movimentações --------- */
+const getMovements = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { rows } = await pool.query(
+      `SELECT id, contrato_id, tipo, observacao, valor AS "valorDelta",
+               criado_em AS "criadoEm"
+         FROM contrato_movimentos
+        WHERE contrato_id = $1
+        ORDER BY id DESC`,
+      [id]
+    );
+    res.json(rows);
+  } catch (err) {
+    httpErr(res, err);
+  }
+};
+
+const postMovement = async (req, res) => {
+  const id = Number(req.params.id);
+  const { tipo, observacao, valorDelta } = req.body || {};
+  if (!tipo) return res.status(400).json({ error: 'Campo "tipo" é obrigatório' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const { rows } = await client.query(
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
+       VALUES ($1,$2,$3,$4)
+       RETURNING id`,
+      [id, tipo, observacao || null, Number(valorDelta || 0)]
+    );
+
+    if (valorDelta && Number(valorDelta) !== 0) {
+      await client.query(
+        'UPDATE contratos SET saldo_utilizado = COALESCE(saldo_utilizado,0) + $1 WHERE id=$2',
+        [Number(valorDelta), id]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.status(201).json({ ok: true, id: rows[0].id });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    httpErr(res, err);
+  } finally {
+    client.release();
+  }
+};
+
+app.get('/contratos/:id/movimentos', getMovements);
+app.post('/contratos/:id/movimentos', postMovement);
+/* compat com rotas antigas */
+app.get('/contratos/:id/movimentacoes', getMovements);
+app.post('/contratos/:id/movimentacoes', postMovement);
+
+/* --------- Upload de anexo --------- */
+app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!req.file) return res.status(400).json({ error: 'Arquivo não enviado' });
+
+    const url = `/files/${req.file.filename}`;
+    const nome = req.file.originalname || req.file.filename;
+
+    await pool.query(
+      `INSERT INTO contrato_arquivos (contrato_id, nome_arquivo, url)
+       VALUES ($1,$2,$3)`,
+      [id, nome, url]
+    );
+
+    await pool.query(
+      `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
+       VALUES ($1, 'ANEXO', $2, 0)`,
+      [id, `Upload de anexo: ${nome}`]
+    );
+
+    res.status(201).json({ ok: true, url, nome });
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/* --------- Lista de anexos --------- */
+app.get('/contratos/:id/arquivos', async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { rows } = await pool.query(
+      `SELECT id, contrato_id, nome_arquivo, url, criado_em
+         FROM contrato_arquivos
+        WHERE contrato_id = $1
+        ORDER BY id DESC`,
+      [id]
+    );
+    res.json(rows);
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/* --------- Relatório CSV --------- */
+app.get('/relatorios/contratos', async (req, res) => {
+  try {
+    const { whereSQL, params } = buildWhere(req);
+    const { rows } = await pool.query(
+      `
+      SELECT
+        c.id, c.numero, c.fornecedor,
+        c.valor AS valor_total, c.saldo_utilizado,
+        c.data_inicio, c.data_fim, c.ativo
+      FROM contratos c
+      ${whereSQL}
+      ORDER BY c.id DESC
+      `,
+      params
+    );
+
+    const head = ['id','numero','fornecedor','valor_total','saldo_utilizado','data_inicio','data_fim','ativo'];
+    const csv = [
+      head.join(';'),
+      ...rows.map(r =>
+        [
+          r.id,
+          r.numero ?? '',
+          r.fornecedor ?? '',
+          r.valor_total ?? 0,
+          r.saldo_utilizado ?? 0,
+          r.data_inicio ? new Date(r.data_inicio).toISOString().slice(0, 10) : '',
+          r.data_fim ? new Date(r.data_fim).toISOString().slice(0, 10) : '',
+          r.ativo ? 'true' : 'false',
+        ].join(';')
+      ),
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="contratos.csv"');
+    res.send(csv);
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
+
+/* ========== 404 padrão ========== */
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Rota não encontrada' });
+});
+
+/* ========== Start ========== */
+const PORT = process.env.PORT || 8080;
+ensureSchema()
+  .then(() => {
+    app.listen(PORT, () => console.log(`API rodando na porta ${PORT}`));
+  })
+  .catch(err => {
+    console.error('Falha ao iniciar por erro de schema:', err);
+    process.exit(1);
   });
-  mdlMov().show();
-}
-$('#btnAddMov').addEventListener('click', async ()=>{
-  const data = Object.fromEntries(new FormData($('#formMov')).entries());
-  data.valor = Number(data.valor || 0);
-  if (!contratoAtivoId) return;
-  await apiPost(`/contratos/${contratoAtivoId}/movimentos`, data);
-  $('#formMov').reset();
-  await openMovimentos(contratoAtivoId);
-  await loadContratos(); // atualiza saldo utilizado na lista
-});
-
-// ===== centros =====
-$('#btnNovoCentro').addEventListener('click', async ()=>{
-  const codigo = prompt('Código do Centro:');
-  if(!codigo) return;
-  const nome = prompt('Nome do Centro:');
-  if(!nome) return;
-  const responsavel = prompt('Responsável (opcional):') || '';
-  const email = prompt('Email (opcional):') || '';
-  await apiPost('/centros', { codigo, nome, responsavel, email });
-  centros = await apiGet('/centros'); renderCentros(); await loadStatic(); // recarrega selects
-});
-async function editCentro(id){
-  const c = centros.find(x=>x.id===id);
-  if(!c) return;
-  const codigo = prompt('Código do Centro:', c.codigo); if(!codigo) return;
-  const nome = prompt('Nome do Centro:', c.nome); if(!nome) return;
-  const responsavel = prompt('Responsável:', c.responsavel || '') || '';
-  const email = prompt('Email:', c.email || '') || '';
-  await apiPut('/centros/'+id, { codigo, nome, responsavel, email });
-  centros = await apiGet('/centros'); renderCentros(); await loadStatic();
-}
-async function deleteCentro(id){
-  if(!confirm('Excluir centro?')) return;
-  await apiDel('/centros/'+id);
-  centros = await apiGet('/centros'); renderCentros(); await loadStatic();
-}
-
-// ===== contas =====
-$('#btnNovaConta').addEventListener('click', async ()=>{
-  const codigo = prompt('Código da Conta:'); if(!codigo) return;
-  const descricao = prompt('Descrição:'); if(!descricao) return;
-  const tipo = (prompt('Tipo (DESPESA/RECEITA):','DESPESA') || 'DESPESA').toUpperCase();
-  await apiPost('/contas', { codigo, descricao, tipo });
-  contas = await apiGet('/contas'); renderContas(); await loadStatic();
-});
-async function editConta(id){
-  const c = contas.find(x=>x.id===id);
-  if(!c) return;
-  const codigo = prompt('Código:', c.codigo); if(!codigo) return;
-  const descricao = prompt('Descrição:', c.descricao); if(!descricao) return;
-  const tipo = (prompt('Tipo (DESPESA/RECEITA):', c.tipo) || c.tipo).toUpperCase();
-  await apiPut('/contas/'+id, { codigo, descricao, tipo });
-  contas = await apiGet('/contas'); renderContas(); await loadStatic();
-}
-async function deleteConta(id){
-  if(!confirm('Excluir conta?')) return;
-  await apiDel('/contas/'+id);
-  contas = await apiGet('/contas'); renderContas(); await loadStatic();
-}
-
-// ===== boot =====
-document.addEventListener('DOMContentLoaded', async ()=>{
-  wireTabs();
-  wireFilters();
-  await loadStatic();
-  await loadContratos();
-});

@@ -1,335 +1,662 @@
-// server.js – API Express para Controle de Contratos
-// Funcionalidades: centros, contas, contratos (CRUD + filtros + CSV),
-// movimentos, anexos, health, dbcheck, files estáticos
+/***********************
+ * CONFIGURAÇÃO
+ ***********************/
+const API = 'https://controledecontratos-production.up.railway.app';
 
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const { Pool } = require('pg');
-const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
+// Estado em memória
+let contratos = [];
+let centrosCusto = [];
+let contasContabeis = [];
+let editingId = null;
 
-const app = express();
-app.use(cors({ origin: true }));
-app.use(express.json());
-
-// === Postgres (Railway/Local) ===
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-
-// === uploads (armazenamento em disco) ===
-const UP_DIR = path.join(process.cwd(), 'uploads');
-if (!fs.existsSync(UP_DIR)) fs.mkdirSync(UP_DIR);
-const storage = multer.diskStorage({
-  destination: (_, __, cb) => cb(null, UP_DIR),
-  filename: (_, file, cb) => {
-    const ts = Date.now();
-    const safe = file.originalname.replace(/[^\w.\-]+/g, '_');
-    cb(null, `${ts}_${safe}`);
+/***********************
+ * UTIL
+ ***********************/
+async function apiGet(path) {
+  const r = await fetch(`${API}${path}`);
+  if (!r.ok) throw new Error(`GET ${path} falhou: ${r.status}`);
+  return r.json();
+}
+async function apiSend(path, method, body) {
+  const r = await fetch(`${API}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {})
+  });
+  if (!r.ok) {
+    const txt = await r.text().catch(()=> '');
+    throw new Error(`${method} ${path} falhou: ${r.status} ${txt}`);
   }
-});
-const upload = multer({ storage });
-
-// ===== Health + DB check =====
-app.get('/health', (req, res) => res.json({ ok: true }));
-app.get('/dbcheck', async (req, res) => {
-  try {
-    const r = await pool.query('select current_database() db, current_user usr');
-    res.json({ ok: true, db: r.rows[0].db, user: r.rows[0].usr });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: String(e) });
-  }
-});
-
-// ===== Servir arquivos enviados =====
-app.get('/files/:name', (req, res) => {
-  const filePath = path.join(UP_DIR, path.basename(req.params.name));
-  if (!fs.existsSync(filePath)) return res.status(404).send('Arquivo não encontrado');
-  res.sendFile(filePath);
-});
-
-/* =============================================================================
-   CENTROS DE CUSTO
-============================================================================= */
-
-app.get('/centros', async (req, res) => {
-  const r = await pool.query(
-    'select id, codigo, nome, responsavel, email from centros_custo order by id desc'
-  );
-  res.json(r.rows);
-});
-
-app.post('/centros', async (req, res) => {
-  const { codigo, nome, responsavel, email } = req.body;
-  const r = await pool.query(
-    'insert into centros_custo (codigo, nome, responsavel, email) values ($1,$2,$3,$4) returning *',
-    [codigo, nome, responsavel || null, email || null]
-  );
-  res.json(r.rows[0]);
-});
-
-app.put('/centros/:id', async (req, res) => {
-  const { id } = req.params;
-  const { codigo, nome, responsavel, email } = req.body;
-  const r = await pool.query(
-    'update centros_custo set codigo=$1, nome=$2, responsavel=$3, email=$4 where id=$5 returning *',
-    [codigo, nome, responsavel || null, email || null, id]
-  );
-  res.json(r.rows[0]);
-});
-
-app.delete('/centros/:id', async (req, res) => {
-  await pool.query('delete from centros_custo where id=$1', [req.params.id]);
-  res.json({ ok: true });
-});
-
-/* =============================================================================
-   CONTAS CONTÁBEIS
-============================================================================= */
-
-app.get('/contas', async (req, res) => {
-  const r = await pool.query(
-    'select id, codigo, descricao, tipo from contas_contabeis order by id desc'
-  );
-  res.json(r.rows);
-});
-
-app.post('/contas', async (req, res) => {
-  const { codigo, descricao, tipo } = req.body;
-  const r = await pool.query(
-    'insert into contas_contabeis (codigo, descricao, tipo) values ($1,$2,$3) returning *',
-    [codigo, descricao, (tipo || 'DESPESA').toUpperCase()]
-  );
-  res.json(r.rows[0]);
-});
-
-app.put('/contas/:id', async (req, res) => {
-  const { id } = req.params;
-  const { codigo, descricao, tipo } = req.body;
-  const r = await pool.query(
-    'update contas_contabeis set codigo=$1, descricao=$2, tipo=$3 where id=$4 returning *',
-    [codigo, descricao, (tipo || 'DESPESA').toUpperCase(), id]
-  );
-  res.json(r.rows[0]);
-});
-
-app.delete('/contas/:id', async (req, res) => {
-  await pool.query('delete from contas_contabeis where id=$1', [req.params.id]);
-  res.json({ ok: true });
-});
-
-/* =============================================================================
-   CONTRATOS
-   Tabela esperada:
-   id, numero, fornecedor, centro_custo_id, conta_contabil_id,
-   valor numeric, saldo_utilizado numeric, data_inicio date, data_fim date,
-   observacoes text, ativo boolean
-============================================================================= */
-
-function buildWhere(q) {
-  const wh = [];
-  const ps = [];
-  let n = 1;
-
-  if (q.status && q.status !== 'todos') {
-    if (q.status === 'ativos') wh.push('ativo = true');
-    if (q.status === 'inativos') wh.push('ativo = false');
-    if (q.status === 'vencendo30')
-      wh.push("ativo = true and data_fim <= (current_date + interval '30 days')");
-    if (q.status === 'estouro')
-      wh.push('coalesce(saldo_utilizado,0) > coalesce(valor,0)');
-  }
-  if (q.centroId) {
-    wh.push(`centro_custo_id = $${n++}`); ps.push(q.centroId);
-  }
-  if (q.inicioDe) {
-    wh.push(`data_inicio >= $${n++}`); ps.push(q.inicioDe);
-  }
-  if (q.vencAte) {
-    wh.push(`data_fim <= $${n++}`); ps.push(q.vencAte);
-  }
-  return { where: wh.length ? (' where ' + wh.join(' and ')) : '', params: ps };
+  return r.status === 204 ? null : r.json();
+}
+async function apiSendForm(path, formData) {
+  const r = await fetch(`${API}${path}`, { method: 'POST', body: formData });
+  if (!r.ok) throw new Error(`POST form ${path} falhou: ${r.status}`);
+  return r.json();
+}
+function toBRL(n) {
+  return Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
 }
 
-app.get('/contratos', async (req, res) => {
-  const { where, params } = buildWhere(req.query);
-  const r = await pool.query(
-    `select id, numero, fornecedor, centro_custo_id, conta_contabil_id,
-            coalesce(valor,0) valor, coalesce(saldo_utilizado,0) saldo_utilizado,
-            data_inicio, data_fim, observacoes, coalesce(ativo,true) ativo
-       from contratos
-     ${where}
-     order by id desc`,
-    params
-  );
-  res.json(r.rows);
+/***********************
+ * INICIALIZAÇÃO
+ ***********************/
+document.addEventListener('DOMContentLoaded', async function () {
+  try {
+    await initializeData();
+
+    // filtros
+    document.getElementById('btnAplicarFiltros')?.addEventListener('click', applyFilters);
+    document.getElementById('btnLimparFiltros')?.addEventListener('click', clearFilters);
+    document.getElementById('btnRelatorio')?.addEventListener('click', baixarRelatorio);
+
+    // atualiza alertas a cada 30s
+    setInterval(checkAlerts, 30000);
+  } catch (e) {
+    console.error(e);
+    showAlert('Erro ao carregar dados da API. Verifique a conexão.', 'danger');
+  }
 });
 
-app.get('/contratos/:id', async (req, res) => {
-  const r = await pool.query('select * from contratos where id=$1', [req.params.id]);
-  if (!r.rows[0]) return res.status(404).json({ error: 'Contrato não encontrado' });
-  res.json(r.rows[0]);
+async function initializeData() {
+  try {
+    const [centrosRes, contasRes, contratosRes] = await Promise.allSettled([
+      apiGet('/centros'),
+      apiGet('/contas'),
+      apiGet('/contratos'),
+    ]);
+
+    centrosCusto    = centrosRes.status === 'fulfilled' ? centrosRes.value : [];
+    contasContabeis = contasRes.status === 'fulfilled' ? contasRes.value  : [];
+    contratos       = contratosRes.status === 'fulfilled' ? contratosRes.value : [];
+
+    if (centrosRes.status === 'rejected')  showAlert('Não foi possível carregar Centros de Custo.', 'warning');
+    if (contasRes.status  === 'rejected')  showAlert('Não foi possível carregar Contas Contábeis.', 'warning');
+    if (contratosRes.status=== 'rejected') showAlert('Não foi possível carregar Contratos. Os demais dados foram carregados.', 'warning');
+
+    populateFiltroCentro();
+    updateTables();
+    updateStats();
+    checkAlerts();
+
+  } catch (err) {
+    console.error('Falha inesperada ao inicializar dados:', err);
+    showAlert('Erro ao carregar dados da API. Verifique a conexão.', 'danger');
+  }
+}
+
+/***********************
+ * ABAS
+ ***********************/
+function showTab(tabName, elOrEvent) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+  let btn = null;
+  if (elOrEvent && elOrEvent.currentTarget) btn = elOrEvent.currentTarget;
+  else if (elOrEvent instanceof HTMLElement) btn = elOrEvent;
+
+  if (btn) btn.classList.add('active');
+
+  const content = document.getElementById(tabName);
+  if (content) content.classList.add('active');
+}
+
+/***********************
+ * MODAIS
+ ***********************/
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.style.display = 'block';
+
+  if (modalId === 'contratoModal') {
+    updateCentroCustoOptions();
+    updateContaContabilOptions();
+  }
+}
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.style.display = 'none';
+
+  const formId = modalId.replace('Modal', 'Form');
+  const form = document.getElementById(formId);
+  if (form) form.reset();
+
+  editingId = null;
+
+  if (modalId === 'contratoModal') document.getElementById('contratoModalTitle').textContent = 'Novo Contrato';
+  if (modalId === 'centroModal')   document.getElementById('centroModalTitle').textContent   = 'Novo Centro de Custo';
+  if (modalId === 'contaModal')    document.getElementById('contaModalTitle').textContent    = 'Nova Conta Contábil';
+}
+window.addEventListener('click', e => {
+  if (e.target.classList?.contains('modal')) e.target.style.display = 'none';
 });
 
-app.get('/contratos/report', async (req, res) => {
-  const { where, params } = buildWhere(req.query);
-  const r = await pool.query(
-    `select numero, fornecedor,
-            (select codigo||' - '||nome from centros_custo cc where cc.id = c.centro_custo_id) centro,
-            valor, saldo_utilizado, data_inicio, data_fim,
-            case when coalesce(ativo,true) then 'ATIVO' else 'INATIVO' end status
-       from contratos c
-     ${where}
-     order by id desc`,
-    params
-  );
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="contratos.csv"');
-  res.write('numero,fornecedor,centro,valor,saldo_utilizado,data_inicio,data_fim,status\n');
-  r.rows.forEach(row => {
-    const d = [
-      row.numero, row.fornecedor, row.centro,
-      row.valor, row.saldo_utilizado,
-      (row.data_inicio || '').toISOString?.().slice(0,10) || row.data_inicio,
-      (row.data_fim    || '').toISOString?.().slice(0,10) || row.data_fim,
-      row.status
-    ].map(v => (v==null?'':String(v).replace(/"/g,'""')));
-    res.write(d.join(',') + '\n');
+/***********************
+ * DROPDOWNS CONTRATO
+ ***********************/
+function updateCentroCustoOptions() {
+  const select = document.getElementById('centroCustoContrato');
+  if (!select) return;
+  select.innerHTML = '<option value="">Selecione um centro de custo</option>';
+  centrosCusto.forEach(centro => {
+    const opt = document.createElement('option');
+    opt.value = centro.id;
+    opt.textContent = `${centro.codigo} - ${centro.nome}`;
+    select.appendChild(opt);
   });
-  res.end();
-});
+}
+function updateContaContabilOptions() {
+  const select = document.getElementById('contaContabil');
+  if (!select) return;
+  select.innerHTML = '<option value="">Selecione uma conta contábil</option>';
+  contasContabeis.forEach(conta => {
+    const opt = document.createElement('option');
+    opt.value = conta.id;
+    opt.textContent = `${conta.codigo} - ${conta.descricao}`;
+    select.appendChild(opt);
+  });
+}
 
-app.post('/contratos', async (req, res) => {
-  const {
-    numero, fornecedor, centro_custo_id, conta_contabil_id,
-    valor, data_inicio, data_fim, observacoes, ativo
-  } = req.body;
-  const r = await pool.query(
-    `insert into contratos
-      (numero, fornecedor, centro_custo_id, conta_contabil_id, valor, saldo_utilizado,
-       data_inicio, data_fim, observacoes, ativo)
-     values ($1,$2,$3,$4,$5,0,$6,$7,$8,$9)
-     returning *`,
-    [numero, fornecedor, centro_custo_id, conta_contabil_id, valor || 0,
-     data_inicio, data_fim, observacoes || null, (ativo !== false)]
-  );
-  res.json(r.rows[0]);
-});
+/***********************
+ * FILTROS + RELATÓRIO
+ ***********************/
+function populateFiltroCentro() {
+  const sel = document.getElementById('filtroCentro');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todos</option>';
+  centrosCusto.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = `${c.codigo} - ${c.nome}`;
+    sel.appendChild(opt);
+  });
+  if (current) sel.value = current;
+}
 
-app.put('/contratos/:id', async (req, res) => {
-  const { id } = req.params;
-  const {
-    numero, fornecedor, centro_custo_id, conta_contabil_id,
-    valor, saldo_utilizado, data_inicio, data_fim, observacoes, ativo
-  } = req.body;
-  const r = await pool.query(
-    `update contratos set
-        numero=$1, fornecedor=$2, centro_custo_id=$3, conta_contabil_id=$4,
-        valor=$5, saldo_utilizado=$6, data_inicio=$7, data_fim=$8,
-        observacoes=$9, ativo=$10
-      where id=$11
-      returning *`,
-    [numero, fornecedor, centro_custo_id, conta_contabil_id,
-     valor, saldo_utilizado, data_inicio, data_fim, observacoes || null, !!ativo, id]
-  );
-  res.json(r.rows[0]);
-});
+function buildContratosQueryFromFilters() {
+  const params = new URLSearchParams();
+  const st = document.getElementById('filtroStatus')?.value || '';
+  const cc = document.getElementById('filtroCentro')?.value || '';
+  const di = document.getElementById('filtroInicio')?.value || '';
+  const dv = document.getElementById('filtroFim')?.value || '';
 
-app.delete('/contratos/:id', async (req, res) => {
-  await pool.query('delete from contratos where id=$1', [req.params.id]);
-  res.json({ ok: true });
-});
+  // mapeia para a API
+  if (st === 'ativo')     params.set('ativo', 'true');
+  if (st === 'inativo')   params.set('ativo', 'false');
+  if (st === 'vencendo')  params.set('status', 'VENCE_EM_30_DIAS');
+  if (st === 'vencido')   params.set('status', 'VENCIDO');
+  if (cc) params.set('centro', cc);
+  if (di) params.set('vencimentoDe', di);   // usamos o campo "Início" como "vencimento a partir de"
+  if (dv) params.set('vencimentoAte', dv);
 
-/* =============================================================================
-   MOVIMENTOS
-   Tabela: contrato_movimentos (id, contrato_id, tipo, valor, observacao, data_movimento, criado_em)
-============================================================================= */
+  const qs = params.toString();
+  return '/contratos' + (qs ? `?${qs}` : '');
+}
 
-app.get('/contratos/:id/movimentos', async (req, res) => {
-  const r = await pool.query(
-    'select id, contrato_id, tipo, valor, observacao, data_movimento, criado_em from contrato_movimentos where contrato_id=$1 order by id desc',
-    [req.params.id]
-  );
-  res.json(r.rows);
-});
+async function applyFilters() {
+  const path = buildContratosQueryFromFilters();
+  try {
+    contratos = await apiGet(path);
+    updateTables(); updateStats(); checkAlerts();
+  } catch (e) {
+    console.error(e);
+    showAlert('Falha ao aplicar filtros.', 'danger');
+  }
+}
 
-app.post('/contratos/:id/movimentos', async (req, res) => {
-  const id = req.params.id;
-  const { tipo, valor, observacao, data_movimento } = req.body;
-  const r = await pool.query(
-    `insert into contrato_movimentos
-      (contrato_id, tipo, valor, observacao, data_movimento, criado_em)
-     values ($1,$2,$3,$4,$5, now())
-     returning *`,
-    [id, (tipo || 'USO').toUpperCase(), valor || 0, observacao || null, data_movimento || new Date()]
-  );
+async function clearFilters() {
+  document.getElementById('filtroStatus').value = '';
+  document.getElementById('filtroCentro').value = '';
+  document.getElementById('filtroInicio').value = '';
+  document.getElementById('filtroFim').value = '';
+  await applyFilters();
+}
 
-  // atualiza saldo no contrato para USO/ESTORNO
-  if ((tipo || '').toUpperCase() === 'USO') {
-    await pool.query('update contratos set saldo_utilizado = coalesce(saldo_utilizado,0) + $1 where id=$2', [valor || 0, id]);
-  } else if ((tipo || '').toUpperCase() === 'ESTORNO') {
-    await pool.query('update contratos set saldo_utilizado = greatest(0, coalesce(saldo_utilizado,0) - $1) where id=$2', [valor || 0, id]);
+async function baixarRelatorio() {
+  try {
+    const path = buildContratosQueryFromFilters(); // reaproveita os filtros
+    const url = `${API}/relatorios/contratos${path.includes('?') ? path.slice(path.indexOf('?')) : ''}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Relatório indisponível.');
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `contratos_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) {
+    console.error(e);
+    showAlert('Erro ao gerar relatório.', 'danger');
+  }
+}
+
+/***********************
+ * TABELAS
+ ***********************/
+function updateTables() {
+  updateContratosTable();
+  updateCentrosTable();
+  updateContasTable();
+}
+
+function updateContratosTable() {
+  const tbody = document.querySelector('#contratosTable tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  contratos.forEach(contrato => {
+    const centro = centrosCusto.find(c => c.id === contrato.centroCusto);
+    const pct = (Number(contrato.saldoUtilizado) / Number(contrato.valorTotal)) * 100;
+    const diasVencimento = Math.ceil((new Date(contrato.dataVencimento) - new Date()) / (1000 * 60 * 60 * 24));
+
+    let statusClass = 'badge-success';
+    let statusText  = 'Ativo';
+    if (contrato.ativo === false) { statusClass = 'badge';         statusText = 'Inativo'; }
+    else if (diasVencimento <= 0) { statusClass = 'badge-danger';  statusText = 'Vencido'; }
+    else if (diasVencimento <= 30){ statusClass = 'badge-warning'; statusText = 'Vencendo'; }
+    else if (pct >= 90)            { statusClass = 'badge-warning'; statusText = 'Saldo Baixo'; }
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${contrato.numero}</td>
+        <td>${contrato.fornecedor}</td>
+        <td>${centro ? centro.nome : 'N/A'}</td>
+        <td>R$ ${toBRL(contrato.valorTotal)}</td>
+        <td>
+          <div>R$ ${toBRL(contrato.saldoUtilizado)}</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${Math.min(pct,100)}%; background:${pct>90?'var(--danger)':'var(--accent)'}"></div>
+          </div>
+          <small>${isFinite(pct)?pct.toFixed(1):'0.0'}% utilizado</small>
+        </td>
+        <td>${new Date(contrato.dataVencimento).toLocaleDateString('pt-BR')}</td>
+        <td><span class="badge ${statusClass}">${statusText}</span></td>
+        <td style="white-space:nowrap">
+          <button class="btn"             style="padding:6px 12px;margin-right:5px" onclick="viewContrato(${contrato.id})">Visualizar</button>
+          <button class="btn btn-warning" style="padding:6px 12px;margin-right:5px" onclick="editContrato(${contrato.id})">Editar</button>
+          <button class="btn btn-danger"  style="padding:6px 12px;margin-right:5px" onclick="deleteContrato(${contrato.id})">Excluir</button>
+          <button class="btn"             style="padding:6px 12px" onclick="openMovModal(${contrato.id})">Movimentar</button>
+        </td>
+      </tr>`;
+  });
+}
+
+function updateCentrosTable() {
+  const tbody = document.querySelector('#centrosTable tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  centrosCusto.forEach(centro => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${centro.codigo}</td>
+        <td>${centro.nome}</td>
+        <td>${centro.responsavel}</td>
+        <td>${centro.email}</td>
+        <td>
+          <button class="btn btn-warning" style="padding:6px 12px;margin-right:5px" onclick="editCentro(${centro.id})">Editar</button>
+          <button class="btn btn-danger"  style="padding:6px 12px;margin-right:5px" onclick="deleteCentro(${centro.id})">Excluir</button>
+        </td>
+      </tr>`;
+  });
+}
+
+function updateContasTable() {
+  const tbody = document.querySelector('#contasTable tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  contasContabeis.forEach(conta => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${conta.codigo}</td>
+        <td>${conta.descricao}</td>
+        <td>${conta.tipo}</td>
+        <td>
+          <button class="btn btn-warning" style="padding:6px 12px;margin-right:5px" onclick="editConta(${conta.id})">Editar</button>
+          <button class="btn btn-danger"  style="padding:6px 12px;margin-right:5px" onclick="deleteConta(${conta.id})">Excluir</button>
+        </td>
+      </tr>`;
+  });
+}
+
+/***********************
+ * ESTATÍSTICAS & ALERTAS
+ ***********************/
+function updateStats() {
+  const totalContratos   = contratos.length;
+  const contratosAtivos  = contratos.filter(c => c.ativo !== false && new Date(c.dataVencimento) > new Date()).length;
+  const contratosVencendo= contratos.filter(c => c.ativo !== false && Math.ceil((new Date(c.dataVencimento)-new Date())/(1000*60*60*24)) <= 30 && Math.ceil((new Date(c.dataVencimento)-new Date())/(1000*60*60*24)) > 0).length;
+  const contratosEstouro = contratos.filter(c => (Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100 > 100).length;
+
+  document.getElementById('totalContratos').textContent   = totalContratos;
+  document.getElementById('contratosAtivos').textContent  = contratosAtivos;
+  document.getElementById('contratosVencendo').textContent= contratosVencendo;
+  document.getElementById('contratosEstouro').textContent = contratosEstouro;
+}
+
+function checkAlerts() {
+  const div = document.getElementById('alerts');
+  if (!div) return;
+  div.innerHTML = '';
+
+  const vencendo = contratos.filter(c => c.ativo !== false && Math.ceil((new Date(c.dataVencimento)-new Date())/(1000*60*60*24)) <= 30 && Math.ceil((new Date(c.dataVencimento)-new Date())/(1000*60*60*24)) > 0);
+  if (vencendo.length) {
+    const el = document.createElement('div');
+    el.className = 'alert alert-warning';
+    el.innerHTML = `<strong>⚠️ Atenção!</strong> ${vencendo.length} contrato(s) vencendo nos próximos 30 dias:
+      ${vencendo.map(c => `<br>• ${c.numero} - ${c.fornecedor} (vence em ${Math.ceil((new Date(c.dataVencimento)-new Date())/(1000*60*60*24))} dias)`).join('')}`;
+    div.appendChild(el);
   }
 
-  res.json(r.rows[0]);
-});
-
-/* =============================================================================
-   ANEXOS
-   Tabela: contrato_arquivos (id, contrato_id, nome_arquivo, url, criado_em)
-============================================================================= */
-
-app.get('/contratos/:id/arquivos', async (req, res) => {
-  const r = await pool.query(
-    'select id, contrato_id, nome_arquivo, url, criado_em from contrato_arquivos where contrato_id=$1 order by id desc',
-    [req.params.id]
-  );
-
-  // se abrir direto no browser, exibir uma listinha
-  if (req.headers.accept && req.headers.accept.includes('text/html')) {
-    const html = `
-      <!doctype html><meta charset="utf-8">
-      <title>Anexos do Contrato ${req.params.id}</title>
-      <h3>Anexos do Contrato #${req.params.id}</h3>
-      <ul>
-        ${r.rows.map(a=>`<li><a href="${a.url}" target="_blank" rel="noopener">${a.nome_arquivo}</a></li>`).join('') || '<li>Nenhum anexo</li>'}
-      </ul>`;
-    res.send(html);
-    return;
+  const estouro = contratos.filter(c => (Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100 > 100);
+  if (estouro.length) {
+    const el = document.createElement('div');
+    el.className = 'alert alert-danger';
+    el.innerHTML = `<strong>🚨 Crítico!</strong> ${estouro.length} contrato(s) com estouro de saldo:
+      ${estouro.map(c => `<br>• ${c.numero} - ${c.fornecedor} (${((Number(c.saldoUtilizado)/Number(c.valorTotal))*100).toFixed(1)}% utilizado)`).join('')}`;
+    div.appendChild(el);
   }
 
-  res.json(r.rows);
-});
-
-app.post('/contratos/:id/arquivos', upload.array('arquivos', 10), async (req, res) => {
-  const files = req.files || [];
-  const id = req.params.id;
-  const inserted = [];
-  for (const f of files) {
-    const url = `/files/${f.filename}`;
-    const nome = f.originalname;
-    const r = await pool.query(
-      'insert into contrato_arquivos (contrato_id, nome_arquivo, url, criado_em) values ($1,$2,$3, now()) returning *',
-      [id, nome, url]
-    );
-    inserted.push(r.rows[0]);
+  const saldoBaixo = contratos.filter(c => {
+    const p = (Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100;
+    return p > 90 && p <= 100;
+  });
+  if (saldoBaixo.length) {
+    const el = document.createElement('div');
+    el.className = 'alert alert-warning';
+    el.innerHTML = `<strong>⚠️ Saldo Baixo!</strong> ${saldoBaixo.length} contrato(s) com saldo próximo do limite:
+      ${saldoBaixo.map(c => `<br>• ${c.numero} - ${c.fornecedor} (${((Number(c.saldoUtilizado)/Number(c.valorTotal))*100).toFixed(1)}% utilizado)`).join('')}`;
+    div.appendChild(el);
   }
-  res.json({ ok: true, files: inserted });
-});
+}
 
-app.delete('/contratos/:id/arquivos/:arqId', async (req, res) => {
-  const r = await pool.query('delete from contrato_arquivos where id=$1 returning url', [req.params.arqId]);
-  const url = r.rows[0]?.url;
-  if (url) {
-    const file = path.join(UP_DIR, path.basename(url));
-    if (fs.existsSync(file)) fs.unlinkSync(file);
+/***********************
+ * VISUALIZAR CONTRATO
+ ***********************/
+async function viewContrato(id){
+  const c = contratos.find(x => x.id === id);
+  if(!c) return;
+
+  // dados
+  const centro = centrosCusto.find(k => k.id === c.centroCusto);
+  const conta  = contasContabeis.find(k => k.id === c.contaContabil);
+  const diasVenc = Math.ceil((new Date(c.dataVencimento) - new Date()) / (1000*60*60*24));
+  let statusText = 'Ativo';
+  if (c.ativo === false) statusText = 'Inativo';
+  else if (diasVenc <= 0) statusText = 'Vencido';
+  else if (diasVenc <= 30) statusText = 'Vencendo';
+  const el = (id)=>document.getElementById(id);
+  el('viewNumero').textContent = c.numero;
+  el('viewFornecedor').textContent = c.fornecedor;
+  el('viewStatus').textContent = statusText;
+  el('viewCentro').textContent = centro ? `${centro.codigo} - ${centro.nome}` : 'N/A';
+  el('viewConta').textContent  = conta ? `${conta.codigo} - ${conta.descricao}` : 'N/A';
+  el('viewAtivo').textContent  = c.ativo ? 'Sim' : 'Não';
+  el('viewValor').textContent  = 'R$ ' + toBRL(c.valorTotal);
+  el('viewSaldo').textContent  = 'R$ ' + toBRL(c.saldoUtilizado);
+  el('viewVenc').textContent   = new Date(c.dataVencimento).toLocaleDateString('pt-BR');
+  el('viewObs').textContent    = c.observacoes || '-';
+
+  // anexos
+  const filesDiv = el('viewFiles');
+  filesDiv.innerHTML = 'Carregando...';
+  try{
+    const lista = await apiGet(`/contratos/${id}/arquivos`);
+    if(!lista.length){ filesDiv.textContent = 'Sem anexos.'; }
+    else{
+      filesDiv.innerHTML = '';
+      lista.forEach(a=>{
+        const link = document.createElement('a');
+        link.href = `${API}${a.url}`;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'btn';
+        link.textContent = a.nome_arquivo || 'Arquivo';
+        filesDiv.appendChild(link);
+      });
+    }
+  }catch(_){
+    filesDiv.textContent = 'Falha ao carregar anexos.';
   }
-  res.json({ ok: true });
+
+  openModal('viewModal');
+}
+
+/***********************
+ * CRUD CONTRATOS
+ ***********************/
+function editContrato(id) {
+  const c = contratos.find(x => x.id === id);
+  if (!c) return;
+  editingId = id;
+  document.getElementById('contratoModalTitle').textContent = 'Editar Contrato';
+  document.getElementById('numeroContrato').value       = c.numero;
+  document.getElementById('fornecedor').value           = c.fornecedor;
+  document.getElementById('centroCustoContrato').value  = c.centroCusto;
+  document.getElementById('contaContabil').value        = c.contaContabil;
+  document.getElementById('valorTotal').value           = Number(c.valorTotal);
+  document.getElementById('saldoUtilizado').value       = Number(c.saldoUtilizado);
+  document.getElementById('dataInicio').value           = c.dataInicio?.slice(0,10) || '';
+  document.getElementById('dataVencimento').value       = c.dataVencimento?.slice(0,10) || '';
+  document.getElementById('observacoes').value          = c.observacoes || '';
+  document.getElementById('ativo').value                = (c.ativo === false ? 'false' : 'true');
+  openModal('contratoModal');
+}
+
+async function deleteContrato(id) {
+  if (!confirm('Tem certeza que deseja excluir este contrato?')) return;
+  await apiSend(`/contratos/${id}`, 'DELETE');
+  contratos = await apiGet(buildContratosQueryFromFilters());
+  updateTables(); updateStats(); checkAlerts();
+  showAlert('Contrato excluído com sucesso!', 'success');
+}
+
+/***********************
+ * CRUD CENTROS & CONTAS
+ ***********************/
+function editCentro(id) {
+  const c = centrosCusto.find(x => x.id === id);
+  if (!c) return;
+  editingId = id;
+  document.getElementById('centroModalTitle').textContent = 'Editar Centro de Custo';
+  document.getElementById('codigoCentro').value = c.codigo;
+  document.getElementById('nomeCentro').value  = c.nome;
+  document.getElementById('responsavel').value = c.responsavel;
+  document.getElementById('emailResponsavel').value = c.email;
+  openModal('centroModal');
+}
+async function deleteCentro(id) {
+  const usados = contratos.filter(c => c.centroCusto === id);
+  if (usados.length > 0) { alert(`Não é possível excluir: usado por ${usados.length} contrato(s).`); return; }
+  if (!confirm('Excluir centro de custo?')) return;
+  await apiSend(`/centros/${id}`, 'DELETE');
+  centrosCusto = await apiGet('/centros');
+  populateFiltroCentro();
+  updateTables();
+  showAlert('Centro de custo excluído!', 'success');
+}
+
+function editConta(id) {
+  const c = contasContabeis.find(x => x.id === id);
+  if (!c) return;
+  editingId = id;
+  document.getElementById('contaModalTitle').textContent = 'Editar Conta Contábil';
+  document.getElementById('codigoConta').value = c.codigo;
+  document.getElementById('descricaoConta').value = c.descricao;
+  document.getElementById('tipoConta').value = c.tipo;
+  openModal('contaModal');
+}
+async function deleteConta(id) {
+  const usados = contratos.filter(c => c.contaContabil === id);
+  if (usados.length > 0) { alert(`Não é possível excluir: usada por ${usados.length} contrato(s).`); return; }
+  if (!confirm('Excluir conta contábil?')) return;
+  await apiSend(`/contas/${id}`, 'DELETE');
+  contasContabeis = await apiGet('/contas');
+  updateTables();
+  showAlert('Conta contábil excluída!', 'success');
+}
+
+/***********************
+ * MOVIMENTAÇÕES
+ ***********************/
+function openMovModal(contratoId) {
+  document.getElementById('movContratoId').value = contratoId;
+  document.getElementById('movTipo').value  = 'saida';
+  document.getElementById('movValor').value = '';
+  document.getElementById('movData').value  = new Date().toISOString().slice(0,10);
+  document.getElementById('movObs').value   = '';
+  openModal('movModal');
+}
+document.getElementById('movForm')?.addEventListener('submit', async function(e){
+  e.preventDefault();
+  const id = document.getElementById('movContratoId').value;
+  const tipoTela = document.getElementById('movTipo').value; // 'saida' | 'ajuste'
+  const payload = {
+    tipo: (tipoTela === 'saida' ? 'PAGAMENTO' : 'AJUSTE'),
+    observacao: document.getElementById('movObs').value || null,
+    valorDelta: parseFloat(document.getElementById('movValor').value) || 0
+  };
+  try {
+    await apiSend(`/contratos/${id}/movimentos`, 'POST', payload);
+    contratos = await apiGet(buildContratosQueryFromFilters());
+    updateTables(); updateStats(); checkAlerts();
+    closeModal('movModal');
+    showAlert('Movimentação lançada!', 'success');
+  } catch (err) {
+    console.error(err);
+    showAlert('Erro ao lançar movimentação.', 'danger');
+  }
 });
 
-// ===== start =====
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log('API ouvindo na porta', PORT));
+/***********************
+ * ALERTAS TEMPORÁRIOS
+ ***********************/
+function showAlert(message, type = 'success') {
+  const container = document.getElementById('alerts');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.className = `alert alert-${type}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+/***********************
+ * SUBMISSÃO DE FORMULÁRIOS
+ ***********************/
+document.getElementById('contratoForm')?.addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const ativo = document.getElementById('ativo').value === 'true';
+  const data = {
+    numero: document.getElementById('numeroContrato').value,
+    fornecedor: document.getElementById('fornecedor').value,
+    centroCusto: parseInt(document.getElementById('centroCustoContrato').value),
+    contaContabil: parseInt(document.getElementById('contaContabil').value),
+    valorTotal: parseFloat(document.getElementById('valorTotal').value),
+    saldoUtilizado: parseFloat(document.getElementById('saldoUtilizado').value) || 0,
+    dataInicio: document.getElementById('dataInicio').value,
+    dataVencimento: document.getElementById('dataVencimento').value,
+    observacoes: document.getElementById('observacoes').value || null,
+    ativo
+  };
+
+  const fileInput = document.getElementById('anexo');
+  const hasFile = fileInput && fileInput.files && fileInput.files[0];
+
+  try {
+    let saved;
+    if (editingId) {
+      saved = await apiSend(`/contratos/${editingId}`, 'PUT', data);
+      showAlert('Contrato atualizado com sucesso!', 'success');
+    } else {
+      saved = await apiSend('/contratos', 'POST', data);
+      showAlert('Contrato criado com sucesso!', 'success');
+    }
+
+    if (hasFile && (saved?.id || saved?.ok)) {
+      const fd = new FormData();
+      fd.append('file', fileInput.files[0]);
+      const id = editingId || saved.id;
+      try { await apiSendForm(`/contratos/${id}/anexos`, fd); } catch (_) {}
+    }
+
+    contratos = await apiGet(buildContratosQueryFromFilters());
+    updateTables(); updateStats(); checkAlerts();
+    closeModal('contratoModal');
+  } catch (err) {
+    console.error(err);
+    showAlert('Erro ao salvar contrato.', 'danger');
+  }
+});
+
+document.getElementById('centroForm')?.addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const data = {
+    codigo: document.getElementById('codigoCentro').value,
+    nome: document.getElementById('nomeCentro').value,
+    responsavel: document.getElementById('responsavel').value,
+    email: document.getElementById('emailResponsavel').value
+  };
+
+  try {
+    if (editingId) {
+      await apiSend(`/centros/${editingId}`, 'PUT', data);
+      showAlert('Centro de custo atualizado!', 'success');
+    } else {
+      await apiSend('/centros', 'POST', data);
+      showAlert('Centro de custo criado!', 'success');
+    }
+    centrosCusto = await apiGet('/centros');
+    populateFiltroCentro();
+    updateTables();
+    closeModal('centroModal');
+  } catch (err) {
+    console.error(err);
+    showAlert('Erro ao salvar centro de custo.', 'danger');
+  }
+});
+
+document.getElementById('contaForm')?.addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const data = {
+    codigo: document.getElementById('codigoConta').value,
+    descricao: document.getElementById('descricaoConta').value,
+    tipo: document.getElementById('tipoConta').value
+  };
+
+  try {
+    if (editingId) {
+      await apiSend(`/contas/${editingId}`, 'PUT', data);
+      showAlert('Conta contábil atualizada!', 'success');
+    } else {
+      await apiSend('/contas', 'POST', data);
+      showAlert('Conta contábil criada!', 'success');
+    }
+    contasContabeis = await apiGet('/contas');
+    updateTables();
+    closeModal('contaModal');
+  } catch (err) {
+    console.error(err);
+    showAlert('Erro ao salvar conta contábil.', 'danger');
+  }
+});
+
+/***********************
+ * EXPORE FUNÇÕES
+ ***********************/
+window.showTab = showTab;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.viewContrato = viewContrato;
+window.editContrato = editContrato;
+window.deleteContrato = deleteContrato;
+window.editCentro   = editCentro;
+window.deleteCentro = deleteCentro;
+window.editConta    = editConta;
+window.deleteConta  = deleteConta;
+window.openMovModal = openMovModal;
