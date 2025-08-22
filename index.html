@@ -306,81 +306,95 @@
       </div>
       <form id="contratoForm">
         <div class="alert" style="display:none" id="msgContrato"></div>
-
-        <div class="form-section">
-          <h3>Dados Básicos</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Número do Contrato *</label>
-              <input id="numeroContrato" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label>Fornecedor *</label>
-              <input id="fornecedor" class="form-control" required />
-            </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <div>
+            <label>Número do Contrato *</label>
+            <input id="numeroContrato" class="form-control" required />
+          </div>
+          <div>
+            <label>Fornecedor *</label>
+            <input id="fornecedor" class="form-control" required />
+          </div>
+          <div>
+            <label>Centro de Custo *</label>
+            <select id="centroCustoContrato" class="form-control" required>
+              <option value="">Selecione</option>
+            </select>
+          </div>
+          <div>
+            <label>Conta Contábil *</label>
+            <select id="contaContabil" class="form-control" required>
+              <option value="">Selecione</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor Total (R$) *</label>
+            <input id="valorTotal" type="number" step="0.01" class="form-control" required />
+          </div>
+          <div>
+            <label>Saldo Utilizado (R$)</label>
+            <input id="saldoUtilizado" type="number" step="0.01" class="form-control" value="0" />
+          </div>
+          <div>
+            <label>Data de Início *</label>
+            <input id="dataInicio" type="date" class="form-control" required />
+          </div>
+          <div>
+            <label>Data de Vencimento *</label>
+            <input id="dataVencimento" type="date" class="form-control" required />
+          </div>
+          <div style="grid-column:1/-1">
+            <label>Observações</label>
+            <textarea id="observacoes" rows="3" class="form-control"></textarea>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="contratoAtivo" checked />
+            <label for="contratoAtivo">Contrato ativo</label>
+          </div>
+          <div style="grid-column:1/-1">
+            <label>Anexos do contrato</label>
+            <input id="anexosContrato" type="file" class="form-control" multiple />
           </div>
         </div>
-
-        <div class="form-section">
-          <h3>Contabilidade</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Centro de Custo *</label>
-              <select id="centroCustoContrato" class="form-control" required>
-                <option value="">Selecione</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Conta Contábil *</label>
-              <select id="contaContabil" class="form-control" required>
-                <option value="">Selecione</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Valor Total (R$) *</label>
-              <input id="valorTotal" type="number" step="0.01" class="form-control" required />
-            </div>
-            <div class="form-group form-group--full">
-              <label>Saldo Utilizado (R$)</label>
-              <input id="saldoUtilizado" type="number" step="0.01" class="form-control" value="0" placeholder="Informe o valor já utilizado" />
-              <small class="field-desc">Valor já utilizado do contrato</small>
-            </div>
-      </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+          <button type="button" class="btn ghost" onclick="closeModal('contratoModal')">Cancelar</button>
+          <button type="submit" class="btn" id="btnSalvarContrato">Salvar</button>
         </div>
+      </form>
+    </div>
+  </div>
 
-        <div class="form-section">
-          <h3>Prazos</h3>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Data de Início *</label>
-              <input id="dataInicio" type="date" class="form-control" required />
-            </div>
-            <div class="form-group">
-              <label>Data de Vencimento *</label>
-              <input id="dataVencimento" type="date" class="form-control" required />
-            </div>
+  <!-- Modal MOVIMENTOS -->
+  <div id="movModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Movimentações do Contrato</h2>
+        <button class="close" onclick="closeModal('movModal')">&times;</button>
       </div>
-        </div>
 
-        <div class="form-section">
-          <h3>Status & Anexos</h3>
-          <div class="form-grid">
-            <div class="form-group form-group--full">
-              <label>Observações</label>
-              <textarea id="observacoes" rows="3" class="form-control"></textarea>
-            </div>
-            <div class="form-group">
-              <div style="display:flex;align-items:center;gap:8px">
-                <input type="checkbox" id="contratoAtivo" checked />
-                <label for="contratoAtivo">Contrato ativo</label>
-              </div>
-            </div>
-            <div class="form-group form-group--full">
-              <label>Anexos do contrato</label>
-              <input id="anexosContrato" type="file" class="form-control" multiple />
-              <small class="field-desc">Adicione arquivos relacionados ao contrato</small>
-              <div id="anexosPreview" class="file-preview"></div>
-            </div>
+      <div class="alert" id="msgMov" style="display:none"></div>
+
+      <form id="movForm">
+        <input type="hidden" id="movContratoId" />
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
+          <div>
+            <label>Tipo</label>
+            <select id="movTipo" class="form-control">
+              <option value="saida">Pagamento (Saída)</option>
+              <option value="ajuste">Ajuste de Saldo</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor (R$)</label>
+            <input id="movValor" type="number" step="0.01" class="form-control" required />
+          </div>
+          <div>
+            <label>Data</label>
+            <input id="movData" type="date" class="form-control" />
+          </div>
+          <div style="grid-column:1/-1">
+            <label>Observações</label>
+            <input id="movObs" class="form-control" />
           </div>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px">
