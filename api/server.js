@@ -1,3 +1,4 @@
+// server.js
 require('dotenv').config();
 
 const express = require('express');
@@ -9,7 +10,7 @@ const fs = require('fs');
 
 const app = express();
 
-/* ================= CORS ================= */
+/* ===================== CORS ===================== */
 const allowList = (process.env.CORS_ORIGIN || '')
   .split(',')
   .map(s => s.trim())
@@ -27,50 +28,26 @@ app.use(
 
 app.use(express.json());
 
-/* ========== Postgres (SSL por ambiente) ========== */
+/* =========== Postgres (SSL só em produção) =========== */
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-/* -------- uploads (anexos) -------- */
+/* =========== Uploads (anexos) =========== */
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
 const upload = multer({ dest: uploadDir });
 app.use('/files', express.static(uploadDir));
 
-/* ---- bootstrap de esquema (idempotente) ---- */
-async function ensureSchema() {
-  await pool.query(`
-    ALTER TABLE contratos
-      ADD COLUMN IF NOT EXISTS ativo boolean NOT NULL DEFAULT true;
-
-    ALTER TABLE contratos
-      ALTER COLUMN saldo_utilizado SET DEFAULT 0;
-
-    CREATE TABLE IF NOT EXISTS contrato_movimentos (
-      id           SERIAL PRIMARY KEY,
-      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
-      tipo         TEXT NOT NULL,  -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
-      observacao   TEXT,
-      valor        NUMERIC DEFAULT 0,
-      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_contrato_movimentos_contrato_id
-      ON contrato_movimentos (contrato_id);
-
-    CREATE TABLE IF NOT EXISTS contrato_arquivos (
-      id           SERIAL PRIMARY KEY,
-      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
-      nome_arquivo TEXT NOT NULL,
-      url          TEXT NOT NULL,
-      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_contrato_arquivos_contrato_id
-      ON contrato_arquivos (contrato_id);
-  `);
+/* =========== Helpers comuns =========== */
+function httpErr(res, err, status = 500) {
+  console.error(err);
+  res.status(status).json({
+    error: 'Erro interno',
+    detail: err.detail || err.message || String(err),
+  });
 }
 
 async function pingDB() {
@@ -78,16 +55,41 @@ async function pingDB() {
   return rows[0].ok === 1;
 }
 
-/* ========== Helpers ========== */
-function httpErr(res, err, status = 500) {
-  console.error(err);
-  return res.status(status).json({
-    error: 'Erro interno',
-    detail: err.detail || err.message || String(err),
-  });
+/* =========== Bootstrap de esquema (idempotente) =========== */
+async function ensureSchema() {
+  await pool.query(`
+    -- contratos: garantir flag ativo e default do saldo
+    ALTER TABLE contratos
+      ADD COLUMN IF NOT EXISTS ativo boolean NOT NULL DEFAULT true;
+    ALTER TABLE contratos
+      ALTER COLUMN saldo_utilizado SET DEFAULT 0;
+
+    -- movimentações
+    CREATE TABLE IF NOT EXISTS contrato_movimentos (
+      id           SERIAL PRIMARY KEY,
+      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
+      tipo         TEXT NOT NULL,    -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
+      observacao   TEXT,
+      valor        NUMERIC DEFAULT 0,
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_contrato_movimentos_contrato_id
+      ON contrato_movimentos (contrato_id);
+
+    -- anexos
+    CREATE TABLE IF NOT EXISTS contrato_arquivos (
+      id           SERIAL PRIMARY KEY,
+      contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
+      nome_arquivo TEXT NOT NULL,
+      url          TEXT NOT NULL,
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_contrato_arquivos_contrato_id
+      ON contrato_arquivos (contrato_id);
+  `);
 }
 
-/* ========== Healthcheck ========== */
+/* =========== Healthcheck =========== */
 app.get('/health', async (_req, res) => {
   try {
     await pingDB();
@@ -236,7 +238,7 @@ app.delete('/contas/:id', async (req, res) => {
 /* ============================   CONTRATOS   ========================= */
 /* =================================================================== */
 
-/** constrói WHERE e params para /contratos e /relatorios/contratos */
+/* monta WHERE de filtros */
 function buildWhere(req) {
   const q = {
     ativo: req.query.ativo,
@@ -245,7 +247,7 @@ function buildWhere(req) {
     conta: req.query.conta,
     fornecedor: req.query.fornecedor,
     q: req.query.q,
-    vencimentoDe: req.query.vencimentoDe || req.query.inicioDesde, // compat
+    vencimentoDe: req.query.vencimentoDe || req.query.inicioDesde,
     vencimentoAte: req.query.vencimentoAte,
   };
 
@@ -299,7 +301,7 @@ function buildWhere(req) {
   return { whereSQL: where.length ? `WHERE ${where.join(' AND ')}` : '', params };
 }
 
-/** GET /contratos (lista + filtros) */
+/* LISTAR */
 app.get('/contratos', async (req, res) => {
   try {
     const { whereSQL, params } = buildWhere(req);
@@ -335,7 +337,7 @@ app.get('/contratos', async (req, res) => {
   }
 });
 
-/** POST /contratos */
+/* CRIAR */
 app.post('/contratos', async (req, res) => {
   try {
     const {
@@ -358,14 +360,13 @@ app.post('/contratos', async (req, res) => {
         typeof ativo === 'boolean' ? ativo : true,
       ]
     );
-
     res.status(201).json({ ok: true, id: ins.rows[0].id });
   } catch (err) {
     httpErr(res, err);
   }
 });
 
-/** PUT /contratos/:id */
+/* ATUALIZAR */
 app.put('/contratos/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -390,14 +391,13 @@ app.put('/contratos/:id', async (req, res) => {
         id,
       ]
     );
-
     res.json({ ok: true });
   } catch (err) {
     httpErr(res, err);
   }
 });
 
-/** DELETE /contratos/:id */
+/* EXCLUIR */
 app.delete('/contratos/:id', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -408,7 +408,7 @@ app.delete('/contratos/:id', async (req, res) => {
   }
 });
 
-/* --------- Ações de status --------- */
+/* =========== Ações de status (inativar/ativar/renovar) =========== */
 app.post('/contratos/:id/inativar', async (req, res) => {
   const id = Number(req.params.id);
   const { motivo } = req.body || {};
@@ -484,13 +484,13 @@ app.post('/contratos/:id/renovar', async (req, res) => {
   }
 });
 
-/* --------- Movimentações --------- */
-const getMovements = async (req, res) => {
+/* =========== Movimentações =========== */
+app.get('/contratos/:id/movimentos', async (req, res) => {
   try {
     const id = Number(req.params.id);
     const { rows } = await pool.query(
       `SELECT id, contrato_id, tipo, observacao, valor AS "valorDelta",
-               criado_em AS "criadoEm"
+              criado_em AS "criadoEm"
          FROM contrato_movimentos
         WHERE contrato_id = $1
         ORDER BY id DESC`,
@@ -500,9 +500,9 @@ const getMovements = async (req, res) => {
   } catch (err) {
     httpErr(res, err);
   }
-};
+});
 
-const postMovement = async (req, res) => {
+app.post('/contratos/:id/movimentos', async (req, res) => {
   const id = Number(req.params.id);
   const { tipo, observacao, valorDelta } = req.body || {};
   if (!tipo) return res.status(400).json({ error: 'Campo "tipo" é obrigatório' });
@@ -533,15 +533,17 @@ const postMovement = async (req, res) => {
   } finally {
     client.release();
   }
-};
+});
 
-app.get('/contratos/:id/movimentos', getMovements);
-app.post('/contratos/:id/movimentos', postMovement);
-/* compat com rotas antigas */
-app.get('/contratos/:id/movimentacoes', getMovements);
-app.post('/contratos/:id/movimentacoes', postMovement);
+/* Rotas compatíveis com nomes antigos */
+app.get('/contratos/:id/movimentacoes', (req, res) => app._router.handle(
+  { ...req, url: `/contratos/${req.params.id}/movimentos`, method: 'GET' }, res
+));
+app.post('/contratos/:id/movimentacoes', (req, res) => app._router.handle(
+  { ...req, url: `/contratos/${req.params.id}/movimentos`, method: 'POST' }, res
+));
 
-/* --------- Upload de anexo --------- */
+/* =========== Upload e listagem de anexos =========== */
 app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -568,7 +570,6 @@ app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
   }
 });
 
-/* --------- Lista de anexos --------- */
 app.get('/contratos/:id/arquivos', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -585,7 +586,7 @@ app.get('/contratos/:id/arquivos', async (req, res) => {
   }
 });
 
-/* --------- Relatório CSV --------- */
+/* =========== Relatório CSV =========== */
 app.get('/relatorios/contratos', async (req, res) => {
   try {
     const { whereSQL, params } = buildWhere(req);
@@ -610,11 +611,11 @@ app.get('/relatorios/contratos', async (req, res) => {
           r.id,
           r.numero ?? '',
           r.fornecedor ?? '',
-          r.valor_total ?? 0,
-          r.saldo_utilizado ?? 0,
-          r.data_inicio ? new Date(r.data_inicio).toISOString().slice(0, 10) : '',
-          r.data_fim ? new Date(r.data_fim).toISOString().slice(0, 10) : '',
-          r.ativo ? 'true' : 'false',
+          String(r.valor_total ?? '').replace('.', ','),
+          String(r.saldo_utilizado ?? '').replace('.', ','),
+          r.data_inicio ?? '',
+          r.data_fim ?? '',
+          r.ativo ? 'SIM' : 'NAO',
         ].join(';')
       ),
     ].join('\n');
@@ -627,16 +628,12 @@ app.get('/relatorios/contratos', async (req, res) => {
   }
 });
 
-/* ========== 404 padrão ========== */
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Rota não encontrada' });
-});
+/* =========== Start =========== */
+const PORT = process.env.PORT || 3000;
 
-/* ========== Start ========== */
-const PORT = process.env.PORT || 8080;
 ensureSchema()
   .then(() => {
-    app.listen(PORT, () => console.log(`API rodando na porta ${PORT}`));
+    app.listen(PORT, () => console.log(`API on http://localhost:${PORT}`));
   })
   .catch(err => {
     console.error('Falha ao iniciar por erro de schema:', err);

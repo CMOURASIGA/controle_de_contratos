@@ -146,6 +146,18 @@
     .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
     .close{background:none;border:none;font-size:22px;color:var(--text-secondary);cursor:pointer}
 
+    /* Estilos dos botões de ação na tabela */
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .action-buttons .btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      min-width: auto;
+    }
+
     @media(max-width:768px){
       .stats-grid{grid-template-columns:repeat(2,1fr)}
       .form-control{min-width:140px}
@@ -228,7 +240,7 @@
                 <th>Saldo Utilizado</th>
                 <th>Vencimento</th>
                 <th>Status</th>
-                <th style="width:220px">Ações</th>
+                <th style="width:300px">Ações</th>
               </tr>
             </thead>
             <tbody><!-- preenchido via app.js --></tbody>
@@ -285,7 +297,7 @@
     </div>
   </div>
 
-  <!-- Modal CONTRATO esperado pelo app.js -->
+  <!-- Modal CONTRATO -->
   <div id="contratoModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -346,15 +358,13 @@
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
           <button type="button" class="btn ghost" onclick="closeModal('contratoModal')">Cancelar</button>
-          <button type="button" class="btn warn" id="btnRenovarContrato" style="display:none">Renovar</button>
-          <button type="button" class="btn danger" id="btnInativar" style="display:none">Inativar</button>
           <button type="submit" class="btn" id="btnSalvarContrato">Salvar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal MOVIMENTOS esperado pelo app.js -->
+  <!-- Modal MOVIMENTOS -->
   <div id="movModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -364,35 +374,34 @@
 
       <div class="alert" id="msgMov" style="display:none"></div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
-        <div>
-          <label>Tipo</label>
-          <select id="movTipo" class="form-control">
-            <option value="ATUALIZACAO">Atualização</option>
-            <option value="PAGAMENTO">Pagamento</option>
-            <option value="REAJUSTE">Reajuste</option>
-            <option value="RENOVACAO">Renovação</option>
-            <option value="CANCELAMENTO">Cancelamento</option>
-          </select>
+      <form id="movForm">
+        <input type="hidden" id="movContratoId" />
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px">
+          <div>
+            <label>Tipo</label>
+            <select id="movTipo" class="form-control">
+              <option value="saida">Pagamento (Saída)</option>
+              <option value="ajuste">Ajuste de Saldo</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor (R$)</label>
+            <input id="movValor" type="number" step="0.01" class="form-control" required />
+          </div>
+          <div>
+            <label>Data</label>
+            <input id="movData" type="date" class="form-control" />
+          </div>
+          <div style="grid-column:1/-1">
+            <label>Observações</label>
+            <input id="movObs" class="form-control" />
+          </div>
         </div>
-        <div>
-          <label>Valor (R$)</label>
-          <input id="movValor" type="number" step="0.01" class="form-control" />
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px">
+          <button type="button" class="btn ghost" onclick="closeModal('movModal')">Fechar</button>
+          <button type="submit" class="btn success">Aplicar Movimentação</button>
         </div>
-        <div>
-          <label>Data</label>
-          <input id="movData" type="date" class="form-control" />
-        </div>
-        <div style="grid-column:1/-1">
-          <label>Observações</label>
-          <input id="movObs" class="form-control" />
-        </div>
-      </div>
-
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px">
-        <button class="btn ghost" id="btnLimparMov">Limpar</button>
-        <button class="btn success" id="btnAddMov">Aplicar</button>
-      </div>
+      </form>
 
       <div class="table-container">
         <table>
@@ -410,7 +419,7 @@
     </div>
   </div>
 
-  <!-- Modais simples para Centros e Contas (mantidos como no app.js antigo) -->
+  <!-- Modal CENTRO -->
   <div id="centroModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -445,6 +454,7 @@
     </div>
   </div>
 
+  <!-- Modal CONTA -->
   <div id="contaModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
