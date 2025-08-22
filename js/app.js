@@ -89,6 +89,12 @@ function setupEventListeners() {
   document.getElementById('centroForm')?.addEventListener('submit', handleCentroSubmit);
   document.getElementById('contaForm')?.addEventListener('submit', handleContaSubmit);
   document.getElementById('movForm')?.addEventListener('submit', handleMovSubmit);
+  
+  // Validação e pré-visualização de anexos
+  document.getElementById('anexosContrato')?.addEventListener('change', updateAnexosPreview);
+  document.querySelectorAll('#contratoForm input, #contratoForm select, #contratoForm textarea').forEach(el => {
+    el.addEventListener('input', () => el.classList.remove('invalid'));
+  });
 }
 
 async function initializeData() {
