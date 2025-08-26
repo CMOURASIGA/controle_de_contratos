@@ -630,12 +630,12 @@ app.get('/dashboard/metrics', async (_req, res) => {
       GROUP BY 1
     `;
     const statusRes = await pool.query(statusSql);
-    const statusCount = {};
+    const statusContratos = {};
     statusRes.rows.forEach(r => {
-      statusCount[r.status] = Number(r.total);
+      statusContratos[r.status] = Number(r.total);
     });
 
-    const pagamentosSql = `
+    const evolucaoSql = `
       SELECT to_char(date_trunc('month', criado_em), 'YYYY-MM') AS mes,
              SUM(valor) AS valor
         FROM contrato_movimentos
@@ -643,8 +643,8 @@ app.get('/dashboard/metrics', async (_req, res) => {
        GROUP BY 1
        ORDER BY 1
     `;
-    const pagRes = await pool.query(pagamentosSql);
-    const pagamentosMensais = pagRes.rows.map(r => ({
+    const pagRes = await pool.query(evolucaoSql);
+    const evolucaoPagamentos = pagRes.rows.map(r => ({
       mes: r.mes,
       valor: Number(r.valor || 0),
     }));
@@ -656,21 +656,21 @@ app.get('/dashboard/metrics', async (_req, res) => {
        ORDER BY fornecedor
     `;
     const fornRes = await pool.query(fornecedorSql);
-    const valorPorFornecedor = fornRes.rows.map(r => ({
+    const topFornecedores = fornRes.rows.map(r => ({
       fornecedor: r.fornecedor,
-      valor: Number(r.valor || 0),
+      total: Number(r.valor || 0),
     }));
 
     res.json({
       // Estrutura pensada para gráficos:
       // {
-      //   statusCount: { ATIVO: 10, VENCIDO: 2, ... },
-      //   pagamentosMensais: [ { mes: '2024-01', valor: 123.45 }, ... ],
-      //   valorPorFornecedor: [ { fornecedor: 'Acme', valor: 999.99 }, ... ]
+      //   statusContratos: { ATIVO: 10, VENCIDO: 2, ... },
+      //   evolucaoPagamentos: [ { mes: '2024-01', valor: 123.45 }, ... ],
+      //   topFornecedores: [ { fornecedor: 'Acme', total: 999.99 }, ... ]
       // }
-      statusCount,
-      pagamentosMensais,
-      valorPorFornecedor,
+      statusContratos,
+      evolucaoPagamentos,
+      topFornecedores,
     });
   } catch (err) {
     httpErr(res, err);
