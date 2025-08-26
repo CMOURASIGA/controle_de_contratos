@@ -614,6 +614,68 @@ app.delete('/contratos/:id/arquivos/:arquivoId', async (req, res) => {
     httpErr(res, err);
   }
 });
+/* ======================== DASHBOARD ======================== */
+app.get('/dashboard/metrics', async (_req, res) => {
+  try {
+    const statusSql = `
+      SELECT
+        CASE
+          WHEN NOT c.ativo THEN 'INATIVO'
+          WHEN c.data_fim < CURRENT_DATE THEN 'VENCIDO'
+          WHEN c.data_fim <= CURRENT_DATE + INTERVAL '30 days' THEN 'VENCE_EM_30_DIAS'
+          ELSE 'ATIVO'
+        END AS status,
+        COUNT(*) AS total
+      FROM contratos c
+      GROUP BY 1
+    `;
+    const statusRes = await pool.query(statusSql);
+    const statusCount = {};
+    statusRes.rows.forEach(r => {
+      statusCount[r.status] = Number(r.total);
+    });
+
+    const pagamentosSql = `
+      SELECT to_char(date_trunc('month', criado_em), 'YYYY-MM') AS mes,
+             SUM(valor) AS valor
+        FROM contrato_movimentos
+       WHERE tipo = 'PAGAMENTO'
+       GROUP BY 1
+       ORDER BY 1
+    `;
+    const pagRes = await pool.query(pagamentosSql);
+    const pagamentosMensais = pagRes.rows.map(r => ({
+      mes: r.mes,
+      valor: Number(r.valor || 0),
+    }));
+
+    const fornecedorSql = `
+      SELECT fornecedor, SUM(valor) AS valor
+        FROM contratos
+       GROUP BY fornecedor
+       ORDER BY fornecedor
+    `;
+    const fornRes = await pool.query(fornecedorSql);
+    const valorPorFornecedor = fornRes.rows.map(r => ({
+      fornecedor: r.fornecedor,
+      valor: Number(r.valor || 0),
+    }));
+
+    res.json({
+      // Estrutura pensada para gráficos:
+      // {
+      //   statusCount: { ATIVO: 10, VENCIDO: 2, ... },
+      //   pagamentosMensais: [ { mes: '2024-01', valor: 123.45 }, ... ],
+      //   valorPorFornecedor: [ { fornecedor: 'Acme', valor: 999.99 }, ... ]
+      // }
+      statusCount,
+      pagamentosMensais,
+      valorPorFornecedor,
+    });
+  } catch (err) {
+    httpErr(res, err);
+  }
+});
 /* =========== Relatório CSV =========== */
 app.get('/relatorios/contratos', async (req, res) => {
   try {
