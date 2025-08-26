@@ -107,6 +107,7 @@ function updateAnexosPreview(e) {
 
 async function loadDashboard() {
   try {
+    updateDashboardMetrics();
     const data = await apiGet('/dashboard/metrics');
 
     // Status dos contratos
@@ -556,6 +557,21 @@ function updateContasTable() {
 /***********************
  * ESTATÍSTICAS & ALERTAS
  ***********************/
+function updateDashboardMetrics() {
+  const ativos = contratos.filter(c => c.ativo !== false);
+  const totalContratos = ativos.length;
+  const totalValor = ativos.reduce((sum, c) => sum + Number(c.valorTotal || 0), 0);
+  const totalFornecedores = new Set(ativos.map(c => c.fornecedor)).size;
+
+  const contratosEl = document.getElementById('dashContratos');
+  if (contratosEl) contratosEl.textContent = totalContratos;
+
+  const valorEl = document.getElementById('dashValor');
+  if (valorEl) valorEl.textContent = `R$ ${toBRL(totalValor)}`;
+
+  const fornecedoresEl = document.getElementById('dashFornecedores');
+  if (fornecedoresEl) fornecedoresEl.textContent = totalFornecedores;
+}
 function updateStats() {
   const totalContratos = contratos.length;
   const contratosAtivos = contratos.filter(c => c.ativo !== false && new Date(c.dataVencimento) > new Date()).length;
