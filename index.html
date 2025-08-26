@@ -233,7 +233,7 @@
 
     <!-- Abas -->
     <div class="nav-tabs">
-      <button class="nav-tab" onclick="showTab('dashboard', this)">Dashboard</button>      
+      <button id="tabDashboard" class="nav-tab" onclick="showTab('dashboard', this)">Dashboard</button>     
       <button class="nav-tab active" onclick="showTab('contratos', this)">Contratos</button>
       <button class="nav-tab" onclick="showTab('centros', this)">Centros de Custo</button>
       <button class="nav-tab" onclick="showTab('contas', this)">Contas Contábeis</button>
@@ -256,19 +256,16 @@
         </div>
       </div>
       <div class="card">
+        <h3>Status dos Contratos</h3>
+        <canvas id="chartStatus"></canvas>
+      </div>
+      <div class="card" style="margin-top:16px">
         <h3>Gastos por Mês</h3>
-        <canvas id="chartGastos"></canvas>
+        <canvas id="chartEvolucao"></canvas>
       </div>
       <div class="card" style="margin-top:16px">
         <h3>Top Fornecedores</h3>
-        <div class="table-container">
-          <table id="topFornecedores">
-            <thead>
-              <tr><th>Fornecedor</th><th>Valor</th></tr>
-            </thead>
-            <tbody><!-- preenchido via app.js --></tbody>
-          </table>
-        </div>
+        <canvas id="chartFornecedores"></canvas>
       </div>
     </div>
 
