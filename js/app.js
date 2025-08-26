@@ -8,6 +8,7 @@ let contratos = [];
 let centrosCusto = [];
 let contasContabeis = [];
 let editingId = null;
+let chartStatus, chartEvolucao, chartFornecedores;
 
 /***********************
  * UTIL
@@ -104,6 +105,70 @@ function updateAnexosPreview(e) {
   });
 }
 
+async function loadDashboard() {
+  try {
+    const data = await apiGet('/dashboard/metrics');
+
+    // Status dos contratos
+    const statusCtx = document.getElementById('chartStatus')?.getContext('2d');
+    if (statusCtx) {
+      chartStatus?.destroy();
+      chartStatus = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(data.statusContratos || {}),
+          datasets: [{
+            data: Object.values(data.statusContratos || {}),
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#0ea5e9', '#c4933d']
+          }]
+        }
+      });
+    }
+
+    // Evolução de valores pagos
+    const evoCtx = document.getElementById('chartEvolucao')?.getContext('2d');
+    if (evoCtx) {
+      chartEvolucao?.destroy();
+      chartEvolucao = new Chart(evoCtx, {
+        type: 'line',
+        data: {
+          labels: (data.evolucaoPagamentos || []).map(p => p.mes),
+          datasets: [{
+            label: 'Valores Pagos',
+            data: (data.evolucaoPagamentos || []).map(p => p.valor),
+            borderColor: '#00478a',
+            backgroundColor: 'rgba(0,71,138,0.1)',
+            tension: 0.1
+          }]
+        }
+      });
+    }
+
+    // Top fornecedores
+    const topCtx = document.getElementById('chartFornecedores')?.getContext('2d');
+    if (topCtx) {
+      chartFornecedores?.destroy();
+      chartFornecedores = new Chart(topCtx, {
+        type: 'bar',
+        data: {
+          labels: (data.topFornecedores || []).map(f => f.fornecedor),
+          datasets: [{
+            label: 'Total Pago',
+            data: (data.topFornecedores || []).map(f => f.total),
+            backgroundColor: '#c4933d'
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Erro ao carregar dashboard:', err);
+    showAlert('Erro ao carregar métricas do dashboard.', 'danger');
+  }
+}
+
 function setupEventListeners() {
   // Filtros
   document.getElementById('btnAplicarFiltros')?.addEventListener('click', applyFilters);
@@ -121,6 +186,9 @@ function setupEventListeners() {
   document.getElementById('centroForm')?.addEventListener('submit', handleCentroSubmit);
   document.getElementById('contaForm')?.addEventListener('submit', handleContaSubmit);
   document.getElementById('movForm')?.addEventListener('submit', handleMovSubmit);
+  
+  // Dashboard
+  document.getElementById('tabDashboard')?.addEventListener('click', loadDashboard);
   
   // Validação e pré-visualização de anexos
   document.getElementById('anexosContrato')?.addEventListener('change', updateAnexosPreview);
