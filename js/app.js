@@ -390,7 +390,7 @@ async function baixarRelatorio() {
     const blob = await r.blob();
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `contratos_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `contratos_${formatISO(brNow()).slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -424,7 +424,7 @@ function updateContratosTable() {
   contratos.forEach(contrato => {
     const centro = centrosCusto.find(c => c.id === contrato.centroCusto);
     const pct = contrato.valorTotal ? (Number(contrato.saldoUtilizado) / Number(contrato.valorTotal)) * 100 : 0;
-    const diasVencimento = Math.ceil((new Date(contrato.dataVencimento) - new Date()) / (1000 * 60 * 60 * 24));
+    const diasVencimento = Math.ceil((toBRDate(contrato.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
 
     let statusClass = 'badge-success';
     let statusText = 'Ativo';
@@ -456,7 +456,7 @@ function updateContratosTable() {
           </div>
           <small>${isFinite(pct) ? pct.toFixed(1) : '0.0'}% utilizado</small>
         </td>
-        <td>${contrato.dataVencimento ? new Date(contrato.dataVencimento).toLocaleDateString('pt-BR') : 'N/A'}</td>
+        <td>${contrato.dataVencimento ? formatBR(contrato.dataVencimento) : 'N/A'}</td>
         <td><span class="badge ${statusClass}">${statusText}</span></td>
         <td>
           <div class="action-buttons">
@@ -574,10 +574,10 @@ function updateDashboardMetrics() {
 }
 function updateStats() {
   const totalContratos = contratos.length;
-  const contratosAtivos = contratos.filter(c => c.ativo !== false && new Date(c.dataVencimento) > new Date()).length;
+  const contratosAtivos = contratos.filter(c => c.ativo !== false && toBRDate(c.dataVencimento) > brNow()).length;
   const contratosVencendo = contratos.filter(c => {
     if (c.ativo === false) return false;
-    const dias = Math.ceil((new Date(c.dataVencimento) - new Date()) / (1000 * 60 * 60 * 24));
+    const dias = Math.ceil((toBRDate(c.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
     return dias <= 30 && dias > 0;
   }).length;
   const contratosEstouro = contratos.filter(c => {
@@ -600,7 +600,7 @@ function checkAlerts() {
 
   const vencendo = contratos.filter(c => {
     if (c.ativo === false) return false;
-    const dias = Math.ceil((new Date(c.dataVencimento) - new Date()) / (1000 * 60 * 60 * 24));
+    const dias = Math.ceil((toBRDate(c.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
     return dias <= 30 && dias > 0;
   });
 
@@ -609,7 +609,7 @@ function checkAlerts() {
     el.className = 'alert alert-warning';
     el.innerHTML = `<strong>⚠️ Atenção!</strong> ${vencendo.length} contrato(s) vencendo nos próximos 30 dias:
       ${vencendo.map(c => {
-        const dias = Math.ceil((new Date(c.dataVencimento) - new Date()) / (1000 * 60 * 60 * 24));
+        const dias = Math.ceil((toBRDate(c.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
         return `<br>• ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (vence em ${dias} dias)`;
       }).join('')}`;
     div.appendChild(el);
@@ -825,7 +825,7 @@ function openMovModal(contratoId) {
   document.getElementById('movContratoId').value = contratoId;
   document.getElementById('movTipo').value = 'saida';
   document.getElementById('movValor').value = '';
-  document.getElementById('movData').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('movData').value = formatISO(brNow()).slice(0, 10);
   document.getElementById('movObs').value = '';
   
   
@@ -854,12 +854,12 @@ async function loadMovimentacoes(contratoId) {
     }
 
     movimentos
-      .sort((a, b) => new Date(b.criadoEm || b.data) - new Date(a.criadoEm || a.data))
+      .sort((a, b) => toBRDate(b.criadoEm || b.data) - toBRDate(a.criadoEm || a.data))
       .forEach(mov => {
         const classe = mov.tipo === 'saida' || mov.valorDelta < 0 ? 'saida' : 'entrada';
         tbody.innerHTML += `
         <tr class="${classe}">
-          <td>${mov.criadoEm ? new Date(mov.criadoEm).toLocaleDateString('pt-BR') : 'N/A'}</td>
+          <td>${mov.criadoEm ? formatBR(mov.criadoEm) : 'N/A'}</td>
           <td>${mov.tipo || 'N/A'}</td>
           <td>R$ ${toBRL(mov.valorDelta)}</td>
           <td>${mov.observacao || '-'}</td>

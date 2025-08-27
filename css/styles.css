@@ -93,6 +93,43 @@ body{
 .stat-number{ font-size: 2.0rem; font-weight: 800; margin: 2px 0 4px; }
 .stat-label{ color: var(--text-secondary); font-size: .95rem; }
 
+/* Dashboard */
+.dashboard-grid{
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.metric-box{
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+  text-align: center;
+  border: 1px solid rgba(0,0,0,.05);
+}
+.metric-box h4{
+  font-size: 1rem;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+.metric-value{
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+.dashboard-charts{
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+.dashboard-charts .card{ flex: 1; }
+
+@media (max-width: 900px){
+  .dashboard-charts{ flex-direction: column; }
+}
+
 /* Helpers para cor dos números */
 .text-primary{ color: var(--primary-color) !important; }
 .text-secondary{ color: var(--secondary-color) !important; }

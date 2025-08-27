@@ -33,7 +33,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
-
+pool.query("SET TIMEZONE 'America/Sao_Paulo'");
 /* =========== Uploads (anexos) =========== */
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
@@ -71,7 +71,7 @@ async function ensureSchema() {
       tipo         TEXT NOT NULL,    -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
       observacao   TEXT,
       valor        NUMERIC DEFAULT 0,
-      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT (NOW() AT TIME ZONE 'America/Sao_Paulo')
     );
     CREATE INDEX IF NOT EXISTS idx_contrato_movimentos_contrato_id
       ON contrato_movimentos (contrato_id);
@@ -82,7 +82,7 @@ async function ensureSchema() {
       contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
       nome_arquivo TEXT NOT NULL,
       url          TEXT NOT NULL,
-      criado_em    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT (NOW() AT TIME ZONE 'America/Sao_Paulo')
     );
     CREATE INDEX IF NOT EXISTS idx_contrato_arquivos_contrato_id
       ON contrato_arquivos (contrato_id);

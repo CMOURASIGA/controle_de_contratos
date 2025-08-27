@@ -233,12 +233,16 @@
 
     <!-- Abas -->
     <div class="nav-tabs">
-      <button id="tabDashboard" class="nav-tab" onclick="showTab('dashboard', this)">Dashboard</button>     
+      <button id="tabDashboard" class="nav-tab" onclick="showTab('dashboard', this)">Dashboard</button>    
       <button class="nav-tab active" onclick="showTab('contratos', this)">Contratos</button>
       <button class="nav-tab" onclick="showTab('centros', this)">Centros de Custo</button>
       <button class="nav-tab" onclick="showTab('contas', this)">Contas Contábeis</button>
     </div>
 
+    <div style="margin:8px 0 16px;text-align:right">
+      <a href="dashboard.html" target="_blank" class="btn secondary">Abrir Dashboard</a>
+    </div>
+    
         <!-- Conteúdo: Dashboard -->
     <div id="dashboard" class="tab-content">
       <div class="dashboard-grid">
@@ -558,7 +562,8 @@
   </div>
 
   <!-- app.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>   
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/timezone.js"></script>  
   <script src="js/app.js"></script>
 </body>
 </html>
