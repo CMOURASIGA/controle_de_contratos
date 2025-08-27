@@ -232,94 +232,10 @@
     </div>
 
     <!-- Abas -->
-    <div class="nav-tabs">
-      <button id="tabDashboard" class="nav-tab" onclick="showTab('dashboard', this)">Dashboard</button>    
-      <button class="nav-tab active" onclick="showTab('contratos', this)">Contratos</button>
-      <button class="nav-tab" onclick="showTab('centros', this)">Centros de Custo</button>
-      <button class="nav-tab" onclick="showTab('contas', this)">Contas Contábeis</button>
-    </div>
-
-    <div style="margin:8px 0 16px;text-align:right">
-      <a href="dashboard.html" target="_blank" class="btn secondary">Abrir Dashboard</a>
-    </div>
-    
-        <!-- Conteúdo: Dashboard -->
-    <div id="dashboard" class="tab-content">
-      <div class="dashboard-grid">
-        <div class="metric-box">
-          <h4>Contratos Ativos</h4>
-          <div class="metric-value" id="dashContratos">0</div>
-        </div>
-        <div class="metric-box">
-          <h4>Valor Total</h4>
-          <div class="metric-value" id="dashValor">R$ 0,00</div>
-        </div>
-        <div class="metric-box">
-          <h4>Fornecedores</h4>
-          <div class="metric-value" id="dashFornecedores">0</div>
-        </div>
-      </div>
-      <div class="card">
-        <h3>Status dos Contratos</h3>
-        <canvas id="chartStatus"></canvas>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <h3>Gastos por Mês</h3>
-        <canvas id="chartEvolucao"></canvas>
-      </div>
-      <div class="card" style="margin-top:16px">
-        <h3>Top Fornecedores</h3>
-        <canvas id="chartFornecedores"></canvas>
-      </div>
-    </div>
-
-    <!-- Conteúdo: Contratos -->
-    <div id="contratos" class="tab-content active">
-      <div class="card">
-        <h3>Gestão de Contratos</h3>
-        <div class="table-container" style="margin-top:12px">
-          <table id="contratosTable">
-            <thead>
-              <tr>
-                <th>Número</th>
-                <th>Fornecedor</th>
-                <th>Centro de Custo</th>
-                <th>Valor Total</th>
-                <th>Saldo Utilizado</th>
-                <th>Vencimento</th>
-                <th>Status</th>
-                <th style="width:300px">Ações</th>
-              </tr>
-            </thead>
-            <tbody><!-- preenchido via app.js --></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Conteúdo: Centros -->
-    <div id="centros" class="tab-content">
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <h3>Centros de Custo</h3>
-          <button class="btn warn" onclick="openModal('centroModal')">+ Novo Centro</button>
-        </div>
-        <div class="table-container">
-          <table id="centrosTable">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nome</th>
-                <th>Responsável</th>
-                <th>Email</th>
-                <th style="width:180px">Ações</th>
-              </tr>
-            </thead>
-            <tbody><!-- via app.js --></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('contratos', this)">Contratos</button>
+        <button class="nav-tab" onclick="showTab('centros', this)">Centros de Custo</button>
+        <button class="nav-tab" onclick="showTab('contas', this)">Contas Contábeis</button>
 
     <!-- Conteúdo: Contas -->
     <div id="contas" class="tab-content">
