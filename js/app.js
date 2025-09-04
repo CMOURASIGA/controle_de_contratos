@@ -1,7 +1,11 @@
 /***********************
  * CONFIGURAÇÃO
  ***********************/
-const API = 'https://controledecontratos-production.up.railway.app';
+// Determine API base URL from global or build-time configuration
+const API =
+  (typeof window !== 'undefined' && window.API_BASE) ||
+  (typeof process !== 'undefined' && process.env && process.env.API_BASE) ||
+  'https://controledecontratos-production.up.railway.app';
 
 // Estado em memória
 let contratos = [];

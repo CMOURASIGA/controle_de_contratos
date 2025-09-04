@@ -1113,7 +1113,10 @@
   <script>
     // Original app.js code will be integrated here
     // Configuration
-    const API = 'https://controledecontratos-production.up.railway.app';
+    const API =
+      (typeof window !== 'undefined' && window.API_BASE) ||
+      (typeof process !== 'undefined' && process.env && process.env.API_BASE) ||
+      'https://controledecontratos-production.up.railway.app';
     
     // State
     let contratos = [];
