@@ -179,10 +179,7 @@ function setupEventListeners() {
   document.getElementById('btnAplicarFiltros')?.addEventListener('click', applyFilters);
   document.getElementById('btnLimparFiltros')?.addEventListener('click', clearFilters);
   document.getElementById('navNovoContrato')?.addEventListener('click', () => {
-    editingId = null;
-    document.getElementById('contratoForm').reset();
-    document.getElementById('contratoModalTitle').textContent = 'Novo Contrato';
-    openModal('contratoModal');
+    window.location.href = 'novo-contrato.html';
   });
 
   // Formulários
@@ -244,7 +241,7 @@ async function initializeData() {
  * ABAS
  ***********************/
 function showTab(tabName, elOrEvent) {
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
   let btn = null;
