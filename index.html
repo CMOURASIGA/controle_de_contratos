@@ -556,10 +556,10 @@
         <span class="nav-icon">🏢</span>
         Centros de Custo
       </a>
-      <div class="nav-item" onclick="showTab('contas', event)">
+      <a class="nav-item" href="contas.html">
         <span class="nav-icon">💰</span>
         Contas Contábeis
-      </div>
+      </a>
       <div class="nav-item" onclick="showTab('relatorios', event)">
         <span class="nav-icon">📊</span>
         Relatórios
@@ -610,7 +610,7 @@
       <button class="btn" onclick="window.location.href='centros.html'">
         🏢 Gerenciar Centros
       </button>
-      <button class="btn" onclick="showTab('contas', document.querySelector('.nav-item:nth-child(4)'))">
+      <button class="btn" onclick="window.location.href='contas.html'">
         💰 Gerenciar Contas
       </button>
     </div>
@@ -631,7 +631,7 @@
           <p>Configure e administre os centros de custo da sua organização</p>
         </div>
 
-        <div class="action-card" onclick="showTab('contas', document.querySelector('.nav-item:nth-child(4)'))">
+        <div class="action-card" onclick="window.location.href='contas.html'">
           <div class="action-icon">💰</div>
           <h3>Contas Contábeis</h3>
           <p>Gerencie o plano de contas e classificações contábeis</p>
@@ -665,31 +665,7 @@
 
 
 
-    <!-- Contas Tab -->
-    <div id="contas" class="tab-content">
-      <div class="content-area">
-        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px;">
-          <h2>Contas Contábeis</h2>
-          <button class="btn warning" onclick="openModal('contaModal')">➕ Nova Conta</button>
-        </div>
-        
-        <div class="table-container">
-          <table id="contasTable">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Descrição</th>
-                <th>Tipo</th>
-                <th style="width: 200px;">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Preenchido via JavaScript -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Relatórios Tab -->
     <div id="relatorios" class="tab-content">
@@ -769,42 +745,7 @@
     </div>
   </div>
 
-  <!-- Modal CONTA -->
-  <div id="contaModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="contaModalTitle">Nova Conta Contábil</h2>
-        <button class="close" onclick="closeModal('contaModal')">&times;</button>
-      </div>
-      <form id="contaForm">
-        <div class="alert" id="msgConta" style="display:none"></div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Código *</label>
-            <input id="codigoConta" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Descrição *</label>
-            <input id="descricaoConta" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Tipo *</label>
-            <select id="tipoConta" class="form-control" required>
-              <option value="">Selecione</option>
-              <option>Despesa</option>
-              <option>Receita</option>
-              <option>Ativo</option>
-              <option>Passivo</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
-          <button type="button" class="btn secondary" onclick="closeModal('contaModal')">Cancelar</button>
-          <button type="submit" class="btn">Salvar</button>
-        </div>
-      </form>
-    </div>
-  </div>
+
 
   <!-- Modal ANEXOS -->
   <div id="anexosModal" class="modal">
@@ -882,7 +823,6 @@
         // Reset titles
         if (modalId === 'contratoModal') document.getElementById('contratoModalTitle').textContent = 'Novo Contrato';
         if (modalId === 'centroModal') document.getElementById('centroModalTitle').textContent = 'Novo Centro de Custo';
-        if (modalId === 'contaModal') document.getElementById('contaModalTitle').textContent = 'Nova Conta Contábil';
       }
     }
 
