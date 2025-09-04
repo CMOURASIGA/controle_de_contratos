@@ -41,6 +41,8 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 const upload = multer({ dest: uploadDir });
 app.use('/files', express.static(uploadDir));
 
+app.get('/', (_req, res) => res.json({ ok: true }));
+
 /* =========== Helpers comuns =========== */
 function httpErr(res, err, status = 500) {
   console.error(err);
