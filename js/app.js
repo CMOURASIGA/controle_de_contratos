@@ -178,8 +178,7 @@ function setupEventListeners() {
   // Filtros
   document.getElementById('btnAplicarFiltros')?.addEventListener('click', applyFilters);
   document.getElementById('btnLimparFiltros')?.addEventListener('click', clearFilters);
-  document.getElementById('btnRelatorio')?.addEventListener('click', baixarRelatorio);
-  document.getElementById('btnNovoContrato')?.addEventListener('click', () => {
+  document.getElementById('navNovoContrato')?.addEventListener('click', () => {
     editingId = null;
     document.getElementById('contratoForm').reset();
     document.getElementById('contratoModalTitle').textContent = 'Novo Contrato';

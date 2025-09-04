@@ -548,10 +548,10 @@
         <span class="nav-icon">📋</span>
         Contratos
       </div>
-      <div class="nav-item" onclick="openModal('contratoModal')">
+      <div class="nav-item" id="navNovoContrato">
         <span class="nav-icon">➕</span>
         Novo Contrato
-      </div>      
+      </div>    
       <div class="nav-item" onclick="showTab('centros', this)">
         <span class="nav-icon">🏢</span>
         Centros de Custo
@@ -1429,17 +1429,7 @@
       initializeData();
       
       // Setup event listeners
-      document.getElementById('btnNovoContrato')?.addEventListener('click', () => {
-        editingId = null;
-        document.getElementById('contratoForm').reset();
-        document.getElementById('contratoModalTitle').textContent = 'Novo Contrato';
-        openModal('contratoModal');
-      });
-      
-      document.getElementById('btnRelatorio')?.addEventListener('click', () => {
-        console.log('Generate report');
-      });
-      
+
       document.getElementById('btnAplicarFiltros')?.addEventListener('click', () => {
         console.log('Apply filters');
       });
