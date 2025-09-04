@@ -37,7 +37,8 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
-pool.query("SET TIMEZONE 'America/Sao_Paulo'");
+pool.query("SET TIME ZONE 'America/Sao_Paulo'");
+
 /* =========== Uploads (anexos) =========== */
 const uploadDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
