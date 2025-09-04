@@ -1,0 +1,119 @@
+Arquivar
+
+Compartilhar
+
+Criar PR
+
+
+1
+1. Mover `<div id="centros">...</div>` para `centros.html`.
+2. Alterar o item de menu correspondente para apontar para `centros.html`.
+3. Importar os scripts necessários no novo arquivo.
+Copiar
+Summary
+Atualizado o menu lateral e os atalhos do dashboard para que o item “Centros de Custo” navegue para a nova página dedicada, substituindo a lógica de abas anterior
+
+Criada a página centros.html, contendo a tabela de centros de custo, modal de cadastro/edição e a importação do script principal para manter a funcionalidade existente
+
+Testing
+❌ npm test (Missing script: "test")
+
+
+Arquivos (2)
+
+centros.html
+Novo
+
+index.html
++5
+-67
+
+mute
+settings
+microphone
+
+
+Perguntar
+
+Código
+Diferença
+Registros
+
+centros.html
+Novo
++74
+-0
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Centros de Custo</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="alerts"></div>
+
+  <div class="container" style="max-width:960px;margin:40px auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2>Centros de Custo</h2>
+      <button class="btn warning" onclick="openModal('centroModal')">➕ Novo Centro</button>
+    </div>
+
+    <div class="table-container">
+      <table id="centrosTable">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Responsável</th>
+            <th>Email</th>
+            <th style="width: 200px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Preenchido via JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal CENTRO -->
+  <div id="centroModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="centroModalTitle">Novo Centro de Custo</h2>
+        <button class="close" onclick="closeModal('centroModal')">&times;</button>
+      </div>
+      <form id="centroForm">
+        <div class="alert" id="msgCentro" style="display:none"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Código *</label>
+            <input id="codigoCentro" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Nome *</label>
+            <input id="nomeCentro" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Responsável *</label>
+            <input id="responsavel" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input id="emailResponsavel" type="email" class="form-control" required />
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+          <button type="button" class="btn secondary" onclick="closeModal('centroModal')">Cancelar</button>
+          <button type="submit" class="btn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

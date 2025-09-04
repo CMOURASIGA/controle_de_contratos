@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Contratos</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="alerts"></div>
+
+  <div class="container">
+    <div id="contratos" class="tab-content active">
+      <div class="content-area">
+        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+          <h2>Gestão de Contratos</h2>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <input class="form-control" id="filtroFornecedor" placeholder="Filtrar por fornecedor" style="width: auto;">
+            <input class="form-control" id="filtroNumero" placeholder="Número do contrato" style="width: auto;">
+            <select class="form-control" id="filtroStatus" style="width: auto;">
+              <option value="">Todos os status</option>
+              <option value="ativo">Ativo</option>
+              <option value="vencendo">Vencendo</option>
+              <option value="vencido">Vencido</option>
+              <option value="inativo">Inativo</option>
+            </select>
+            <button class="btn" id="btnAplicarFiltros">Aplicar</button>
+            <button class="btn secondary" id="btnLimparFiltros">Limpar</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table id="contratosTable">
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Fornecedor</th>
+                <th>Centro de Custo</th>
+                <th>Valor Total</th>
+                <th>Saldo Utilizado</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th style="width: 300px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Preenchido via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal MOVIMENTOS -->
+  <div id="movModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Movimentações do Contrato</h2>
+        <button class="close" onclick="closeModal('movModal')">&times;</button>
+      </div>
+
+      <div class="alert" id="msgMov" style="display:none"></div>
+
+      <form id="movForm">
+        <input type="hidden" id="movContratoId" />
+        <div class="form-grid" style="margin-bottom:20px">
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="movTipo" class="form-control">
+              <option value="saida">Pagamento (Saída)</option>
+              <option value="ajuste">Ajuste de Saldo</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Valor (R$)</label>
+            <input id="movValor" type="number" step="0.01" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Data</label>
+            <input id="movData" type="date" class="form-control" />
+          </div>
+          <div class="form-group form-group--full">
+            <label>Observações</label>
+            <input id="movObs" class="form-control" />
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:20px">
+          <button type="button" class="btn secondary" onclick="closeModal('movModal')">Fechar</button>
+          <button type="submit" class="btn success">Aplicar Movimentação</button>
+        </div>
+      </form>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+              <th>Obs</th>
+            </tr>
+          </thead>
+          <tbody id="tbMov"><!-- via app.js --></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal CENTRO -->
+  <div id="centroModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="centroModalTitle">Novo Centro de Custo</h2>
+        <button class="close" onclick="closeModal('centroModal')">&times;</button>
+      </div>
+      <form id="centroForm">
+        <div class="alert" id="msgCentro" style="display:none"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Código *</label>
+            <input id="codigoCentro" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Nome *</label>
+            <input id="nomeCentro" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Responsável *</label>
+            <input id="responsavel" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input id="emailResponsavel" type="email" class="form-control" required />
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+          <button type="button" class="btn secondary" onclick="closeModal('centroModal')">Cancelar</button>
+          <button type="submit" class="btn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal CONTA -->
+  <div id="contaModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="contaModalTitle">Nova Conta Contábil</h2>
+        <button class="close" onclick="closeModal('contaModal')">&times;</button>
+      </div>
+      <form id="contaForm">
+        <div class="alert" id="msgConta" style="display:none"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Código *</label>
+            <input id="codigoConta" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Descrição *</label>
+            <input id="descricaoConta" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Tipo *</label>
+            <select id="tipoConta" class="form-control" required>
+              <option value="">Selecione</option>
+              <option>Despesa</option>
+              <option>Receita</option>
+              <option>Ativo</option>
+              <option>Passivo</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+          <button type="button" class="btn secondary" onclick="closeModal('contaModal')">Cancelar</button>
+          <button type="submit" class="btn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal ANEXOS -->
+  <div id="anexosModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Anexos</h2>
+        <button class="close" onclick="closeModal('anexosModal')">&times;</button>
+      </div>
+      <ul id="listaAnexosModal"></ul>
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+        <button type="button" class="btn secondary" onclick="closeModal('anexosModal')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/timezone.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializeData();
+    });
+  </script>
+</body>
+</html>
