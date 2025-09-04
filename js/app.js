@@ -141,8 +141,8 @@ async function loadDashboard() {
           datasets: [{
             label: 'Valores Pagos',
             data: (data.evolucaoPagamentos || []).map(p => p.valor),
-            borderColor: '#00478a',
-            backgroundColor: 'rgba(0,71,138,0.1)',
+            borderColor: '#4169e1',
+            backgroundColor: 'rgba(65,105,225,0.1)',
             tension: 0.1
           }]
         }

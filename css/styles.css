@@ -1,7 +1,7 @@
 /* ===== Paleta CNC ===== */
 :root{
-  --primary-color: #00478a;    /* Azul CNC */
-  --primary-dark:  #003a6e;    /* Hover */
+  --primary-color: #4169e1;    /* Azul CNC */
+  --primary-dark:  #27408b;    /* Hover */
   --secondary-color: #c4933d;  /* Dourado CNC */
 
   --accent-color:  #10b981;    /* Sucesso */
@@ -16,8 +16,8 @@
   --bg-light:     #f6f9fc; /* claro azulado */
   --bg-light-alt: #fcf7ee; /* claro dourado */
 
-  --row-hover:  rgba(0, 71, 138, 0.06);
-  --focus-ring: rgba(0, 71, 138, 0.15);
+  --row-hover:  rgba(65, 105, 225, 0.06);
+  --focus-ring: rgba(65, 105, 225, 0.15);
 
   --shadow:   0 4px 6px -1px rgba(0,0,0,.1);
   --shadow-lg:0 10px 15px -3px rgba(0,0,0,.12);
