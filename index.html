@@ -7,15 +7,32 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <div id="alerts"></div>
-  <div class="brand-bar"></div>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">CNC Sistema de Contratos</div>
+      <div class="sidebar-sub">Gestão completa de contratos</div>
+    </div>
+    <nav class="nav-menu">
+      <a class="nav-item active" href="index.html"><span class="nav-icon">🏠</span>Dashboard</a>
+      <a class="nav-item" href="contratos.html"><span class="nav-icon">📄</span>Contratos</a>
+      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">➕</span>Novo Contrato</a>
+      <a class="nav-item" href="centros.html"><span class="nav-icon">🏢</span>Centros de Custo</a>
+      <a class="nav-item" href="contas.html"><span class="nav-icon">🧾</span>Contas Contábeis</a>
+      <a class="nav-item" href="relatorio.html"><span class="nav-icon">📈</span>Relatórios</a>
+    </nav>
+  </div>
 
-  <div class="header">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
-      <div>
-        <h1>Sistema de Controle de Contratos</h1>
-        <p>Gestão de contratos, centros de custo e contas contábeis com a identidade da CNC</p>
-      </div>
+  <div class="main-content">
+    <div id="alerts"></div>
+    <div class="brand-bar"></div>
+
+    <div class="header">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
+        <div>
+          <h1>Sistema de Controle de Contratos</h1>
+          <p>Gestão de contratos, centros de custo e contas contábeis com a identidade da CNC</p>
+        </div>
       <div style="display:flex; gap:8px;">
         <a class="btn" href="contratos.html">Ir para Gestão</a>
         <a class="btn secondary" href="relatorio.html">Relatórios</a>
@@ -63,8 +80,8 @@
     </div>
   </div>
 
-  <script src="js/timezone.js"></script>
-  <script src="js/app.js"></script>
+    <script src="js/timezone.js"></script>
+    <script src="js/app.js"></script>
+  </div>
 </body>
 </html>
-

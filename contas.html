@@ -1,20 +1,37 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contas Contábeis</title>
+  <title>Contas ContÃ¡beis</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">CNC Sistema de Contratos</div>
+      <div class="sidebar-sub">Gestão completa de contratos</div>
+    </div>
+    <nav class="nav-menu">
+      <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span>Dashboard</a>
+      <a class="nav-item" href="contratos.html"><span class="nav-icon">📄</span>Contratos</a>
+      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">➕</span>Novo Contrato</a>
+      <a class="nav-item" href="centros.html"><span class="nav-icon">🏢</span>Centros de Custo</a>
+      <a class="nav-item active" href="contas.html"><span class="nav-icon">🧾</span>Contas Contábeis</a>
+      <a class="nav-item" href="relatorio.html"><span class="nav-icon">📈</span>Relatórios</a>
+    </nav>
+  </div>
+
+  <div class="main-content">
   <div id="alerts"></div>
 
   <div class="brand-bar"></div>
   <div class="header">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
       <div>
-        <h1>Contas Contábeis</h1>
-        <p>Gerencie o plano e classificações contábeis</p>
+        <h1>Contas ContÃ¡beis</h1>
+        <p>Gerencie o plano e classificaÃ§Ãµes contÃ¡beis</p>
       </div>
       <div style="display:flex; gap:8px;">
         <a class="btn secondary" href="index.html">Voltar</a>
@@ -28,10 +45,10 @@
       <table id="contasTable">
         <thead>
           <tr>
-            <th>Código</th>
-            <th>Descrição</th>
+            <th>CÃ³digo</th>
+            <th>DescriÃ§Ã£o</th>
             <th>Tipo</th>
-            <th style="width: 200px;">Ações</th>
+            <th style="width: 200px;">AÃ§Ãµes</th>
           </tr>
         </thead>
         <tbody>
@@ -45,18 +62,18 @@
   <div id="contaModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="contaModalTitle">Nova Conta Contábil</h2>
+        <h2 id="contaModalTitle">Nova Conta ContÃ¡bil</h2>
         <button class="close" onclick="closeModal('contaModal')">&times;</button>
       </div>
       <form id="contaForm">
         <div class="alert" id="msgConta" style="display:none"></div>
         <div class="form-grid">
           <div class="form-group">
-            <label>Código *</label>
+            <label>CÃ³digo *</label>
             <input id="codigoConta" class="form-control" required />
           </div>
           <div class="form-group">
-            <label>Descrição *</label>
+            <label>DescriÃ§Ã£o *</label>
             <input id="descricaoConta" class="form-control" required />
           </div>
           <div class="form-group">
@@ -80,6 +97,7 @@
 
   <script src="js/timezone.js"></script>
   <script src="js/app.js"></script>
+  </div>
 </body>
 </html>
 
