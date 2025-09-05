@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RelatÃ³rio de Contratos</title>
+  <title>Relat&oacute;rio de Contratos</title>
   <link rel="stylesheet" href="css/styles.css" />
   <style>
     .filters { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
@@ -15,15 +15,15 @@
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-title">CNC Sistema de Contratos</div>
-      <div class="sidebar-sub">GestÃ£o completa de contratos</div>
+      <div class="sidebar-sub">Gest&atilde;o completa de contratos</div>
     </div>
     <nav class="nav-menu">
-      <a class="nav-item" href="index.html"><span class="nav-icon">ðŸ </span>Dashboard</a>
-      <a class="nav-item" href="contratos.html"><span class="nav-icon">ðŸ“„</span>Contratos</a>
-      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">âž•</span>Novo Contrato</a>
-      <a class="nav-item" href="centros.html"><span class="nav-icon">ðŸ¢</span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon">ðŸ§¾</span>Contas ContÃ¡beis</a>
-      <a class="nav-item active" href="relatorio.html"><span class="nav-icon">ðŸ“ˆ</span>RelatÃ³rios</a>
+      <a class="nav-item" href="index.html">Dashboard</a>
+      <a class="nav-item" href="contratos.html">Contratos</a>
+      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html">Novo Contrato</a>
+      <a class="nav-item" href="centros.html">Centros de Custo</a>
+      <a class="nav-item" href="contas.html">Contas Cont&aacute;beis</a>
+      <a class="nav-item active" href="relatorio.html">Relat&oacute;rios</a>
     </nav>
   </div>
 
@@ -33,8 +33,8 @@
     <div class="header">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
         <div>
-          <h1>RelatÃ³rio</h1>
-          <p>Exporte os contratos filtrados em CSV (UTC-3 SÃ£o Paulo)</p>
+          <h1>Relat&oacute;rio</h1>
+          <p>Exporte os contratos filtrados em CSV (UTC-3 S&atilde;o Paulo)</p>
         </div>
         <div style="display:flex; gap:8px;">
           <a class="btn secondary" href="index.html">Voltar</a>
@@ -47,7 +47,7 @@
         <h2 style="margin:0 0 12px">Filtros</h2>
         <div class="filters">
           <input class="form-control" id="filtroFornecedor" placeholder="Fornecedor" />
-          <input class="form-control" id="filtroNumero" placeholder="NÃºmero do contrato" />
+          <input class="form-control" id="filtroNumero" placeholder="N&uacute;mero do contrato" />
           <select class="form-control" id="filtroStatus">
             <option value="">Todos os status</option>
             <option value="ativo">Ativo</option>
@@ -57,11 +57,11 @@
           </select>
           <div>
             <label>Vencimento de</label>
-            <input class="form-control" id="filtroVencimentoDe" type="text" placeholder="dd/mm/aaaa" lang="pt-BR" />
+            <input class="form-control" id="filtroVencimentoDe" type="text" placeholder="dd/mm/aaaa" />
           </div>
           <div>
-            <label>Vencimento atÃ©</label>
-            <input class="form-control" id="filtroVencimentoAte" type="text" placeholder="dd/mm/aaaa" lang="pt-BR" />
+            <label>Vencimento at&eacute;</label>
+            <input class="form-control" id="filtroVencimentoAte" type="text" placeholder="dd/mm/aaaa" />
           </div>
           <button class="btn" id="btnAplicarFiltros">Aplicar</button>
           <button class="btn secondary" id="btnLimparFiltros">Limpar</button>
@@ -76,14 +76,14 @@
           <table id="contratosTable">
             <thead>
               <tr>
-                <th>NÃºmero</th>
+                <th>N&uacute;mero</th>
                 <th>Fornecedor</th>
                 <th>Centro de Custo</th>
                 <th>Valor Total</th>
                 <th>Saldo Utilizado</th>
                 <th>Vencimento</th>
                 <th>Status</th>
-                <th style="width:300px;">AÃ§Ãµes</th>
+                <th style="width:300px;">A&ccedil;&otilde;es</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -98,7 +98,7 @@
       document.addEventListener('DOMContentLoaded', async () => {
         try {
           await initializeData();
-        } catch(e) { /* silencioso para pÃ¡gina de relatÃ³rio */ }
+        } catch(e) { /* silencioso para p&aacute;gina de relat&oacute;rio */ }
 
         document.getElementById('btnBaixar')?.addEventListener('click', () => {
           baixarRelatorio();
@@ -108,3 +108,4 @@
   </div>
 </body>
 </html>
+
