@@ -9,6 +9,18 @@
 <body>
   <div id="alerts"></div>
 
+  <div class="brand-bar"></div>
+  <div class="header">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
+      <div>
+        <h1>Novo Contrato</h1>
+        <p>Preencha os dados para cadastrar um novo contrato</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <a class="btn secondary" href="index.html">Voltar</a>
+      </div>
+    </div>
+  </div>
   <div class="container" style="max-width:720px;margin:40px auto;">
     <h2 id="contratoModalTitle">Novo Contrato</h2>
     <form id="contratoForm">
@@ -78,6 +90,7 @@
     </form>
   </div>
 
+  <script src="js/timezone.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

@@ -573,6 +573,13 @@ function updateDashboardMetrics() {
   if (fornecedoresEl) fornecedoresEl.textContent = totalFornecedores;
 }
 function updateStats() {
+  // Skip if dashboard stat elements are not present on this page
+  const elTotal = document.getElementById('totalContratos');
+  const elAtivos = document.getElementById('contratosAtivos');
+  const elVencendo = document.getElementById('contratosVencendo');
+  const elEstouro = document.getElementById('contratosEstouro');
+  if (!elTotal && !elAtivos && !elVencendo && !elEstouro) return;
+
   const totalContratos = contratos.length;
   const contratosAtivos = contratos.filter(c => c.ativo !== false && toBRDate(c.dataVencimento) > brNow()).length;
   const contratosVencendo = contratos.filter(c => {
@@ -585,10 +592,10 @@ function updateStats() {
     return (Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100 > 100;
   }).length;
 
-  document.getElementById('totalContratos').textContent = totalContratos;
-  document.getElementById('contratosAtivos').textContent = contratosAtivos;
-  document.getElementById('contratosVencendo').textContent = contratosVencendo;
-  document.getElementById('contratosEstouro').textContent = contratosEstouro;
+  if (elTotal) elTotal.textContent = totalContratos;
+  if (elAtivos) elAtivos.textContent = contratosAtivos;
+  if (elVencendo) elVencendo.textContent = contratosVencendo;
+  if (elEstouro) elEstouro.textContent = contratosEstouro;
 }
 
 function checkAlerts() {

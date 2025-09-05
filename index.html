@@ -548,10 +548,10 @@
         <span class="nav-icon">📋</span>
         Contratos
       </a>
-      <div class="nav-item" id="navNovoContrato">
+      <a class="nav-item" href="novo-contrato.html" id="navNovoContrato">
         <span class="nav-icon">➕</span>
         Novo Contrato
-      </div>
+      </a>
       <a class="nav-item" href="centros.html">
         <span class="nav-icon">🏢</span>
         Centros de Custo
@@ -644,7 +644,7 @@
         </div>
       </div>
 
-      <div class="content-area">
+      <div class="content-area" style="display:none;">
         <h2 style="margin-bottom: 20px;">Visão Geral do Sistema</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
           <div style="text-align: center; padding: 20px;">
@@ -1161,7 +1161,33 @@
     window.deleteCentro = function(id) { console.log('Delete centro', id); };
     window.editConta = function(id) { console.log('Edit conta', id); };
     window.deleteConta = function(id) { console.log('Delete conta', id); };
-    window.baixarRelatorio = function() { console.log('Download report'); };
+    window.baixarRelatorio = async function() {
+      try {
+        const qs = (typeof buildContratosQueryFromFilters === 'function')
+          ? (buildContratosQueryFromFilters().split('?')[1] || '')
+          : '';
+        const url = `${API}/relatorios/contratos${qs ? ('?' + qs) : ''}`;
+
+        const r = await fetch(url);
+        if (!r.ok) throw new Error('Relatorio indisponivel.');
+
+        const blob = await r.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        const today = (typeof formatISO === 'function' && typeof brNow === 'function')
+          ? formatISO(brNow()).slice(0, 10)
+          : new Date().toISOString().slice(0, 10);
+        a.download = `contratos_${today}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        if (typeof showAlert === 'function') showAlert('Relatorio baixado com sucesso!', 'success');
+      } catch (e) {
+        console.error('Erro ao gerar relatorio:', e);
+        if (typeof showAlert === 'function') showAlert('Erro ao gerar relatorio.', 'danger');
+      }
+    };
     window.loadDashboard = function() { console.log('Load dashboard'); };
 
     // Initialize on load

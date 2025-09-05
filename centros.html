@@ -1,49 +1,3 @@
-Arquivar
-
-Compartilhar
-
-Criar PR
-
-
-1
-1. Mover `<div id="centros">...</div>` para `centros.html`.
-2. Alterar o item de menu correspondente para apontar para `centros.html`.
-3. Importar os scripts necessários no novo arquivo.
-Copiar
-Summary
-Atualizado o menu lateral e os atalhos do dashboard para que o item “Centros de Custo” navegue para a nova página dedicada, substituindo a lógica de abas anterior
-
-Criada a página centros.html, contendo a tabela de centros de custo, modal de cadastro/edição e a importação do script principal para manter a funcionalidade existente
-
-Testing
-❌ npm test (Missing script: "test")
-
-
-Arquivos (2)
-
-centros.html
-Novo
-
-index.html
-+5
--67
-
-mute
-settings
-microphone
-
-
-Perguntar
-
-Código
-Diferença
-Registros
-
-centros.html
-Novo
-+74
--0
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -55,12 +9,21 @@ Novo
 <body>
   <div id="alerts"></div>
 
-  <div class="container" style="max-width:960px;margin:40px auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h2>Centros de Custo</h2>
-      <button class="btn warning" onclick="openModal('centroModal')">➕ Novo Centro</button>
+  <div class="brand-bar"></div>
+  <div class="header">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
+      <div>
+        <h1>Centros de Custo</h1>
+        <p>Cadastre e gerencie centros de custo</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <a class="btn secondary" href="index.html">Voltar</a>
+        <button class="btn warning" onclick="openModal('centroModal')">Novo Centro</button>
+      </div>
     </div>
+  </div>
 
+  <div class="container" style="max-width:960px;margin:40px auto;">
     <div class="table-container">
       <table id="centrosTable">
         <thead>
@@ -114,6 +77,8 @@ Novo
     </div>
   </div>
 
+  <script src="js/timezone.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
+
