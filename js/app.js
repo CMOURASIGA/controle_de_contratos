@@ -17,16 +17,7 @@ let chartStatus, chartEvolucao, chartFornecedores;
 /***********************
  * UTIL
  ***********************/
-async function tryPing(base) {
-  try { const r = await fetch(`${base}/health`, { method: 'GET', cache: 'no-store' }); return r.ok; } catch { return false; }
-}
-async function ensureApiBase() {
-  const bases = [];
-  if (API) bases.push(API);
-  if (typeof window !== 'undefined') { bases.push(`${window.location.origin}/api`); bases.push(window.location.origin); }
-  for (const b of bases) { if (!b) continue; if (await tryPing(b)) { API = b; if (typeof window !== 'undefined') window.API_BASE = b; return b; } }
-  return API;
-}
+
 async function apiGet(path) {
   try {
     const r = await fetch(`${API}${path}`);
@@ -96,7 +87,7 @@ function addDateMaskFor(id) {
  ***********************/
 document.addEventListener('DOMContentLoaded', async function () {
   try {
-    await ensureApiBase();\n    await initializeData();
+    \n    await initializeData();
     setupEventListeners();
     // Preenche selects do contrato quando presentes (novo/editar)
     updateCentroCustoOptions();
