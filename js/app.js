@@ -1146,3 +1146,4 @@ window.editConta = editConta;
 window.deleteConta = deleteConta;
 window.openMovModal = openMovModal;
 window.viewAnexos = viewAnexos;
+
