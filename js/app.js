@@ -68,6 +68,16 @@ document.addEventListener('DOMContentLoaded', async function () {
   try {
     await initializeData();
     setupEventListeners();
+    // Preenche selects do contrato quando presentes (novo/editar)
+    updateCentroCustoOptions();
+    updateContaContabilOptions();
+    // Define valores padrão de datas respeitando UTC-3 quando presentes
+    if (typeof formatYMD === 'function') {
+      const di = document.getElementById('dataInicio');
+      const dv = document.getElementById('dataVencimento');
+      if (di && !di.value) di.value = formatYMD(brNow());
+      if (dv && !dv.value) dv.value = '';
+    }
     
     // Atualiza alertas a cada 30s
     setInterval(checkAlerts, 30000);
@@ -706,21 +716,30 @@ async function editContrato(id) {
   if (!c) return;
 
   editingId = id;
-  document.getElementById('contratoModalTitle').textContent = 'Editar Contrato';
-  openModal('contratoModal');  
-  document.getElementById('numeroContrato').value = c.numero || '';
-  document.getElementById('fornecedor').value = c.fornecedor || '';
-  document.getElementById('centroCustoContrato').value = c.centroCusto || '';
-  document.getElementById('contaContabil').value = c.contaContabil || '';
-  document.getElementById('valorTotal').value = Number(c.valorTotal) || 0;
-  document.getElementById('saldoUtilizado').value = Number(c.saldoUtilizado) || 0;
-  document.getElementById('dataInicio').value = c.dataInicio?.slice(0, 10) || '';
-  document.getElementById('dataVencimento').value = c.dataVencimento?.slice(0, 10) || '';
-  document.getElementById('observacoes').value = c.observacoes || '';
-  document.getElementById('contratoAtivo').checked = c.ativo !== false;
+  const titleEl = document.getElementById('contratoModalTitle');
+  if (titleEl) titleEl.textContent = 'Editar Contrato';
+  updateCentroCustoOptions();
+  updateContaContabilOptions();
+  openModal('contratoModal');
+
+  const get = id => document.getElementById(id);
+  get('numeroContrato') && (get('numeroContrato').value = c.numero || '');
+  get('fornecedor') && (get('fornecedor').value = c.fornecedor || '');
+  get('centroCustoContrato') && (get('centroCustoContrato').value = c.centroCusto || '');
+  get('contaContabil') && (get('contaContabil').value = c.contaContabil || '');
+  get('valorTotal') && (get('valorTotal').value = Number(c.valorTotal) || 0);
+  get('saldoUtilizado') && (get('saldoUtilizado').value = Number(c.saldoUtilizado) || 0);
+  if (typeof formatYMD === 'function') {
+    get('dataInicio') && (get('dataInicio').value = c.dataInicio ? formatYMD(c.dataInicio) : '');
+    get('dataVencimento') && (get('dataVencimento').value = c.dataVencimento ? formatYMD(c.dataVencimento) : '');
+  } else {
+    get('dataInicio') && (get('dataInicio').value = c.dataInicio?.slice(0, 10) || '');
+    get('dataVencimento') && (get('dataVencimento').value = c.dataVencimento?.slice(0, 10) || '');
+  }
+  get('observacoes') && (get('observacoes').value = c.observacoes || '');
+  get('contratoAtivo') && (get('contratoAtivo').checked = c.ativo !== false);
 
   await updateListaAnexos(id);
-
 }
 
 async function removeAnexo(contratoId, arquivoId) {

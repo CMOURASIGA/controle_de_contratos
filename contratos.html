@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestão de Contratos</title>
+  <title>GestÃ£o de Contratos</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -13,7 +13,7 @@
   <div class="header">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
       <div>
-        <h1>Gestao de Contratos</h1>
+        <h1>Gestão de Contratos</h1>
         <p>Visualize, filtre e gerencie seus contratos</p>
       </div>
       <div style="display:flex; gap:8px;">
@@ -26,10 +26,10 @@
     <div id="contratos" class="tab-content active">
       <div class="content-area">
         <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
-          <h2>Gestão de Contratos</h2>
+          <h2>GestÃ£o de Contratos</h2>
           <div style="display: flex; gap: 12px; flex-wrap: wrap;">
             <input class="form-control" id="filtroFornecedor" placeholder="Filtrar por fornecedor" style="width: auto;">
-            <input class="form-control" id="filtroNumero" placeholder="Número do contrato" style="width: auto;">
+            <input class="form-control" id="filtroNumero" placeholder="NÃºmero do contrato" style="width: auto;">
             <select class="form-control" id="filtroStatus" style="width: auto;">
               <option value="">Todos os status</option>
               <option value="ativo">Ativo</option>
@@ -46,7 +46,7 @@
           <table id="contratosTable">
             <thead>
               <tr>
-                <th>Número</th>
+                <th>NÃºmero</th>
                 <th>Fornecedor</th>
                 <th>Centro de Custo</th>
                 <th>Valor Total</th>
@@ -69,7 +69,7 @@
   <div id="movModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Movimentações do Contrato</h2>
+        <h2>MovimentAções do Contrato</h2>
         <button class="close" onclick="closeModal('movModal')">&times;</button>
       </div>
 
@@ -91,16 +91,16 @@
           </div>
           <div class="form-group">
             <label>Data</label>
-            <input id="movData" type="date" class="form-control" />
+            <input id="movData" type="date" class="form-control" lang="pt-BR" />
           </div>
           <div class="form-group form-group--full">
-            <label>Observações</label>
+            <label>ObservAções</label>
             <input id="movObs" class="form-control" />
           </div>
         </div>
         <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:20px">
           <button type="button" class="btn secondary" onclick="closeModal('movModal')">Fechar</button>
-          <button type="submit" class="btn success">Aplicar Movimentação</button>
+          <button type="submit" class="btn success">Aplicar MovimentaÃ§Ã£o</button>
         </div>
       </form>
 
@@ -139,7 +139,7 @@
             <input id="nomeCentro" class="form-control" required />
           </div>
           <div class="form-group">
-            <label>Responsável *</label>
+            <label>ResponsÃ¡vel *</label>
             <input id="responsavel" class="form-control" required />
           </div>
           <div class="form-group">
@@ -159,7 +159,7 @@
   <div id="contaModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="contaModalTitle">Nova Conta Contábil</h2>
+        <h2 id="contaModalTitle">Nova Conta ContÃ¡bil</h2>
         <button class="close" onclick="closeModal('contaModal')">&times;</button>
       </div>
       <form id="contaForm">
@@ -170,8 +170,8 @@
             <input id="codigoConta" class="form-control" required />
           </div>
           <div class="form-group">
-            <label>Descrição *</label>
-            <input id="descricaoConta" class="form-control" required />
+            <label>DescriÃ§Ã£o *</label>
+            <input id="DescriçãoConta" class="form-control" required />
           </div>
           <div class="form-group">
             <label>Tipo *</label>
@@ -214,5 +214,156 @@
       await initializeData();
     });
   </script>
-</body>
-</html>
+
+
+  <!-- Modal CONTRATO (edição) -->
+  <div id="contratoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="contratoModalTitle">Novo Contrato</h2>
+        <button class="close" onclick="closeModal('contratoModal')">&times;</button>
+      </div>
+      <form id="contratoForm">
+        <div class="alert" style="display:none" id="msgContrato"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Número do Contrato *</label>
+            <input id="numeroContrato" class="form-control" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Fornecedor *</label>
+            <input id="fornecedor" class="form-control" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Centro de Custo *</label>
+            <select id="centroCustoContrato" class="form-control" required>
+              <option value="">Selecione</option>
+            </select>
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Conta Contábil *</label>
+            <select id="contaContabil" class="form-control" required>
+              <option value="">Selecione</option>
+            </select>
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Valor Total (R$) *</label>
+            <input id="valorTotal" type="number" step="0.01" class="form-control" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Saldo Utilizado (R$)</label>
+            <input id="saldoUtilizado" type="number" step="0.01" class="form-control" value="0" />
+          </div>
+          <div class="form-group">
+            <label>Data de Início *</label>
+            <input id="dataInicio" type="date" class="form-control" lang="pt-BR" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Data de Vencimento *</label>
+            <input id="dataVencimento" type="date" class="form-control" lang="pt-BR" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group form-group--full">
+            <label>Observações</label>
+            <textarea id="observacoes" rows="3" class="form-control"></textarea>
+          </div>
+          <div class="form-group" style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="contratoAtivo" checked />
+            <label for="contratoAtivo">Contrato ativo</label>
+          </div>
+          <div class="form-group form-group--full">
+            <label>Anexos do contrato</label>
+            <input id="anexosContrato" type="file" class="form-control" multiple />
+            <ul id="listaAnexosContrato"></ul>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+          <button type="button" class="btn secondary" onclick="closeModal('contratoModal')">Cancelar</button>
+          <button type="submit" class="btn" id="btnSalvarContrato">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+
+  <!-- Modal CONTRATO (edição) -->
+  <div id="contratoModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="contratoModalTitle">Novo Contrato</h2>
+        <button class="close" onclick="closeModal('contratoModal')">&times;</button>
+      </div>
+      <form id="contratoForm">
+        <div class="alert" style="display:none" id="msgContrato"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Número do Contrato *</label>
+            <input id="numeroContrato" class="form-control" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Fornecedor *</label>
+            <input id="fornecedor" class="form-control" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Centro de Custo *</label>
+            <select id="centroCustoContrato" class="form-control" required>
+              <option value="">Selecione</option>
+            </select>
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Conta Contábil *</label>
+            <select id="contaContabil" class="form-control" required>
+              <option value="">Selecione</option>
+            </select>
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Valor Total (R$) *</label>
+            <input id="valorTotal" type="number" step="0.01" class="form-control" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Saldo Utilizado (R$)</label>
+            <input id="saldoUtilizado" type="number" step="0.01" class="form-control" value="0" />
+          </div>
+          <div class="form-group">
+            <label>Data de Início *</label>
+            <input id="dataInicio" type="date" class="form-control" lang="pt-BR" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group">
+            <label>Data de Vencimento *</label>
+            <input id="dataVencimento" type="date" class="form-control" lang="pt-BR" required />
+            <span class="error"></span>
+          </div>
+          <div class="form-group form-group--full">
+            <label>Observações</label>
+            <textarea id="observacoes" rows="3" class="form-control"></textarea>
+          </div>
+          <div class="form-group" style="display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="contratoAtivo" checked />
+            <label for="contratoAtivo">Contrato ativo</label>
+          </div>
+          <div class="form-group form-group--full">
+            <label>Anexos do contrato</label>
+            <input id="anexosContrato" type="file" class="form-control" multiple />
+            <ul id="listaAnexosContrato"></ul>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+          <button type="button" class="btn secondary" onclick="closeModal('contratoModal')">Cancelar</button>
+          <button type="submit" class="btn" id="btnSalvarContrato">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>

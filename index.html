@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -525,45 +525,42 @@
 </head>
 <body>
   <!-- Mobile Menu Button -->
-  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">ÃƒÆ’Ã‚Â¢Ãƒâ€¹Ã…â€œÃƒâ€šÃ‚Â°</button>
 
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-title">
-        📊 CNC
+        ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â  CNC
         Sistema de Contratos
       </div>
       <div class="sidebar-subtitle">
-        Gestão completa de contratos e fornecedores
+        GestÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o completa de contratos e fornecedores
       </div>
     </div>
     
     <nav class="nav-menu">
       <div class="nav-item active" onclick="showTab('dashboard', event)">
-        <span class="nav-icon">🏠</span>
+        <span class="nav-icon">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â </span>
         Dashboard
       </div>
       <a class="nav-item" href="contratos.html">
-        <span class="nav-icon">📋</span>
+        <span class="nav-icon">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹</span>
         Contratos
       </a>
       <a class="nav-item" href="novo-contrato.html" id="navNovoContrato">
-        <span class="nav-icon">➕</span>
+        <span class="nav-icon">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¾ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
         Novo Contrato
       </a>
       <a class="nav-item" href="centros.html">
-        <span class="nav-icon">🏢</span>
+        <span class="nav-icon">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¢</span>
         Centros de Custo
       </a>
       <a class="nav-item" href="contas.html">
-        <span class="nav-icon">💰</span>
-        Contas Contábeis
+        <span class="nav-icon">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â°</span>
+        Contas ContÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡beis
       </a>
-      <div class="nav-item" onclick="showTab('relatorios', event)">
-        <span class="nav-icon">📊</span>
-        Relatórios
-      </div>
+      <a class="nav-item" href="relatorio.html"><span class="nav-icon">??</span>RelatÃƒÆ’Ã‚Â³rios</a>
     </nav>
   </div>
 
@@ -572,7 +569,7 @@
     <!-- Page Header -->
     <div class="page-header">
       <h1 class="page-title">Sistema de Controle de Contratos</h1>
-      <p class="page-subtitle">Gestão de contratos, centros de custo e contas contábeis com a identidade da CNC</p>
+      <p class="page-subtitle">GestÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de contratos, Centros de Custo e contas contÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡beis com a identidade da CNC</p>
     </div>
 
     <!-- Alerts -->
@@ -602,16 +599,16 @@
     <!--
     <div class="quick-actions">
       <button class="btn success" id="btnNovoContrato">
-        ➕ Novo Contrato
+        ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¾ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Novo Contrato
       </button>
       <button class="btn secondary" id="btnRelatorio">
-        📄 Relatório CSV
+        ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ RelatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio CSV
       </button>
       <button class="btn" onclick="window.location.href='centros.html'">
-        🏢 Gerenciar Centros
+        ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¢ Gerenciar Centros
       </button>
       <button class="btn" onclick="window.location.href='contas.html'">
-        💰 Gerenciar Contas
+        ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â° Gerenciar Contas
       </button>
     </div>
     -->
@@ -620,32 +617,32 @@
     <div id="dashboard" class="tab-content active">
       <div class="action-cards-grid">
         <a class="action-card" href="contratos.html">
-          <div class="action-icon">📋</div>
+          <div class="action-icon">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹</div>
           <h3>Gerenciar Contratos</h3>
           <p>Visualize, crie e gerencie todos os seus contratos de forma centralizada</p>
         </a>
 
         <div class="action-card" onclick="window.location.href='centros.html'">
-          <div class="action-icon">🏢</div>
+          <div class="action-icon">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¢</div>
           <h3>Centros de Custo</h3>
-          <p>Configure e administre os centros de custo da sua organização</p>
+          <p>Configure e administre os Centros de Custo da sua organizaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o</p>
         </div>
 
         <div class="action-card" onclick="window.location.href='contas.html'">
-          <div class="action-icon">💰</div>
-          <h3>Contas Contábeis</h3>
-          <p>Gerencie o plano de contas e classificações contábeis</p>
+          <div class="action-icon">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â°</div>
+          <h3>Contas ContÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡beis</h3>
+          <p>Gerencie o plano de contas e classificaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes contÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡beis</p>
         </div>
 
-        <div class="action-card" onclick="showTab('relatorios', document.querySelector('.nav-item:nth-child(5)'))">
-          <div class="action-icon">📊</div>
-          <h3>Relatórios e Analytics</h3>
-          <p>Acompanhe métricas e gere relatórios detalhados</p>
+        <div class="action-card" onclick="window.location.href='relatorio.html'">
+          <div class="action-icon">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â </div>
+          <h3>RelatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios e Analytics</h3>
+          <p>Acompanhe mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tricas e gere relatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios detalhados</p>
         </div>
       </div>
 
       <div class="content-area" style="display:none;">
-        <h2 style="margin-bottom: 20px;">Visão Geral do Sistema</h2>
+        <h2 style="margin-bottom: 20px;">VisÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Geral do Sistema</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
           <div style="text-align: center; padding: 20px;">
             <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color); margin-bottom: 8px;" id="dashContratos">0</div>
@@ -667,21 +664,21 @@
 
 
 
-    <!-- Relatórios Tab -->
+    <!-- RelatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios Tab -->
     <div id="relatorios" class="tab-content">
       <div class="content-area">
-        <h2 style="margin-bottom: 20px;">Relatórios e Analytics</h2>
+        <h2 style="margin-bottom: 20px;">RelatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rios e Analytics</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
           <div style="padding: 20px; border: 1px solid var(--border-color); border-radius: 12px;">
-            <h3>Relatório de Contratos</h3>
+            <h3>RelatÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rio de Contratos</h3>
             <p style="color: var(--text-secondary); margin: 12px 0;">Exporte dados detalhados dos contratos</p>
-            <button class="btn secondary" onclick="baixarRelatorio()">📄 Baixar CSV</button>
+            <button class="btn secondary" onclick="baixarRelatorio()">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ Baixar CSV</button>
           </div>
           
           <div style="padding: 20px; border: 1px solid var(--border-color); border-radius: 12px;">
             <h3>Dashboard Analytics</h3>
-            <p style="color: var(--text-secondary); margin: 12px 0;">Visualize métricas e gráficos</p>
-            <button class="btn" onclick="loadDashboard()">📊 Ver Analytics</button>
+            <p style="color: var(--text-secondary); margin: 12px 0;">Visualize mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©tricas e grÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ficos</p>
+            <button class="btn" onclick="loadDashboard()">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â  Ver Analytics</button>
           </div>
         </div>
       </div>
@@ -694,7 +691,7 @@
   <div id="movModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Movimentações do Contrato</h2>
+        <h2>MovimentaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes do Contrato</h2>
         <button class="close" onclick="closeModal('movModal')">&times;</button>
       </div>
 
@@ -706,7 +703,7 @@
           <div class="form-group">
             <label>Tipo</label>
             <select id="movTipo" class="form-control">
-              <option value="saida">Pagamento (Saída)</option>
+              <option value="saida">Pagamento (SaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­da)</option>
               <option value="ajuste">Ajuste de Saldo</option>
             </select>
           </div>
@@ -719,13 +716,13 @@
             <input id="movData" type="date" class="form-control" />
           </div>
           <div class="form-group form-group--full">
-            <label>Observações</label>
+            <label>ObservaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes</label>
             <input id="movObs" class="form-control" />
           </div>
         </div>
         <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:20px">
           <button type="button" class="btn secondary" onclick="closeModal('movModal')">Fechar</button>
-          <button type="submit" class="btn success">Aplicar Movimentação</button>
+          <button type="submit" class="btn success">Aplicar MovimentaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o</button>
         </div>
       </form>
 
@@ -878,7 +875,7 @@
         if (!r.ok) throw new Error(`GET ${path} falhou: ${r.status}`);
         return r.json();
       } catch (error) {
-        console.error('Erro na requisição GET:', error);
+        console.error('Erro na requisiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o GET:', error);
         throw error;
       }
     }
@@ -896,7 +893,7 @@
         }
         return r.status === 204 ? null : r.json();
       } catch (error) {
-        console.error(`Erro na requisição ${method}:`, error);
+        console.error(`Erro na requisiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ${method}:`, error);
         throw error;
       }
     }
@@ -907,7 +904,7 @@
         if (!r.ok) throw new Error(`POST form ${path} falhou: ${r.status}`);
         return r.json();
       } catch (error) {
-        console.error('Erro no envio do formulário:', error);
+        console.error('Erro no envio do formulÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio:', error);
         throw error;
       }
     }
@@ -941,19 +938,19 @@
         
         centrosCusto = await apiGet('/centros').catch(err => {
           console.error('Erro ao carregar centros:', err);
-          showAlert('Não foi possível carregar Centros de Custo.', 'warning');
+          showAlert('NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel carregar Centros de Custo.', 'warning');
           return [];
         });
 
         contasContabeis = await apiGet('/contas').catch(err => {
           console.error('Erro ao carregar contas:', err);
-          showAlert('Não foi possível carregar Contas Contábeis.', 'warning');
+          showAlert('NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel carregar Contas ContÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡beis.', 'warning');
           return [];
         });
 
         contratos = await apiGet('/contratos').catch(err => {
           console.error('Erro ao carregar contratos:', err);
-          showAlert('Não foi possível carregar Contratos.', 'warning');
+          showAlert('NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­vel carregar Contratos.', 'warning');
           return [];
         });
 
@@ -965,7 +962,7 @@
 
       } catch (err) {
         console.error('Falha inesperada ao inicializar dados:', err);
-        showAlert('Erro ao carregar dados da API. Verifique a conexão.', 'danger');
+        showAlert('Erro ao carregar dados da API. Verifique a conexÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o.', 'danger');
       }
     }
 
@@ -1086,7 +1083,7 @@
       tbody.innerHTML = '';
 
       if (contasContabeis.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-secondary)">Nenhuma conta contábil encontrada</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-secondary)">Nenhuma conta contÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡bil encontrada</td></tr>';
         return;
       }
 
@@ -1110,7 +1107,7 @@
       const div = document.getElementById('alerts');
       if (!div) return;
 
-      // Limpa alertas existentes (mas mantém os temporários)
+      // Limpa alertas existentes (mas mantÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©m os temporÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios)
       div.querySelectorAll('.alert:not([data-temporary])').forEach(el => el.remove());
 
       const vencendo = contratos.filter(c => {
@@ -1122,7 +1119,7 @@
       if (vencendo.length) {
         const el = document.createElement('div');
         el.className = 'alert alert-warning';
-        el.innerHTML = `<strong>Atenção!</strong> ${vencendo.length} contrato(s) vencendo nos próximos 30 dias.`;
+        el.innerHTML = `<strong>AtenÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o!</strong> ${vencendo.length} contrato(s) vencendo nos prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ximos 30 dias.`;
         div.appendChild(el);
       }
     }
@@ -1143,7 +1140,7 @@
     function updateContaContabilOptions() {
       const select = document.getElementById('contaContabil');
       if (!select) return;
-      select.innerHTML = '<option value="">Selecione uma conta contábil</option>';
+      select.innerHTML = '<option value="">Selecione uma conta contÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡bil</option>';
       contasContabeis.forEach(conta => {
         const opt = document.createElement('option');
         opt.value = conta.id;
@@ -1211,3 +1208,4 @@
 </body>
 
 </html>
+

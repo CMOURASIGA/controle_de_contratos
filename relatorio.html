@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RelatÃ³rio de Contratos</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .filters { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+    .filters .form-control { width:auto; }
+  </style>
+  </head>
+<body>
+  <div id="alerts"></div>
+  <div class="brand-bar"></div>
+  <div class="header">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
+      <div>
+        <h1>RelatÃ³rio</h1>
+        <p>Exporte os contratos filtrados em CSV (UTC-3 SÃ£o Paulo)</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <a class="btn secondary" href="index.html">Voltar</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="content-area">
+      <h2 style="margin:0 0 12px">Filtros</h2>
+      <div class="filters">
+        <input class="form-control" id="filtroFornecedor" placeholder="Fornecedor" />
+        <input class="form-control" id="filtroNumero" placeholder="NÃºmero do contrato" />
+        <select class="form-control" id="filtroStatus">
+          <option value="">Todos os status</option>
+          <option value="ativo">Ativo</option>
+          <option value="vencendo">Vencendo</option>
+          <option value="vencido">Vencido</option>
+          <option value="inativo">Inativo</option>
+        </select>
+        <div>
+          <label>Vencimento de</label>
+          <input class="form-control" id="filtroVencimentoDe" type="date" />
+        </div>
+        <div>
+          <label>Vencimento atÃ©</label>
+          <input class="form-control" id="filtroVencimentoAte" type="date" />
+        </div>
+        <button class="btn" id="btnAplicarFiltros">Aplicar</button>
+        <button class="btn secondary" id="btnLimparFiltros">Limpar</button>
+        <button class="btn success" id="btnBaixar">Baixar CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/timezone.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await initializeData();
+      } catch(e) { /* silencioso para pÃ¡gina de relatÃ³rio */ }
+
+      document.getElementById('btnBaixar')?.addEventListener('click', () => {
+        baixarRelatorio();
+      });
+    });
+  </script>
+  <div class="container">
+    <div class="content-area">
+      <div class="table-container">
+        <table id="contratosTable">
+          <thead>
+            <tr>
+              <th>Número</th>
+              <th>Fornecedor</th>
+              <th>Centro de Custo</th>
+              <th>Valor Total</th>
+              <th>Saldo Utilizado</th>
+              <th>Vencimento</th>
+              <th>Status</th>
+              <th style="width:300px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div></body>
+</html>
+

@@ -222,6 +222,14 @@ label{ font-weight: 600; font-size: .95rem; }
   border: 2px solid var(--border-color); font-size: 1rem;
   background: #fff; outline: none; transition: border .15s ease, box-shadow .15s ease;
 }
+.form-group input[type="checkbox"]#contratoAtivo{
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primary-color);
+}
+.form-group input[type="checkbox"]#contratoAtivo + label{
+  font-size: 1rem;
+}
 .form-control:focus{
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px var(--focus-ring);

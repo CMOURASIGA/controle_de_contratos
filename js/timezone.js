@@ -1,6 +1,3 @@
-+40
--0
-
 const BR_TZ = 'America/Sao_Paulo';
 
 /**
@@ -35,8 +32,21 @@ function formatISO(date) {
   return toBRDate(date).toISOString();
 }
 
+/**
+ * Retorna string YYYY-MM-DD da data no fuso de São Paulo.
+ * @param {string|number|Date} date
+ */
+function formatYMD(date) {
+  const d = toBRDate(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 // expõe funções no escopo global
 window.brNow = brNow;
 window.toBRDate = toBRDate;
 window.formatBR = formatBR;
 window.formatISO = formatISO;
+window.formatYMD = formatYMD;
