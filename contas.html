@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contas ContÃ¡beis</title>
+  <title>Contas Contábeis</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -30,8 +30,8 @@
   <div class="header">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
       <div>
-        <h1>Contas ContÃ¡beis</h1>
-        <p>Gerencie o plano e classificaÃ§Ãµes contÃ¡beis</p>
+        <h1>Contas Contábeis</h1>
+        <p>Gerencie o plano e classificAções contábeis</p>
       </div>
       <div style="display:flex; gap:8px;">
         <a class="btn secondary" href="index.html">Voltar</a>
@@ -45,10 +45,10 @@
       <table id="contasTable">
         <thead>
           <tr>
-            <th>CÃ³digo</th>
-            <th>DescriÃ§Ã£o</th>
+            <th>Código</th>
+            <th>Descrição</th>
             <th>Tipo</th>
-            <th style="width: 200px;">AÃ§Ãµes</th>
+            <th style="width: 200px;">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -62,18 +62,18 @@
   <div id="contaModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="contaModalTitle">Nova Conta ContÃ¡bil</h2>
+        <h2 id="contaModalTitle">Nova Conta Contábil</h2>
         <button class="close" onclick="closeModal('contaModal')">&times;</button>
       </div>
       <form id="contaForm">
         <div class="alert" id="msgConta" style="display:none"></div>
         <div class="form-grid">
           <div class="form-group">
-            <label>CÃ³digo *</label>
+            <label>Código *</label>
             <input id="codigoConta" class="form-control" required />
           </div>
           <div class="form-group">
-            <label>DescriÃ§Ã£o *</label>
+            <label>Descrição *</label>
             <input id="descricaoConta" class="form-control" required />
           </div>
           <div class="form-group">
@@ -100,4 +100,5 @@
   </div>
 </body>
 </html>
+
 

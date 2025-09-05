@@ -44,9 +44,33 @@ function formatYMD(date) {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * Retorna string dd/mm/aaaa no fuso de São Paulo.
+ */
+function formatBRInput(date) {
+  const d = toBRDate(date);
+  const day = String(d.getDate()).padStart(2, '0');
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const y = d.getFullYear();
+  return `${day}/${m}/${y}`;
+}
+
+/**
+ * Converte dd/mm/aaaa para YYYY-MM-DD.
+ */
+function parseBRToYMD(str) {
+  if (!str) return null;
+  const m = String(str).match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return str || null; // já pode estar em ISO (YYYY-MM-DD)
+  const [_, dd, mm, yyyy] = m;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 // expõe funções no escopo global
 window.brNow = brNow;
 window.toBRDate = toBRDate;
 window.formatBR = formatBR;
 window.formatISO = formatISO;
 window.formatYMD = formatYMD;
+window.formatBRInput = formatBRInput;
+window.parseBRToYMD = parseBRToYMD;

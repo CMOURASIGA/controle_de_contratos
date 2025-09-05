@@ -1,4 +1,4 @@
-/***********************
+﻿/***********************
  * CONFIGURAÇÃO
  ***********************/
 // Determine API base URL from global or build-time configuration
@@ -7,7 +7,7 @@ const API =
   (typeof process !== 'undefined' && process.env && process.env.API_BASE) ||
   'https://controledecontratos-production.up.railway.app';
 
-// Estado em memória
+// Estado em memÃ³ria
 let contratos = [];
 let centrosCusto = [];
 let contasContabeis = [];
@@ -61,6 +61,26 @@ function toBRL(n) {
   return Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 }
 
+// Máscara e normalização para datas dd/mm/aaaa
+function addDateMaskFor(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.setAttribute('inputmode', 'numeric');
+  el.setAttribute('placeholder', 'dd/mm/aaaa');
+  el.addEventListener('input', () => {
+    let v = el.value.replace(/\D/g, '').slice(0, 8);
+    if (v.length >= 5) v = v.replace(/(\d{2})(\d{2})(\d{1,4})/, '$1/$2/$3');
+    else if (v.length >= 3) v = v.replace(/(\d{2})(\d{1,2})/, '$1/$2');
+    el.value = v;
+  });
+  el.addEventListener('blur', () => {
+    if (typeof formatBRInput === 'function' && el.value.trim() === '') {
+      // deixa vazio ao sair, sem auto-preencher
+      return;
+    }
+  });
+}
+
 /***********************
  * INICIALIZAÇÃO
  ***********************/
@@ -71,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Preenche selects do contrato quando presentes (novo/editar)
     updateCentroCustoOptions();
     updateContaContabilOptions();
-    // Define valores padrão de datas respeitando UTC-3 quando presentes
+    // Define valores padrÃ£o de datas respeitando UTC-3 quando presentes
     if (typeof formatYMD === 'function') {
       const di = document.getElementById('dataInicio');
       const dv = document.getElementById('dataVencimento');
@@ -140,7 +160,7 @@ async function loadDashboard() {
       });
     }
 
-    // Evolução de valores pagos
+    // EvoluÃ§Ã£o de valores pagos
     const evoCtx = document.getElementById('chartEvolucao')?.getContext('2d');
     if (evoCtx) {
       chartEvolucao?.destroy();
@@ -192,7 +212,7 @@ function setupEventListeners() {
     window.location.href = 'novo-contrato.html';
   });
 
-  // Formulários
+  // formulários
   document.getElementById('contratoForm')?.addEventListener('submit', handleContratoSubmit);
   document.getElementById('centroForm')?.addEventListener('submit', handleCentroSubmit);
   document.getElementById('contaForm')?.addEventListener('submit', handleContaSubmit);
@@ -210,9 +230,14 @@ function setupEventListeners() {
       if (err && err.classList.contains('error')) err.textContent = '';
     });
   });
-}
-
-async function initializeData() {
+\n  // Ajuste visual de campos de data para formato BR
+  ['dataInicio','dataVencimento','movData'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.setAttribute('placeholder','dd/mm/aaaa');
+      if (typeof formatBRInput==='function' && !el.value) el.value = id==='movData' ? formatBRInput(brNow()) : el.value;
+    }
+  });\n}\n\nasync function initializeData() {
   try {
     console.log('Inicializando dados...');
     
@@ -292,7 +317,7 @@ function closeModal(modalId) {
   // Reset titles
   if (modalId === 'contratoModal') document.getElementById('contratoModalTitle').textContent = 'Novo Contrato';
   if (modalId === 'centroModal') document.getElementById('centroModalTitle').textContent = 'Novo Centro de Custo';
-  if (modalId === 'contaModal') document.getElementById('contaModalTitle').textContent = 'Nova Conta Contábil';
+  if (modalId === 'contaModal') document.getElementById('contaModalTitle').textContent = 'Nova Conta contábil';
 }
 
 // Fechar modal clicando fora
@@ -330,15 +355,21 @@ function updateContaContabilOptions() {
 }
 
 /***********************
- * FILTROS + RELATÓRIO
+ * FILTROS + RELATÃ“RIO
  ***********************/
 function buildContratosQueryFromFilters() {
   const params = new URLSearchParams();
   const fornecedor = document.getElementById('filtroFornecedor')?.value?.trim() || '';
   const numero = document.getElementById('filtroNumero')?.value?.trim() || '';
   const status = document.getElementById('filtroStatus')?.value || '';
-  const vencimentoDe = document.getElementById('filtroVencimentoDe')?.value || '';
-  const vencimentoAte = document.getElementById('filtroVencimentoAte')?.value || '';
+  let vencimentoDe = document.getElementById('filtroVencimentoDe')?.value || '';
+  let vencimentoAte = document.getElementById('filtroVencimentoAte')?.value || '';
+  // Converte dd/mm/aaaa -> YYYY-MM-DD se necessário
+  if (typeof parseBRToYMD === 'function') {
+    const br = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    if (br.test(vencimentoDe)) vencimentoDe = parseBRToYMD(vencimentoDe);
+    if (br.test(vencimentoAte)) vencimentoAte = parseBRToYMD(vencimentoAte);
+  }
 
   // Mapeia para a API
   if (fornecedor) params.set('fornecedor', fornecedor);
@@ -407,8 +438,8 @@ async function baixarRelatorio() {
     
     showAlert('Relatório baixado com sucesso!', 'success');
   } catch (e) {
-    console.error('Erro ao gerar relatório:', e);
-    showAlert('Erro ao gerar relatório.', 'danger');
+    console.error('Erro ao gerar Relatório:', e);
+    showAlert('Erro ao gerar Relatório.', 'danger');
   }
 }
 
@@ -565,7 +596,7 @@ function updateContasTable() {
 }
 
 /***********************
- * ESTATÍSTICAS & ALERTAS
+ * ESTATÃSTICAS & ALERTAS
  ***********************/
 function updateDashboardMetrics() {
   const ativos = contratos.filter(c => c.ativo !== false);
@@ -627,7 +658,7 @@ function checkAlerts() {
     el.innerHTML = `<strong>⚠️ Atenção!</strong> ${vencendo.length} contrato(s) vencendo nos próximos 30 dias:
       ${vencendo.map(c => {
         const dias = Math.ceil((toBRDate(c.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
-        return `<br>• ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (vence em ${dias} dias)`;
+        return `<br>â€¢ ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (vence em ${dias} dias)`;
       }).join('')}`;
     div.appendChild(el);
   }
@@ -643,7 +674,7 @@ function checkAlerts() {
     el.innerHTML = `<strong>🚨 Crítico!</strong> ${estouro.length} contrato(s) com estouro de saldo:
       ${estouro.map(c => {
         const pct = ((Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100).toFixed(1);
-        return `<br>• ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
+        return `<br>â€¢ ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
       }).join('')}`;
     div.appendChild(el);
   }
@@ -660,7 +691,7 @@ function checkAlerts() {
     el.innerHTML = `<strong>⚠️ Saldo Baixo!</strong> ${saldoBaixo.length} contrato(s) com saldo próximo do limite:
       ${saldoBaixo.map(c => {
         const pct = ((Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100).toFixed(1);
-        return `<br>• ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
+        return `<br>â€¢ ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
       }).join('')}`;
     div.appendChild(el);
   }
@@ -729,10 +760,7 @@ async function editContrato(id) {
   get('contaContabil') && (get('contaContabil').value = c.contaContabil || '');
   get('valorTotal') && (get('valorTotal').value = Number(c.valorTotal) || 0);
   get('saldoUtilizado') && (get('saldoUtilizado').value = Number(c.saldoUtilizado) || 0);
-  if (typeof formatYMD === 'function') {
-    get('dataInicio') && (get('dataInicio').value = c.dataInicio ? formatYMD(c.dataInicio) : '');
-    get('dataVencimento') && (get('dataVencimento').value = c.dataVencimento ? formatYMD(c.dataVencimento) : '');
-  } else {
+  if (typeof formatBRInput === 'function') { get('dataInicio') && (get('dataInicio').value = c.dataInicio ? formatBRInput(c.dataInicio) : ''); get('dataVencimento') && (get('dataVencimento').value = c.dataVencimento ? formatBRInput(c.dataVencimento) : ''); } else {
     get('dataInicio') && (get('dataInicio').value = c.dataInicio?.slice(0, 10) || '');
     get('dataVencimento') && (get('dataVencimento').value = c.dataVencimento?.slice(0, 10) || '');
   }
@@ -816,7 +844,7 @@ function editConta(id) {
   if (!c) return;
 
   editingId = id;
-  document.getElementById('contaModalTitle').textContent = 'Editar Conta Contábil';
+  document.getElementById('contaModalTitle').textContent = 'Editar Conta contábil';
   document.getElementById('codigoConta').value = c.codigo || '';
   document.getElementById('descricaoConta').value = c.descricao || '';
   document.getElementById('tipoConta').value = c.tipo || '';
@@ -845,13 +873,18 @@ async function deleteConta(id) {
 }
 
 /***********************
- * MOVIMENTAÇÕES
+ * MOVIMENTAÃ‡Ã•ES
  ***********************/
 function openMovModal(contratoId) {
   document.getElementById('movContratoId').value = contratoId;
   document.getElementById('movTipo').value = 'saida';
   document.getElementById('movValor').value = '';
-  document.getElementById('movData').value = formatISO(brNow()).slice(0, 10);
+  if (typeof formatBRInput === 'function') {
+    document.getElementById('movData').value = formatBRInput(brNow());
+    document.getElementById('movData').setAttribute('placeholder','dd/mm/aaaa');
+  } else {
+    document.getElementById('movData').value = formatISO(brNow()).slice(0, 10);
+  }
   document.getElementById('movObs').value = '';
   
   
@@ -901,7 +934,7 @@ async function loadMovimentacoes(contratoId) {
 }
 
 /***********************
- * MANIPULADORES DE FORMULÁRIO
+ * MANIPULADORES DE FORMULÃRIO
  ***********************/
 function validateContratoForm() {
   let valid = true;
@@ -948,8 +981,8 @@ async function handleContratoSubmit(e) {
     contaContabil: parseInt(document.getElementById('contaContabil').value) || null,
     valorTotal: parseFloat(document.getElementById('valorTotal').value) || 0,
     saldoUtilizado: parseFloat(document.getElementById('saldoUtilizado').value) || 0,
-    dataInicio: document.getElementById('dataInicio').value || null,
-    dataVencimento: document.getElementById('dataVencimento').value || null,
+    dataInicio: (typeof parseBRToYMD==='function') ? parseBRToYMD(document.getElementById('dataInicio').value) : (document.getElementById('dataInicio').value || null),
+    dataVencimento: (typeof parseBRToYMD==='function') ? parseBRToYMD(document.getElementById('dataVencimento').value) : (document.getElementById('dataVencimento').value || null),
     observacoes: document.getElementById('observacoes').value || null,
     ativo
   };
@@ -1071,13 +1104,13 @@ async function handleMovSubmit(e) {
     
     showAlert('Movimentação lançada!', 'success');
   } catch (err) {
-    console.error('Erro ao lançar movimentação:', err);
-    showAlert('Erro ao lançar movimentação.', 'danger');
+    console.error('Erro ao lançar Movimentação:', err);
+    showAlert('Erro ao lançar Movimentação.', 'danger');
   }
 }
 
 /***********************
- * ALERTAS TEMPORÁRIOS
+ * ALERTAS TEMPORÃRIOS
  ***********************/
 function showAlert(message, type = 'success') {
   const container = document.getElementById('alerts');
@@ -1098,7 +1131,7 @@ function showAlert(message, type = 'success') {
 }
 
 /***********************
- * EXPORTAR FUNÇÕES GLOBAIS
+ * EXPORTAR FUNÃ‡Ã•ES GLOBAIS
  ***********************/
 window.showTab = showTab;
 window.openModal = openModal;
