@@ -27,7 +27,7 @@
       <div class="alert" style="display:none" id="msgContrato"></div>
       <div class="form-grid">
         <div class="form-group">
-          <label>NÃºmero do Contrato *</label>
+          <label>Número do Contrato *</label>
           <input id="numeroContrato" class="form-control" required />
           <span class="error"></span>
         </div>
@@ -44,7 +44,7 @@
           <span class="error"></span>
         </div>
         <div class="form-group">
-          <label>Conta ContÃ¡bil *</label>
+          <label>Conta Contábil *</label>
           <select id="contaContabil" class="form-control" required>
             <option value="">Selecione</option>
           </select>
@@ -60,7 +60,7 @@
           <input id="saldoUtilizado" type="number" step="0.01" class="form-control" value="0" />
         </div>
         <div class="form-group">
-          <label>Data de InÃ­cio *</label>
+          <label>Data de Início *</label>
           <input id="dataInicio" type="date" class="form-control" lang="pt-BR" required />
           <span class="error"></span>
         </div>
@@ -70,7 +70,7 @@
           <span class="error"></span>
         </div>
         <div class="form-group form-group--full">
-          <label>ObservaÃ§Ãµes</label>
+          <label>Observações</label>
           <textarea id="observacoes" rows="3" class="form-control"></textarea>
         </div>
         <div class="form-group" style="display:flex;align-items:center;gap:8px">
@@ -95,11 +95,11 @@
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       try {
-        // Assegura preenchimento das opÃ§Ãµes quando os dados jÃ¡ estiverem carregados
+        // Assegura preenchimento das opções quando os dados já estiverem carregados
         if (typeof updateCentroCustoOptions === 'function') updateCentroCustoOptions();
         if (typeof updateContaContabilOptions === 'function') updateContaContabilOptions();
 
-        // Define datas padrÃ£o no fuso America/Sao_Paulo
+        // Define datas padrão no fuso America/Sao_Paulo
         if (typeof formatYMD === 'function') {
           const di = document.getElementById('dataInicio');
           const dv = document.getElementById('dataVencimento');
@@ -107,7 +107,7 @@
           if (dv && !dv.value) dv.value = '';
         }
 
-        // EdiÃ§Ã£o: carrega contrato se houver ?id=
+        // Edição: carrega contrato se houver ?id=
         const params = new URLSearchParams(window.location.search);
         const id = params.get('id');
         if (id) {
@@ -135,7 +135,7 @@
           }
         }
       } catch (err) {
-        console.error('Falha ao preparar formulÃ¡rio de contrato:', err);
+        console.error('Falha ao preparar formulário de contrato:', err);
       }
     });
   </script>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GestÃ£o de Contratos</title>
+  <title>Gestão de Contratos</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -26,10 +26,10 @@
     <div id="contratos" class="tab-content active">
       <div class="content-area">
         <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
-          <h2>GestÃ£o de Contratos</h2>
+          <h2>Gestão de Contratos</h2>
           <div style="display: flex; gap: 12px; flex-wrap: wrap;">
             <input class="form-control" id="filtroFornecedor" placeholder="Filtrar por fornecedor" style="width: auto;">
-            <input class="form-control" id="filtroNumero" placeholder="NÃºmero do contrato" style="width: auto;">
+            <input class="form-control" id="filtroNumero" placeholder="Número do contrato" style="width: auto;">
             <select class="form-control" id="filtroStatus" style="width: auto;">
               <option value="">Todos os status</option>
               <option value="ativo">Ativo</option>
@@ -46,7 +46,7 @@
           <table id="contratosTable">
             <thead>
               <tr>
-                <th>NÃºmero</th>
+                <th>Número</th>
                 <th>Fornecedor</th>
                 <th>Centro de Custo</th>
                 <th>Valor Total</th>
@@ -100,7 +100,7 @@
         </div>
         <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:20px">
           <button type="button" class="btn secondary" onclick="closeModal('movModal')">Fechar</button>
-          <button type="submit" class="btn success">Aplicar MovimentaÃ§Ã£o</button>
+          <button type="submit" class="btn success">Aplicar Movimentação</button>
         </div>
       </form>
 
@@ -139,7 +139,7 @@
             <input id="nomeCentro" class="form-control" required />
           </div>
           <div class="form-group">
-            <label>ResponsÃ¡vel *</label>
+            <label>Responsável *</label>
             <input id="responsavel" class="form-control" required />
           </div>
           <div class="form-group">
@@ -159,7 +159,7 @@
   <div id="contaModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="contaModalTitle">Nova Conta ContÃ¡bil</h2>
+        <h2 id="contaModalTitle">Nova Conta Contábil</h2>
         <button class="close" onclick="closeModal('contaModal')">&times;</button>
       </div>
       <form id="contaForm">
@@ -170,7 +170,7 @@
             <input id="codigoConta" class="form-control" required />
           </div>
           <div class="form-group">
-            <label>DescriÃ§Ã£o *</label>
+            <label>Descrição *</label>
             <input id="DescriçãoConta" class="form-control" required />
           </div>
           <div class="form-group">
