@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -16,10 +16,10 @@
     <nav class="nav-menu">
       <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span>Dashboard</a>
       <a class="nav-item" href="contratos.html"><span class="nav-icon">📄</span>Contratos</a>
-      <a class="nav-item active" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">➕</span>Novo Contrato</a>
+      <a class="nav-item active" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">✍️</span>Novo Contrato</a>
       <a class="nav-item" href="centros.html"><span class="nav-icon">🏢</span>Centros de Custo</a>
       <a class="nav-item" href="contas.html"><span class="nav-icon">🧾</span>Contas Contábeis</a>
-      <a class="nav-item" href="relatorio.html"><span class="nav-icon">📈</span>Relatórios</a>
+      <a class="nav-item" href="relatorio.html"><span class="nav-icon">📊</span>Relatórios</a>
     </nav>
   </div>
 
@@ -113,11 +113,9 @@
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       try {
-        // Assegura preenchimento das opções quando os dados já estiverem carregados
         if (typeof updateCentroCustoOptions === 'function') updateCentroCustoOptions();
         if (typeof updateContaContabilOptions === 'function') updateContaContabilOptions();
 
-        // Define datas padrão no fuso America/Sao_Paulo
         if (typeof formatYMD === 'function') {
           const di = document.getElementById('dataInicio');
           const dv = document.getElementById('dataVencimento');
@@ -148,7 +146,6 @@
             }
             document.getElementById('observacoes').value = c.observacoes || '';
             document.getElementById('contratoAtivo').checked = c.ativo !== false;
-            // Lista anexos existentes
             if (typeof updateListaAnexos === 'function') await updateListaAnexos(Number(id));
           }
         }
@@ -157,6 +154,7 @@
       }
     });
   </script>
+  </div>
 </body>
 </html>
 
