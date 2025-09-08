@@ -16,11 +16,25 @@ const allowList = (process.env.CORS_ORIGIN || '')
   .map(s => s.trim())
   .filter(Boolean);
 
+function isOriginAllowed(origin) {
+  if (!origin) return true; // curl/postman
+  if (allowList.length === 0) return true; // sem restrição => permite todos
+  if (allowList.includes('*')) return true; // curinga explícito
+  if (allowList.includes(origin)) return true; // match exato
+  // match por prefixo para permitir qualquer porta (ex.: http://localhost, http://172.23.64.1)
+  for (const a of allowList) {
+    if (!a) continue;
+    if (origin.startsWith(a)) return true;
+    // também aceita sufixo '*' explicitado (ex.: http://localhost:*)
+    if (a.endsWith('*') && origin.startsWith(a.slice(0, -1))) return true;
+  }
+  return false;
+}
+
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin) return cb(null, true); // curl/postman
-      if (allowList.length === 0 || allowList.includes(origin)) return cb(null, true);
+      if (isOriginAllowed(origin)) return cb(null, true);
       return cb(new Error('Not allowed by CORS'));
     },
   })

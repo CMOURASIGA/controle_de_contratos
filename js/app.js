@@ -87,7 +87,7 @@ function addDateMaskFor(id) {
  ***********************/
 document.addEventListener('DOMContentLoaded', async function () {
   try {
-    \n    await initializeData();
+    await initializeData();
     setupEventListeners();
     // Preenche selects do contrato quando presentes (novo/editar)
     updateCentroCustoOptions();
@@ -229,16 +229,19 @@ function setupEventListeners() {
       el.classList.remove('invalid');
       const err = el.nextElementSibling;
       if (err && err.classList.contains('error')) err.textContent = '';
-    });
   });
-\n  // Ajuste visual de campos de data para formato BR
+  });
+  // Ajuste visual de campos de data para formato BR
   ['dataInicio','dataVencimento','movData'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       el.setAttribute('placeholder','dd/mm/aaaa');
       if (typeof formatBRInput==='function' && !el.value) el.value = id==='movData' ? formatBRInput(brNow()) : el.value;
     }
-  });\n}\n\nasync function initializeData() {
+  });
+}
+
+async function initializeData() {
   try {
     console.log('Inicializando dados...');
     
