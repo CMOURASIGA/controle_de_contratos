@@ -662,7 +662,7 @@ function checkAlerts() {
     el.innerHTML = `<strong>⚠️ Atenção!</strong> ${vencendo.length} contrato(s) vencendo nos próximos 30 dias:
       ${vencendo.map(c => {
         const dias = Math.ceil((toBRDate(c.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
-        return `<br>â€¢ ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (vence em ${dias} dias)`;
+        return `<br>&bull; ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (vence em ${dias} dias)`;
       }).join('')}`;
     div.appendChild(el);
   }
@@ -678,7 +678,7 @@ function checkAlerts() {
     el.innerHTML = `<strong>🚨 Crítico!</strong> ${estouro.length} contrato(s) com estouro de saldo:
       ${estouro.map(c => {
         const pct = ((Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100).toFixed(1);
-        return `<br>â€¢ ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
+        return `<br>&bull; ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
       }).join('')}`;
     div.appendChild(el);
   }
@@ -695,7 +695,7 @@ function checkAlerts() {
     el.innerHTML = `<strong>⚠️ Saldo Baixo!</strong> ${saldoBaixo.length} contrato(s) com saldo próximo do limite:
       ${saldoBaixo.map(c => {
         const pct = ((Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100).toFixed(1);
-        return `<br>â€¢ ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
+        return `<br>&bull; ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
       }).join('')}`;
     div.appendChild(el);
   }
