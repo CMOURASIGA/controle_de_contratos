@@ -189,7 +189,7 @@ body{
   margin-bottom: 14px;
 }
 
-.table-container{ background: #fff; border-radius: 12px; padding: 8px; }
+.table-container{ background: #fff; border-radius: 12px; padding: 8px; overflow-x: auto; }
 table{ width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; }
 thead th{
   background: #f2f6fb; color: #0f172a;
@@ -314,5 +314,28 @@ label{ font-weight: 600; font-size: .95rem; }
 }
 @media (max-width: 520px){
   .nav-tabs{ flex-direction: column; }
+}
+
+/* Tabelas responsivas (empilha linhas em cartões no mobile) */
+@media (max-width: 760px){
+  table.responsive thead{ position: absolute; left: -9999px; top: -9999px; height: 0; width: 0; overflow: hidden; }
+  table.responsive, table.responsive tbody, table.responsive tr, table.responsive td{ display: block; width: 100%; }
+  table.responsive tr{
+    margin: 0 0 12px 0; background: #fff; border-radius: 12px; box-shadow: var(--shadow);
+    border: 1px solid rgba(0,0,0,.04);
+  }
+  table.responsive td{
+    border: none; border-bottom: 1px solid var(--border-color);
+    position: relative; padding: 12px 12px 12px 46%;
+    min-height: 44px;
+  }
+  table.responsive td:last-child{ border-bottom: none; }
+  table.responsive td::before{
+    content: attr(data-label);
+    position: absolute; left: 12px; top: 12px; width: 40%;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: var(--text-secondary); font-weight: 600;
+  }
+  .action-buttons{ display: flex; gap: 8px; flex-wrap: wrap; }
 }
 

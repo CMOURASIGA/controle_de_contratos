@@ -490,20 +490,20 @@ function updateContratosTable() {
 
     tbody.innerHTML += `
       <tr>
-        <td>${contrato.numero || 'N/A'}</td>
-        <td>${contrato.fornecedor || 'N/A'}</td>
-        <td>${centro ? centro.nome : 'N/A'}</td>
-        <td>R$ ${toBRL(contrato.valorTotal)}</td>
-        <td>
+        <td data-label="Número">${contrato.numero || 'N/A'}</td>
+        <td data-label="Fornecedor">${contrato.fornecedor || 'N/A'}</td>
+        <td data-label="Centro de Custo">${centro ? centro.nome : 'N/A'}</td>
+        <td data-label="Valor Total">R$ ${toBRL(contrato.valorTotal)}</td>
+        <td data-label="Saldo Utilizado">
           <div>R$ ${toBRL(contrato.saldoUtilizado)}</div>
           <div class="progress-bar">
             <div class="progress-fill" style="width:${Math.min(pct, 100)}%; background:${pct > 90 ? 'var(--danger-color)' : 'var(--accent-color)'}"></div>
           </div>
           <small>${isFinite(pct) ? pct.toFixed(1) : '0.0'}% utilizado</small>
         </td>
-        <td>${contrato.dataVencimento ? formatBR(contrato.dataVencimento) : 'N/A'}</td>
-        <td><span class="badge ${statusClass}">${statusText}</span></td>
-        <td>
+        <td data-label="Vencimento">${contrato.dataVencimento ? formatBR(contrato.dataVencimento) : 'N/A'}</td>
+        <td data-label="Status"><span class="badge ${statusClass}">${statusText}</span></td>
+        <td data-label="Ações">
           <div class="action-buttons">
             <button class="btn" onclick="viewAnexos(${contrato.id})">Visualizar</button>          
             <button class="btn" onclick="editContrato(${contrato.id})">Editar</button>
@@ -559,11 +559,11 @@ function updateCentrosTable() {
   centrosCusto.forEach(centro => {
     tbody.innerHTML += `
       <tr>
-        <td>${centro.codigo || 'N/A'}</td>
-        <td>${centro.nome || 'N/A'}</td>
-        <td>${centro.responsavel || 'N/A'}</td>
-        <td>${centro.email || 'N/A'}</td>
-        <td>
+        <td data-label="Código">${centro.codigo || 'N/A'}</td>
+        <td data-label="Nome">${centro.nome || 'N/A'}</td>
+        <td data-label="Responsável">${centro.responsavel || 'N/A'}</td>
+        <td data-label="Email">${centro.email || 'N/A'}</td>
+        <td data-label="Ações">
           <div class="action-buttons">
             <button class="btn warn" onclick="editCentro(${centro.id})">Editar</button>
             <button class="btn danger" onclick="deleteCentro(${centro.id})">Excluir</button>
@@ -586,10 +586,10 @@ function updateContasTable() {
   contasContabeis.forEach(conta => {
     tbody.innerHTML += `
       <tr>
-        <td>${conta.codigo || 'N/A'}</td>
-        <td>${conta.descricao || 'N/A'}</td>
-        <td>${conta.tipo || 'N/A'}</td>
-        <td>
+        <td data-label="Código">${conta.codigo || 'N/A'}</td>
+        <td data-label="Descrição">${conta.descricao || 'N/A'}</td>
+        <td data-label="Tipo">${conta.tipo || 'N/A'}</td>
+        <td data-label="Ações">
           <div class="action-buttons">
             <button class="btn warn" onclick="editConta(${conta.id})">Editar</button>
             <button class="btn danger" onclick="deleteConta(${conta.id})">Excluir</button>
