@@ -1,4 +1,5 @@
 ﻿/***********************
+<<<<<<< HEAD
  * CONFIGURACAO / STORAGE LOCAL
  ***********************/
 let API = 'local-storage';
@@ -39,6 +40,17 @@ const LOCAL_DB_SNAPSHOT = {
 let localDB = loadLocalDB();
 
 // Estado em memoria
+=======
+ * CONFIGURAÇÃO
+ ***********************/
+// Determine API base URL from global or build-time configuration
+let API =
+  (typeof window !== 'undefined' && window.API_BASE) ||
+  (typeof process !== 'undefined' && process.env && process.env.API_BASE) ||
+  'https://controledecontratos-production.up.railway.app';
+
+// Estado em memÃ³ria
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 let contratos = [];
 let centrosCusto = [];
 let contasContabeis = [];
@@ -46,6 +58,7 @@ let editingId = null;
 let chartStatus, chartEvolucao, chartFornecedores;
 
 /***********************
+<<<<<<< HEAD
  * UTIL - STORAGE LOCAL
  ***********************/
 function loadLocalDB() {
@@ -414,11 +427,60 @@ async function apiSendForm(path, formData) {
 /***********************
  * UTIL
  **************************************/
+=======
+ * UTIL
+ ***********************/
+
+async function apiGet(path) {
+  try {
+    const r = await fetch(`${API}${path}`);
+    if (!r.ok) throw new Error(`GET ${path} falhou: ${r.status}`);
+    return r.json();
+  } catch (error) {
+    console.error('Erro na requisição GET:', error);
+    throw error;
+  }
+}
+
+async function apiSend(path, method, body) {
+  try {
+    const r = await fetch(`${API}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {})
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      throw new Error(`${method} ${path} falhou: ${r.status} ${txt}`);
+    }
+    return r.status === 204 ? null : r.json();
+  } catch (error) {
+    console.error(`Erro na requisição ${method}:`, error);
+    throw error;
+  }
+}
+
+async function apiSendForm(path, formData) {
+  try {
+    const r = await fetch(`${API}${path}`, { method: 'POST', body: formData });
+    if (!r.ok) throw new Error(`POST form ${path} falhou: ${r.status}`);
+    return r.json();
+  } catch (error) {
+    console.error('Erro no envio do formulário:', error);
+    throw error;
+  }
+}
+
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 function toBRL(n) {
   return Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 }
 
+<<<<<<< HEAD
 // Mascara e normalizacao para datas dd/mm/aaaa
+=======
+// Máscara e normalização para datas dd/mm/aaaa
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 function addDateMaskFor(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -439,7 +501,11 @@ function addDateMaskFor(id) {
 }
 
 /***********************
+<<<<<<< HEAD
  * INICIALIZACAO
+=======
+ * INICIALIZAÇÃO
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
  ***********************/
 document.addEventListener('DOMContentLoaded', async function () {
   try {
@@ -448,7 +514,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Preenche selects do contrato quando presentes (novo/editar)
     updateCentroCustoOptions();
     updateContaContabilOptions();
+<<<<<<< HEAD
     // Define valores padrao de datas respeitando UTC-3 quando presentes
+=======
+    // Define valores padrÃ£o de datas respeitando UTC-3 quando presentes
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     if (typeof formatYMD === 'function') {
       const di = document.getElementById('dataInicio');
       const dv = document.getElementById('dataVencimento');
@@ -459,8 +529,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Atualiza alertas a cada 30s
     setInterval(checkAlerts, 30000);
   } catch (e) {
+<<<<<<< HEAD
     console.error('Erro na inicializacao:', e);
     showAlert('Erro ao carregar dados da API. Verifique a conexao.', 'danger');
+=======
+    console.error('Erro na inicialização:', e);
+    showAlert('Erro ao carregar dados da API. Verifique a conexão.', 'danger');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   }
 });
 
@@ -517,10 +592,17 @@ async function loadDashboard() {
       });
     }
 
+<<<<<<< HEAD
     // Evoluaao de valores pagos
     const evoCtx = document.getElementById('chartEvolucao')?.getContext('2d');
     if (evoCtx) {
       chartEvolucao.destroy();
+=======
+    // EvoluÃ§Ã£o de valores pagos
+    const evoCtx = document.getElementById('chartEvolucao')?.getContext('2d');
+    if (evoCtx) {
+      chartEvolucao?.destroy();
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       chartEvolucao = new Chart(evoCtx, {
         type: 'line',
         data: {
@@ -557,7 +639,11 @@ async function loadDashboard() {
     }
   } catch (err) {
     console.error('Erro ao carregar dashboard:', err);
+<<<<<<< HEAD
     showAlert('Erro ao carregar metricas do dashboard.', 'danger');
+=======
+    showAlert('Erro ao carregar métricas do dashboard.', 'danger');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   }
 }
 
@@ -569,7 +655,11 @@ function setupEventListeners() {
     window.location.href = 'novo-contrato.html';
   });
 
+<<<<<<< HEAD
   // formularios
+=======
+  // formulários
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   document.getElementById('contratoForm')?.addEventListener('submit', handleContratoSubmit);
   document.getElementById('centroForm')?.addEventListener('submit', handleCentroSubmit);
   document.getElementById('contaForm')?.addEventListener('submit', handleContaSubmit);
@@ -578,7 +668,11 @@ function setupEventListeners() {
   // Dashboard
   document.getElementById('tabDashboard')?.addEventListener('click', loadDashboard);
   
+<<<<<<< HEAD
   // Validacao e pre-visualizacao de anexos
+=======
+  // Validação e pré-visualização de anexos
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   document.getElementById('anexosContrato')?.addEventListener('change', updateAnexosPreview);
   document.querySelectorAll('#contratoForm input, #contratoForm select, #contratoForm textarea').forEach(el => {
     el.addEventListener('input', () => {
@@ -601,22 +695,37 @@ async function initializeData() {
   try {
     console.log('Inicializando dados...');
     
+<<<<<<< HEAD
     // Primeiro, tenta carregar os dados basicos
     centrosCusto = await apiGet('/centros').catch(err => {
       console.error('Erro ao carregar centros:', err);
       showAlert('Nao foi possivel carregar Centros de Custo.', 'warning');
+=======
+    // Primeiro, tenta carregar os dados básicos
+    centrosCusto = await apiGet('/centros').catch(err => {
+      console.error('Erro ao carregar centros:', err);
+      showAlert('Não foi possível carregar Centros de Custo.', 'warning');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       return [];
     });
 
     contasContabeis = await apiGet('/contas').catch(err => {
       console.error('Erro ao carregar contas:', err);
+<<<<<<< HEAD
       showAlert('Nao foi possivel carregar Contas Contabeis.', 'warning');
+=======
+      showAlert('Não foi possível carregar Contas Contábeis.', 'warning');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       return [];
     });
 
     contratos = await apiGet('/contratos').catch(err => {
       console.error('Erro ao carregar contratos:', err);
+<<<<<<< HEAD
       showAlert('Nao foi possivel carregar Contratos.', 'warning');
+=======
+      showAlert('Não foi possível carregar Contratos.', 'warning');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       return [];
     });
 
@@ -628,7 +737,11 @@ async function initializeData() {
 
   } catch (err) {
     console.error('Falha inesperada ao inicializar dados:', err);
+<<<<<<< HEAD
     showAlert('Erro ao carregar dados da API. Verifique a conexao.', 'danger');
+=======
+    showAlert('Erro ao carregar dados da API. Verifique a conexão.', 'danger');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   }
 }
 
@@ -677,7 +790,11 @@ function closeModal(modalId) {
   // Reset titles
   if (modalId === 'contratoModal') document.getElementById('contratoModalTitle').textContent = 'Novo Contrato';
   if (modalId === 'centroModal') document.getElementById('centroModalTitle').textContent = 'Novo Centro de Custo';
+<<<<<<< HEAD
   if (modalId === 'contaModal') document.getElementById('contaModalTitle').textContent = 'Nova Conta contabil';
+=======
+  if (modalId === 'contaModal') document.getElementById('contaModalTitle').textContent = 'Nova Conta contábil';
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 }
 
 // Fechar modal clicando fora
@@ -705,7 +822,11 @@ function updateCentroCustoOptions() {
 function updateContaContabilOptions() {
   const select = document.getElementById('contaContabil');
   if (!select) return;
+<<<<<<< HEAD
   select.innerHTML = '<option value="">Selecione uma conta contabil</option>';
+=======
+  select.innerHTML = '<option value="">Selecione uma conta contábil</option>';
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   contasContabeis.forEach(conta => {
     const opt = document.createElement('option');
     opt.value = conta.id;
@@ -715,6 +836,7 @@ function updateContaContabilOptions() {
 }
 
 /***********************
+<<<<<<< HEAD
  * FILTROS + RELATA"RIO
  ***********************/
 function buildContratosQueryFromFilters() {
@@ -725,6 +847,18 @@ function buildContratosQueryFromFilters() {
   let vencimentoDe = document.getElementById('filtroVencimentoDe')?.value || '';
   let vencimentoAte = document.getElementById('filtroVencimentoAte')?.value || '';
   // Converte dd/mm/aaaa -> YYYY-MM-DD se necessario
+=======
+ * FILTROS + RELATÃ“RIO
+ ***********************/
+function buildContratosQueryFromFilters() {
+  const params = new URLSearchParams();
+  const fornecedor = document.getElementById('filtroFornecedor')?.value?.trim() || '';
+  const numero = document.getElementById('filtroNumero')?.value?.trim() || '';
+  const status = document.getElementById('filtroStatus')?.value || '';
+  let vencimentoDe = document.getElementById('filtroVencimentoDe')?.value || '';
+  let vencimentoAte = document.getElementById('filtroVencimentoAte')?.value || '';
+  // Converte dd/mm/aaaa -> YYYY-MM-DD se necessário
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   if (typeof parseBRToYMD === 'function') {
     const br = /^(\d{2})\/(\d{2})\/(\d{4})$/;
     if (br.test(vencimentoDe)) vencimentoDe = parseBRToYMD(vencimentoDe);
@@ -782,15 +916,26 @@ async function clearFilters() {
 async function baixarRelatorio() {
   try {
     const path = buildContratosQueryFromFilters();
+<<<<<<< HEAD
     const filtered = await apiGet(path);
     const csv = buildContratosCSV(filtered || []);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+=======
+    const queryString = path.includes('?') ? path.slice(path.indexOf('?')) : '';
+    const url = `${API}/relatorios/contratos${queryString}`;
+    
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Relatório indisponível.');
+    
+    const blob = await r.blob();
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `contratos_${formatISO(brNow()).slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
+<<<<<<< HEAD
     showAlert('Relatorio baixado com sucesso!', 'success');
   } catch (e) {
     console.error('Erro ao gerar Relatorio:', e);
@@ -813,6 +958,16 @@ function buildContratosCSV(data) {
   return [head.join(';'), ...rows.map(r => r.join(';'))].join('\n');
 }
 
+=======
+    
+    showAlert('Relatório baixado com sucesso!', 'success');
+  } catch (e) {
+    console.error('Erro ao gerar Relatório:', e);
+    showAlert('Erro ao gerar Relatório.', 'danger');
+  }
+}
+
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 /***********************
  * TABELAS
  ***********************/
@@ -856,7 +1011,11 @@ function updateContratosTable() {
 
     tbody.innerHTML += `
       <tr>
+<<<<<<< HEAD
         <td data-label="Numero">${contrato.numero || 'N/A'}</td>
+=======
+        <td data-label="Número">${contrato.numero || 'N/A'}</td>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
         <td data-label="Fornecedor">${contrato.fornecedor || 'N/A'}</td>
         <td data-label="Centro de Custo">${centro ? centro.nome : 'N/A'}</td>
         <td data-label="Valor Total">R$ ${toBRL(contrato.valorTotal)}</td>
@@ -869,7 +1028,11 @@ function updateContratosTable() {
         </td>
         <td data-label="Vencimento">${contrato.dataVencimento ? formatBR(contrato.dataVencimento) : 'N/A'}</td>
         <td data-label="Status"><span class="badge ${statusClass}">${statusText}</span></td>
+<<<<<<< HEAD
         <td data-label="Acoes">
+=======
+        <td data-label="Ações">
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
           <div class="action-buttons">
             <button class="btn" onclick="viewAnexos(${contrato.id})">Visualizar</button>          
             <button class="btn" onclick="editContrato(${contrato.id})">Editar</button>
@@ -897,7 +1060,11 @@ async function viewAnexos(id) {
       anexos.forEach(arq => {
         const li = document.createElement('li');
         const link = document.createElement('a');
+<<<<<<< HEAD
         link.href = arq.url || '#';
+=======
+        link.href = `${API}${arq.url}`;
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
         link.textContent = arq.nome_arquivo || 'Arquivo';
         link.target = '_blank';
         li.appendChild(link);
@@ -925,11 +1092,19 @@ function updateCentrosTable() {
   centrosCusto.forEach(centro => {
     tbody.innerHTML += `
       <tr>
+<<<<<<< HEAD
         <td data-label="Codigo">${centro.codigo || 'N/A'}</td>
         <td data-label="Nome">${centro.nome || 'N/A'}</td>
         <td data-label="Responsavel">${centro.responsavel || 'N/A'}</td>
         <td data-label="Email">${centro.email || 'N/A'}</td>
         <td data-label="Acoes">
+=======
+        <td data-label="Código">${centro.codigo || 'N/A'}</td>
+        <td data-label="Nome">${centro.nome || 'N/A'}</td>
+        <td data-label="Responsável">${centro.responsavel || 'N/A'}</td>
+        <td data-label="Email">${centro.email || 'N/A'}</td>
+        <td data-label="Ações">
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
           <div class="action-buttons">
             <button class="btn warn" onclick="editCentro(${centro.id})">Editar</button>
             <button class="btn danger" onclick="deleteCentro(${centro.id})">Excluir</button>
@@ -945,17 +1120,28 @@ function updateContasTable() {
   tbody.innerHTML = '';
 
   if (contasContabeis.length === 0) {
+<<<<<<< HEAD
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-secondary)">Nenhuma conta contabil encontrada</td></tr>';
+=======
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-secondary)">Nenhuma conta contábil encontrada</td></tr>';
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     return;
   }
 
   contasContabeis.forEach(conta => {
     tbody.innerHTML += `
       <tr>
+<<<<<<< HEAD
         <td data-label="Codigo">${conta.codigo || 'N/A'}</td>
         <td data-label="Descricao">${conta.descricao || 'N/A'}</td>
         <td data-label="Tipo">${conta.tipo || 'N/A'}</td>
         <td data-label="Acoes">
+=======
+        <td data-label="Código">${conta.codigo || 'N/A'}</td>
+        <td data-label="Descrição">${conta.descricao || 'N/A'}</td>
+        <td data-label="Tipo">${conta.tipo || 'N/A'}</td>
+        <td data-label="Ações">
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
           <div class="action-buttons">
             <button class="btn warn" onclick="editConta(${conta.id})">Editar</button>
             <button class="btn danger" onclick="deleteConta(${conta.id})">Excluir</button>
@@ -966,7 +1152,11 @@ function updateContasTable() {
 }
 
 /***********************
+<<<<<<< HEAD
  * ESTATaSTICAS & ALERTAS
+=======
+ * ESTATÃSTICAS & ALERTAS
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
  ***********************/
 function updateDashboardMetrics() {
   const ativos = contratos.filter(c => c.ativo !== false);
@@ -1013,7 +1203,11 @@ function checkAlerts() {
   const div = document.getElementById('alerts');
   if (!div) return;
 
+<<<<<<< HEAD
   // Limpa alertas existentes (mas mantem os temporarios)
+=======
+  // Limpa alertas existentes (mas mantém os temporários)
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   div.querySelectorAll('.alert:not([data-temporary])').forEach(el => el.remove());
 
   const vencendo = contratos.filter(c => {
@@ -1025,7 +1219,11 @@ function checkAlerts() {
   if (vencendo.length) {
     const el = document.createElement('div');
     el.className = 'alert alert-warning';
+<<<<<<< HEAD
     el.innerHTML = `<strong>?? Atencao!</strong> ${vencendo.length} contrato(s) vencendo nos proximos 30 dias:
+=======
+    el.innerHTML = `<strong>⚠️ Atenção!</strong> ${vencendo.length} contrato(s) vencendo nos próximos 30 dias:
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       ${vencendo.map(c => {
         const dias = Math.ceil((toBRDate(c.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
         return `<br>&bull; ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (vence em ${dias} dias)`;
@@ -1041,7 +1239,11 @@ function checkAlerts() {
   if (estouro.length) {
     const el = document.createElement('div');
     el.className = 'alert alert-danger';
+<<<<<<< HEAD
     el.innerHTML = `<strong>?? Critico!</strong> ${estouro.length} contrato(s) com estouro de saldo:
+=======
+    el.innerHTML = `<strong>🚨 Crítico!</strong> ${estouro.length} contrato(s) com estouro de saldo:
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       ${estouro.map(c => {
         const pct = ((Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100).toFixed(1);
         return `<br>&bull; ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
@@ -1058,7 +1260,11 @@ function checkAlerts() {
   if (saldoBaixo.length) {
     const el = document.createElement('div');
     el.className = 'alert alert-warning';
+<<<<<<< HEAD
     el.innerHTML = `<strong>?? Saldo Baixo!</strong> ${saldoBaixo.length} contrato(s) com saldo proximo do limite:
+=======
+    el.innerHTML = `<strong>⚠️ Saldo Baixo!</strong> ${saldoBaixo.length} contrato(s) com saldo próximo do limite:
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       ${saldoBaixo.map(c => {
         const pct = ((Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100).toFixed(1);
         return `<br>&bull; ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
@@ -1091,7 +1297,11 @@ async function updateListaAnexos(contratoId) {
       const li = document.createElement('li');
 
       const link = document.createElement('a');
+<<<<<<< HEAD
       link.href = a.url || '#';
+=======
+      link.href = `${API}${a.url}`;
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       link.textContent = a.nome_arquivo || 'arquivo';
       link.target = '_blank';
       li.appendChild(link);
@@ -1131,8 +1341,13 @@ async function editContrato(id) {
   get('valorTotal') && (get('valorTotal').value = Number(c.valorTotal) || 0);
   get('saldoUtilizado') && (get('saldoUtilizado').value = Number(c.saldoUtilizado) || 0);
   if (typeof formatBRInput === 'function') { get('dataInicio') && (get('dataInicio').value = c.dataInicio ? formatBRInput(c.dataInicio) : ''); get('dataVencimento') && (get('dataVencimento').value = c.dataVencimento ? formatBRInput(c.dataVencimento) : ''); } else {
+<<<<<<< HEAD
     get('dataInicio') && (get('dataInicio').value = c.dataInicio.slice(0, 10) || '');
     get('dataVencimento') && (get('dataVencimento').value = c.dataVencimento.slice(0, 10) || '');
+=======
+    get('dataInicio') && (get('dataInicio').value = c.dataInicio?.slice(0, 10) || '');
+    get('dataVencimento') && (get('dataVencimento').value = c.dataVencimento?.slice(0, 10) || '');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   }
   get('observacoes') && (get('observacoes').value = c.observacoes || '');
   get('contratoAtivo') && (get('contratoAtivo').checked = c.ativo !== false);
@@ -1141,7 +1356,11 @@ async function editContrato(id) {
 }
 
 async function removeAnexo(contratoId, arquivoId) {
+<<<<<<< HEAD
   if (!confirm('Remover este anexo')) return;
+=======
+  if (!confirm('Remover este anexo?')) return;
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   try {
     await apiSend(`/contratos/${contratoId}/arquivos/${arquivoId}`, 'DELETE');
     showAlert('Anexo removido!', 'success');
@@ -1153,7 +1372,11 @@ async function removeAnexo(contratoId, arquivoId) {
 }
 
 async function deleteContrato(id) {
+<<<<<<< HEAD
   if (!confirm('Tem certeza que deseja excluir este contrato')) return;
+=======
+  if (!confirm('Tem certeza que deseja excluir este contrato?')) return;
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   
   try {
     await apiSend(`/contratos/${id}`, 'DELETE');
@@ -1165,7 +1388,11 @@ async function deleteContrato(id) {
     updateTables();
     updateStats();
     checkAlerts();
+<<<<<<< HEAD
     showAlert('Contrato excluido com sucesso!', 'success');
+=======
+    showAlert('Contrato excluído com sucesso!', 'success');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   } catch (e) {
     console.error('Erro ao excluir contrato:', e);
     showAlert('Erro ao excluir contrato.', 'danger');
@@ -1192,17 +1419,29 @@ function editCentro(id) {
 async function deleteCentro(id) {
   const usados = contratos.filter(c => c.centroCusto === id);
   if (usados.length > 0) {
+<<<<<<< HEAD
     alert(`Nao e possivel excluir: usado por ${usados.length} contrato(s).`);
     return;
   }
   
   if (!confirm('Excluir centro de custo')) return;
+=======
+    alert(`Não é possível excluir: usado por ${usados.length} contrato(s).`);
+    return;
+  }
+  
+  if (!confirm('Excluir centro de custo?')) return;
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   
   try {
     await apiSend(`/centros/${id}`, 'DELETE');
     centrosCusto = await apiGet('/centros');
     updateTables();
+<<<<<<< HEAD
     showAlert('Centro de custo excluido!', 'success');
+=======
+    showAlert('Centro de custo excluído!', 'success');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   } catch (e) {
     console.error('Erro ao excluir centro:', e);
     showAlert('Erro ao excluir centro de custo.', 'danger');
@@ -1214,7 +1453,11 @@ function editConta(id) {
   if (!c) return;
 
   editingId = id;
+<<<<<<< HEAD
   document.getElementById('contaModalTitle').textContent = 'Editar Conta contabil';
+=======
+  document.getElementById('contaModalTitle').textContent = 'Editar Conta contábil';
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   document.getElementById('codigoConta').value = c.codigo || '';
   document.getElementById('descricaoConta').value = c.descricao || '';
   document.getElementById('tipoConta').value = c.tipo || '';
@@ -1225,25 +1468,44 @@ function editConta(id) {
 async function deleteConta(id) {
   const usados = contratos.filter(c => c.contaContabil === id);
   if (usados.length > 0) {
+<<<<<<< HEAD
     alert(`Nao e possivel excluir: usada por ${usados.length} contrato(s).`);
     return;
   }
   
   if (!confirm('Excluir conta contabil')) return;
+=======
+    alert(`Não é possível excluir: usada por ${usados.length} contrato(s).`);
+    return;
+  }
+  
+  if (!confirm('Excluir conta contábil?')) return;
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   
   try {
     await apiSend(`/contas/${id}`, 'DELETE');
     contasContabeis = await apiGet('/contas');
     updateTables();
+<<<<<<< HEAD
     showAlert('Conta contabil excluida!', 'success');
   } catch (e) {
     console.error('Erro ao excluir conta:', e);
     showAlert('Erro ao excluir conta contabil.', 'danger');
+=======
+    showAlert('Conta contábil excluída!', 'success');
+  } catch (e) {
+    console.error('Erro ao excluir conta:', e);
+    showAlert('Erro ao excluir conta contábil.', 'danger');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   }
 }
 
 /***********************
+<<<<<<< HEAD
  * MOVIMENTAaA.ES
+=======
+ * MOVIMENTAÃ‡Ã•ES
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
  ***********************/
 function openMovModal(contratoId) {
   document.getElementById('movContratoId').value = contratoId;
@@ -1263,7 +1525,11 @@ function openMovModal(contratoId) {
   if (infoEl) {
     infoEl.textContent = contrato ? `${contrato.numero || 'S/N'} - ${contrato.fornecedor || 'N/A'}` : '';
   }
+<<<<<<< HEAD
   // Carrega movimentacoes existentes
+=======
+  // Carrega movimentações existentes
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   loadMovimentacoes(contratoId);
   
   openModal('movModal');
@@ -1278,7 +1544,11 @@ async function loadMovimentacoes(contratoId) {
     tbody.innerHTML = '';
     
     if (movimentos.length === 0) {
+<<<<<<< HEAD
       tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:10px; color:var(--text-secondary)">Nenhuma movimentacao encontrada</td></tr>';
+=======
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:10px; color:var(--text-secondary)">Nenhuma movimentação encontrada</td></tr>';
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       return;
     }
 
@@ -1295,26 +1565,46 @@ async function loadMovimentacoes(contratoId) {
         </tr>`;
     });
   } catch (e) {
+<<<<<<< HEAD
     console.error('Erro ao carregar movimentacoes:', e);
     const tbody = document.getElementById('tbMov');
     if (tbody) {
       tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:10px; color:var(--danger-color)">Erro ao carregar movimentacoes</td></tr>';
+=======
+    console.error('Erro ao carregar movimentações:', e);
+    const tbody = document.getElementById('tbMov');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:10px; color:var(--danger-color)">Erro ao carregar movimentações</td></tr>';
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     }
   }
 }
 
 /***********************
+<<<<<<< HEAD
  * MANIPULADORES DE FORMULaRIO
+=======
+ * MANIPULADORES DE FORMULÃRIO
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
  ***********************/
 function validateContratoForm() {
   let valid = true;
   const fields = [
+<<<<<<< HEAD
     { id: 'numeroContrato', msg: 'Informe o numero do contrato.' },
     { id: 'fornecedor', msg: 'Informe o fornecedor.' },
     { id: 'centroCustoContrato', msg: 'Selecione o centro de custo.' },
     { id: 'contaContabil', msg: 'Selecione a conta contabil.' },
     { id: 'valorTotal', msg: 'Informe o valor total.' },
     { id: 'dataInicio', msg: 'Informe a data de inicio.' },
+=======
+    { id: 'numeroContrato', msg: 'Informe o número do contrato.' },
+    { id: 'fornecedor', msg: 'Informe o fornecedor.' },
+    { id: 'centroCustoContrato', msg: 'Selecione o centro de custo.' },
+    { id: 'contaContabil', msg: 'Selecione a conta contábil.' },
+    { id: 'valorTotal', msg: 'Informe o valor total.' },
+    { id: 'dataInicio', msg: 'Informe a data de início.' },
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     { id: 'dataVencimento', msg: 'Informe a data de vencimento.' }
   ];
 
@@ -1339,7 +1629,11 @@ async function handleContratoSubmit(e) {
   e.preventDefault();
 
   if (!validateContratoForm()) {
+<<<<<<< HEAD
     showAlert('Preencha os campos obrigatorios.', 'danger');
+=======
+    showAlert('Preencha os campos obrigatórios.', 'danger');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     return;
   }
 
@@ -1429,10 +1723,17 @@ async function handleContaSubmit(e) {
   try {
     if (editingId) {
       await apiSend(`/contas/${editingId}`, 'PUT', data);
+<<<<<<< HEAD
       showAlert('Conta contabil atualizada!', 'success');
     } else {
       await apiSend('/contas', 'POST', data);
       showAlert('Conta contabil criada!', 'success');
+=======
+      showAlert('Conta contábil atualizada!', 'success');
+    } else {
+      await apiSend('/contas', 'POST', data);
+      showAlert('Conta contábil criada!', 'success');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     }
 
     contasContabeis = await apiGet('/contas');
@@ -1440,7 +1741,11 @@ async function handleContaSubmit(e) {
     closeModal('contaModal');
   } catch (err) {
     console.error('Erro ao salvar conta:', err);
+<<<<<<< HEAD
     showAlert('Erro ao salvar conta contabil.', 'danger');
+=======
+    showAlert('Erro ao salvar conta contábil.', 'danger');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   }
 }
 
@@ -1465,6 +1770,7 @@ async function handleMovSubmit(e) {
     updateStats();
     checkAlerts();
     
+<<<<<<< HEAD
     // Recarrega as movimentacoes no modal
     await loadMovimentacoes(id);
     
@@ -1476,11 +1782,28 @@ async function handleMovSubmit(e) {
   } catch (err) {
     console.error('Erro ao lancar Movimentacao:', err);
     showAlert('Erro ao lancar Movimentacao.', 'danger');
+=======
+    // Recarrega as movimentações no modal
+    await loadMovimentacoes(id);
+    
+    // Limpa o formulário
+    document.getElementById('movValor').value = '';
+    document.getElementById('movObs').value = '';
+    
+    showAlert('Movimentação lançada!', 'success');
+  } catch (err) {
+    console.error('Erro ao lançar Movimentação:', err);
+    showAlert('Erro ao lançar Movimentação.', 'danger');
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   }
 }
 
 /***********************
+<<<<<<< HEAD
  * ALERTAS TEMPORaRIOS
+=======
+ * ALERTAS TEMPORÃRIOS
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
  ***********************/
 function showAlert(message, type = 'success') {
   const container = document.getElementById('alerts');
@@ -1501,7 +1824,11 @@ function showAlert(message, type = 'success') {
 }
 
 /***********************
+<<<<<<< HEAD
  * EXPORTAR FUNaA.ES GLOBAIS
+=======
+ * EXPORTAR FUNÃ‡Ã•ES GLOBAIS
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
  ***********************/
 window.showTab = showTab;
 window.openModal = openModal;
@@ -1516,6 +1843,7 @@ window.deleteConta = deleteConta;
 window.openMovModal = openMovModal;
 window.viewAnexos = viewAnexos;
 
+<<<<<<< HEAD
 
 
 
@@ -1527,3 +1855,5 @@ window.viewAnexos = viewAnexos;
 
 
 
+=======
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51

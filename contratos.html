@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<<<<<<< HEAD
   <title>Gestao de Contratos</title>
+=======
+  <title>Gestão de Contratos</title>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -11,6 +15,7 @@
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-title">CNC Sistema de Contratos</div>
+<<<<<<< HEAD
       <div class="sidebar-sub">Gestao completa de contratos</div>
     </div>
             <nav class="nav-menu">
@@ -20,6 +25,17 @@
       <a class="nav-item" href="centros.html"><span class="nav-icon nav-icon-centers"></span>Centros de Custo</a>
       <a class="nav-item" href="contas.html"><span class="nav-icon nav-icon-accounts"></span>Contas Contabeis</a>
       <a class="nav-item" href="relatorio.html"><span class="nav-icon nav-icon-reports"></span>Relatorios</a>
+=======
+      <div class="sidebar-sub">Gestão completa de contratos</div>
+    </div>
+    <nav class="nav-menu">
+      <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span>Dashboard</a>
+      <a class="nav-item active" href="contratos.html"><span class="nav-icon">📄</span>Contratos</a>
+      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">✍️</span>Novo Contrato</a>
+      <a class="nav-item" href="centros.html"><span class="nav-icon">🏢</span>Centros de Custo</a>
+      <a class="nav-item" href="contas.html"><span class="nav-icon">🧾</span>Contas Contábeis</a>
+      <a class="nav-item" href="relatorio.html"><span class="nav-icon">📊</span>Relatórios</a>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     </nav>
   </div>
 
@@ -30,7 +46,11 @@
   <div class="header">
     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
       <div>
+<<<<<<< HEAD
         <h1>Gestao de Contratos</h1>
+=======
+        <h1>Gestão de Contratos</h1>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
         <p>Visualize, filtre e gerencie seus contratos</p>
       </div>
       <div style="display:flex; gap:8px;">
@@ -43,10 +63,17 @@
     <div id="contratos" class="tab-content active">
       <div class="content-area">
         <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+<<<<<<< HEAD
           <h2>Gestao de Contratos</h2>
           <div style="display: flex; gap: 12px; flex-wrap: wrap;">
             <input class="form-control" id="filtroFornecedor" placeholder="Filtrar por fornecedor" style="width: auto;">
             <input class="form-control" id="filtroNumero" placeholder="Namero do contrato" style="width: auto;">
+=======
+          <h2>Gestão de Contratos</h2>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <input class="form-control" id="filtroFornecedor" placeholder="Filtrar por fornecedor" style="width: auto;">
+            <input class="form-control" id="filtroNumero" placeholder="Número do contrato" style="width: auto;">
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
             <select class="form-control" id="filtroStatus" style="width: auto;">
               <option value="">Todos os status</option>
               <option value="ativo">Ativo</option>
@@ -63,14 +90,22 @@
           <table id="contratosTable" class="responsive">
             <thead>
               <tr>
+<<<<<<< HEAD
                 <th>Namero</th>
+=======
+                <th>Número</th>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
                 <th>Fornecedor</th>
                 <th>Centro de Custo</th>
                 <th>Valor Total</th>
                 <th>Saldo Utilizado</th>
                 <th>Vencimento</th>
                 <th>Status</th>
+<<<<<<< HEAD
                 <th style="width: 300px;">Aaaes</th>
+=======
+                <th style="width: 300px;">Ações</th>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
               </tr>
             </thead>
             <tbody>
@@ -86,7 +121,11 @@
   <div id="movModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
+<<<<<<< HEAD
         <h2>Movimentaaaes do Contrato</h2>
+=======
+        <h2>Movimentações do Contrato</h2>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
         <button class="close" onclick="closeModal('movModal')">&times;</button>
       </div>
 
@@ -98,7 +137,11 @@
           <div class="form-group">
             <label>Tipo</label>
             <select id="movTipo" class="form-control">
+<<<<<<< HEAD
               <option value="saida">Pagamento (Saada)</option>
+=======
+              <option value="saida">Pagamento (Saída)</option>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
               <option value="ajuste">Ajuste de Saldo</option>
             </select>
           </div>
@@ -111,13 +154,21 @@
             <input id="movData" type="date" class="form-control" lang="pt-BR" />
           </div>
           <div class="form-group form-group--full">
+<<<<<<< HEAD
             <label>Observaaaes</label>
+=======
+            <label>Observações</label>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
             <input id="movObs" class="form-control" />
           </div>
         </div>
         <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:20px">
           <button type="button" class="btn secondary" onclick="closeModal('movModal')">Fechar</button>
+<<<<<<< HEAD
           <button type="submit" class="btn success">Aplicar Movimentaaao</button>
+=======
+          <button type="submit" class="btn success">Aplicar Movimentação</button>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
         </div>
       </form>
 
@@ -148,7 +199,11 @@
         <div class="alert" id="msgCentro" style="display:none"></div>
         <div class="form-grid">
           <div class="form-group">
+<<<<<<< HEAD
             <label>Cadigo *</label>
+=======
+            <label>Código *</label>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
             <input id="codigoCentro" class="form-control" required />
           </div>
           <div class="form-group">
@@ -156,7 +211,11 @@
             <input id="nomeCentro" class="form-control" required />
           </div>
           <div class="form-group">
+<<<<<<< HEAD
             <label>Responsavel *</label>
+=======
+            <label>Responsável *</label>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
             <input id="responsavel" class="form-control" required />
           </div>
           <div class="form-group">
@@ -176,18 +235,30 @@
   <div id="contaModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
+<<<<<<< HEAD
         <h2 id="contaModalTitle">Nova Conta Contabil</h2>
+=======
+        <h2 id="contaModalTitle">Nova Conta Contábil</h2>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
         <button class="close" onclick="closeModal('contaModal')">&times;</button>
       </div>
       <form id="contaForm">
         <div class="alert" id="msgConta" style="display:none"></div>
         <div class="form-grid">
           <div class="form-group">
+<<<<<<< HEAD
             <label>Cadigo *</label>
             <input id="codigoConta" class="form-control" required />
           </div>
           <div class="form-group">
             <label>Descriaao *</label>
+=======
+            <label>Código *</label>
+            <input id="codigoConta" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label>Descrição *</label>
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
             <input id="descricaoConta" class="form-control" required />
           </div>
           <div class="form-group">
@@ -220,6 +291,7 @@
   </div>
 </body>
 </html>
+<<<<<<< HEAD
 
 
 
@@ -227,3 +299,5 @@
 
 
 
+=======
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51

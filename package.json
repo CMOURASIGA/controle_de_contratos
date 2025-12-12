@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "controle_de_contratos",
   "version": "1.0.0",
   "private": true,
@@ -11,6 +12,8 @@
     "api:install": "npm --prefix api install",
     "postinstall": "npm run api:install"
   },
+=======
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",

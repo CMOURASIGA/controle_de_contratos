@@ -1,17 +1,27 @@
+<<<<<<< HEAD
 ﻿// server.js
+=======
+// server.js
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+<<<<<<< HEAD
 const { newDb } = require('pg-mem');
+=======
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
 const app = express();
+<<<<<<< HEAD
 let pool;
 let usingMemoryDB = false;
+=======
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 
 /* ===================== CORS ===================== */
 const allowList = (process.env.CORS_ORIGIN || '')
@@ -21,14 +31,23 @@ const allowList = (process.env.CORS_ORIGIN || '')
 
 function isOriginAllowed(origin) {
   if (!origin) return true; // curl/postman
+<<<<<<< HEAD
   if (allowList.length === 0) return true; // sem restriaao => permite todos
   if (allowList.includes('*')) return true; // curinga explacito
+=======
+  if (allowList.length === 0) return true; // sem restrição => permite todos
+  if (allowList.includes('*')) return true; // curinga explícito
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   if (allowList.includes(origin)) return true; // match exato
   // match por prefixo para permitir qualquer porta (ex.: http://localhost, http://172.23.64.1)
   for (const a of allowList) {
     if (!a) continue;
     if (origin.startsWith(a)) return true;
+<<<<<<< HEAD
     // tambam aceita sufixo '*' explicitado (ex.: http://localhost:*)
+=======
+    // também aceita sufixo '*' explicitado (ex.: http://localhost:*)
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     if (a.endsWith('*') && origin.startsWith(a.slice(0, -1))) return true;
   }
   return false;
@@ -45,6 +64,7 @@ app.use(
 
 app.use(express.json());
 
+<<<<<<< HEAD
 /* =========== Postgres / pg-mem bootstrap =========== */
 function shouldUseMemoryDB() {
   const driver = (process.env.DB_DRIVER || '').toLowerCase();
@@ -118,6 +138,18 @@ async function bootstrapPool() {
     pool = createMemoryPool();
   }
 }
+=======
+/* =========== Postgres (SSL só em produção) =========== */
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL not set');
+  process.exit(1);
+}
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+});
+pool.query("SET TIME ZONE 'America/Sao_Paulo'");
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 
 /* =========== Uploads (anexos) =========== */
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -138,13 +170,17 @@ function httpErr(res, err, status = 500) {
 }
 
 async function pingDB() {
+<<<<<<< HEAD
   if (!pool) throw new Error('DB pool ainda nao inicializado');
+=======
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   const { rows } = await pool.query('SELECT 1 AS ok');
   return rows[0].ok === 1;
 }
 
 /* =========== Bootstrap de esquema (idempotente) =========== */
 async function ensureSchema() {
+<<<<<<< HEAD
   const timestampDefault = usingMemoryDB ? "NOW()" : "(NOW() AT TIME ZONE 'America/Sao_Paulo')";
   await pool.query(`
     CREATE TABLE IF NOT EXISTS centros_custo (
@@ -178,20 +214,31 @@ async function ensureSchema() {
     CREATE INDEX IF NOT EXISTS idx_contratos_centro ON contratos (centro_custo_id);
     CREATE INDEX IF NOT EXISTS idx_contratos_conta ON contratos (conta_contabil_id);
 
+=======
+  await pool.query(`
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     -- contratos: garantir flag ativo e default do saldo
     ALTER TABLE contratos
       ADD COLUMN IF NOT EXISTS ativo boolean NOT NULL DEFAULT true;
     ALTER TABLE contratos
       ALTER COLUMN saldo_utilizado SET DEFAULT 0;
 
+<<<<<<< HEAD
     -- movimentaaaes
+=======
+    -- movimentações
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     CREATE TABLE IF NOT EXISTS contrato_movimentos (
       id           SERIAL PRIMARY KEY,
       contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
       tipo         TEXT NOT NULL,    -- PAGAMENTO, AJUSTE, INATIVACAO, ATIVACAO, RENOVACAO, ANEXO
       observacao   TEXT,
       valor        NUMERIC DEFAULT 0,
+<<<<<<< HEAD
       criado_em    TIMESTAMPTZ NOT NULL DEFAULT ${timestampDefault}
+=======
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT (NOW() AT TIME ZONE 'America/Sao_Paulo')
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     );
     CREATE INDEX IF NOT EXISTS idx_contrato_movimentos_contrato_id
       ON contrato_movimentos (contrato_id);
@@ -202,7 +249,11 @@ async function ensureSchema() {
       contrato_id  INT NOT NULL REFERENCES contratos(id) ON DELETE CASCADE,
       nome_arquivo TEXT NOT NULL,
       url          TEXT NOT NULL,
+<<<<<<< HEAD
       criado_em    TIMESTAMPTZ NOT NULL DEFAULT ${timestampDefault}
+=======
+      criado_em    TIMESTAMPTZ NOT NULL DEFAULT (NOW() AT TIME ZONE 'America/Sao_Paulo')
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     );
     CREATE INDEX IF NOT EXISTS idx_contrato_arquivos_contrato_id
       ON contrato_arquivos (contrato_id);
@@ -246,7 +297,11 @@ app.post('/centros', async (req, res) => {
     res.status(201).json(rows[0]);
   } catch (err) {
     if (err.code === '23505') {
+<<<<<<< HEAD
       return res.status(409).json({ error: 'Cadigo de centro ja existe', detail: err.detail });
+=======
+      return res.status(409).json({ error: 'Código de centro já existe', detail: err.detail });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     }
     httpErr(res, err);
   }
@@ -266,11 +321,19 @@ app.put('/centros/:id', async (req, res) => {
       RETURNING id, codigo, nome, responsavel, email
     `;
     const { rows } = await pool.query(sql, [codigo, nome, responsavel || null, email || null, id]);
+<<<<<<< HEAD
     if (rows.length === 0) return res.status(404).json({ error: 'Centro nao encontrado' });
     res.json(rows[0]);
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'Cadigo de centro ja existe', detail: err.detail });
+=======
+    if (rows.length === 0) return res.status(404).json({ error: 'Centro não encontrado' });
+    res.json(rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Código de centro já existe', detail: err.detail });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     }
     httpErr(res, err);
   }
@@ -280,7 +343,11 @@ app.delete('/centros/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const del = await pool.query('DELETE FROM centros_custo WHERE id=$1', [id]);
+<<<<<<< HEAD
     if (del.rowCount === 0) return res.status(404).json({ error: 'Centro nao encontrado' });
+=======
+    if (del.rowCount === 0) return res.status(404).json({ error: 'Centro não encontrado' });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     res.json({ ok: true });
   } catch (err) {
     httpErr(res, err);
@@ -288,7 +355,11 @@ app.delete('/centros/:id', async (req, res) => {
 });
 
 /* =================================================================== */
+<<<<<<< HEAD
 /* =======================   CONTAS CONTaBEIS   ====================== */
+=======
+/* =======================   CONTAS CONTÁBEIS   ====================== */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 /* =================================================================== */
 
 app.get('/contas', async (_req, res) => {
@@ -314,7 +385,11 @@ app.post('/contas', async (req, res) => {
     res.status(201).json(rows[0]);
   } catch (err) {
     if (err.code === '23505') {
+<<<<<<< HEAD
       return res.status(409).json({ error: 'Cadigo de conta ja existe', detail: err.detail });
+=======
+      return res.status(409).json({ error: 'Código de conta já existe', detail: err.detail });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     }
     httpErr(res, err);
   }
@@ -333,11 +408,19 @@ app.put('/contas/:id', async (req, res) => {
       RETURNING id, codigo, descricao, tipo
     `;
     const { rows } = await pool.query(sql, [codigo, descricao, tipo, id]);
+<<<<<<< HEAD
     if (rows.length === 0) return res.status(404).json({ error: 'Conta nao encontrada' });
     res.json(rows[0]);
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'Cadigo de conta ja existe', detail: err.detail });
+=======
+    if (rows.length === 0) return res.status(404).json({ error: 'Conta não encontrada' });
+    res.json(rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'Código de conta já existe', detail: err.detail });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     }
     httpErr(res, err);
   }
@@ -347,7 +430,11 @@ app.delete('/contas/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const del = await pool.query('DELETE FROM contas_contabeis WHERE id=$1', [id]);
+<<<<<<< HEAD
     if (del.rowCount === 0) return res.status(404).json({ error: 'Conta nao encontrada' });
+=======
+    if (del.rowCount === 0) return res.status(404).json({ error: 'Conta não encontrada' });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     res.json({ ok: true });
   } catch (err) {
     httpErr(res, err);
@@ -528,7 +615,11 @@ app.delete('/contratos/:id', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 /* =========== Aaaes de status (inativar/ativar/renovar) =========== */
+=======
+/* =========== Ações de status (inativar/ativar/renovar) =========== */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 app.post('/contratos/:id/inativar', async (req, res) => {
   const id = Number(req.params.id);
   const { motivo } = req.body || {};
@@ -604,7 +695,11 @@ app.post('/contratos/:id/renovar', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 /* =========== Movimentaaaes =========== */
+=======
+/* =========== Movimentações =========== */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 app.get('/contratos/:id/movimentos', async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -625,7 +720,11 @@ app.get('/contratos/:id/movimentos', async (req, res) => {
 app.post('/contratos/:id/movimentos', async (req, res) => {
   const id = Number(req.params.id);
   const { tipo, observacao, valorDelta } = req.body || {};
+<<<<<<< HEAD
   if (!tipo) return res.status(400).json({ error: 'Campo "tipo" a obrigatario' });
+=======
+  if (!tipo) return res.status(400).json({ error: 'Campo "tipo" é obrigatório' });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 
   const client = await pool.connect();
   try {
@@ -655,7 +754,11 @@ app.post('/contratos/:id/movimentos', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 /* Rotas compataveis com nomes antigos */
+=======
+/* Rotas compatíveis com nomes antigos */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 app.get('/contratos/:id/movimentacoes', (req, res) => app._router.handle(
   { ...req, url: `/contratos/${req.params.id}/movimentos`, method: 'GET' }, res
 ));
@@ -667,7 +770,11 @@ app.post('/contratos/:id/movimentacoes', (req, res) => app._router.handle(
 app.post('/contratos/:id/anexos', upload.single('file'), async (req, res) => {
   try {
     const id = Number(req.params.id);
+<<<<<<< HEAD
     if (!req.file) return res.status(400).json({ error: 'Arquivo nao enviado' });
+=======
+    if (!req.file) return res.status(400).json({ error: 'Arquivo não enviado' });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 
     const url = `/files/${req.file.filename}`;
     const nome = req.file.originalname || req.file.filename;
@@ -717,7 +824,11 @@ app.delete('/contratos/:id/arquivos/:arquivoId', async (req, res) => {
     );
 
     if (rows.length === 0) {
+<<<<<<< HEAD
       return res.status(404).json({ error: 'Arquivo nao encontrado' });
+=======
+      return res.status(404).json({ error: 'Arquivo não encontrado' });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     }
 
     const filePath = path.join(uploadDir, path.basename(rows[0].url));
@@ -726,7 +837,11 @@ app.delete('/contratos/:id/arquivos/:arquivoId', async (req, res) => {
     await pool.query(
       `INSERT INTO contrato_movimentos (contrato_id, tipo, observacao, valor)
        VALUES ($1, 'ANEXO', $2, 0)`,
+<<<<<<< HEAD
       [contratoId, `Remoaao de anexo: ${rows[0].nome_arquivo}`]
+=======
+      [contratoId, `Remoção de anexo: ${rows[0].nome_arquivo}`]
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
     );
 
     res.status(204).end();
@@ -782,7 +897,11 @@ app.get('/dashboard/metrics', async (_req, res) => {
     }));
 
     res.json({
+<<<<<<< HEAD
       // Estrutura pensada para graficos:
+=======
+      // Estrutura pensada para gráficos:
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       // {
       //   statusContratos: { ATIVO: 10, VENCIDO: 2, ... },
       //   evolucaoPagamentos: [ { mes: '2024-01', valor: 123.45 }, ... ],
@@ -796,7 +915,11 @@ app.get('/dashboard/metrics', async (_req, res) => {
     httpErr(res, err);
   }
 });
+<<<<<<< HEAD
 /* =========== Relatario CSV =========== */
+=======
+/* =========== Relatório CSV =========== */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 app.get('/relatorios/contratos', async (req, res) => {
   try {
     const { whereSQL, params } = buildWhere(req);
@@ -841,6 +964,7 @@ app.get('/relatorios/contratos', async (req, res) => {
 /* =========== Start =========== */
 const PORT = process.env.PORT || 3000;
 
+<<<<<<< HEAD
 async function start() {
   await bootstrapPool();
   await ensureSchema();
@@ -869,3 +993,13 @@ start()
 
 
 
+=======
+ensureSchema()
+  .then(() => {
+    app.listen(PORT, () => console.log(`API on http://localhost:${PORT}`));
+  })
+  .catch(err => {
+    console.error('Falha ao iniciar por erro de schema:', err);
+    process.exit(1);
+  });
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51

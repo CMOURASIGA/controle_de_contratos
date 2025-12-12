@@ -47,6 +47,7 @@ body{
 .nav-item{ display:flex; gap:10px; align-items:center; color:#e8eefc; text-decoration:none; padding: 10px 12px; border-radius: 10px; }
 .nav-item:hover{ background: rgba(255,255,255,.12); color:#fff; }
 .nav-item.active{ background: rgba(255,255,255,.18); color:#fff; }
+<<<<<<< HEAD
 .nav-icon{
   width:20px;
   height:20px;
@@ -88,6 +89,9 @@ body{
 .nav-icon-reports::before{
   background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPSclMjNkYmVhZmUnIHN0cm9rZS13aWR0aD0nMicgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJyBzdHJva2UtbGluZWpvaW49J3JvdW5kJz48cGF0aCBkPSdNNCAxOVY1Jy8+PHBhdGggZD0nTTIwIDE5VjknLz48cGF0aCBkPSdNMTIgMTlWMycvPjxwYXRoIGQ9J004IDE5VjEyJy8+PHBhdGggZD0nTTE2IDE5VjE0Jy8+PC9zdmc+");
 }
+=======
+.nav-icon{ width:18px; height:18px; opacity:.9; }
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 
 /* Main area when sidebar present */
 .main-content{ margin-left: 260px; padding: 16px; }
@@ -195,7 +199,11 @@ body{
   .dashboard-charts{ flex-direction: column; }
 }
 
+<<<<<<< HEAD
 /* Helpers para cor dos nameros */
+=======
+/* Helpers para cor dos nÃºmeros */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 .text-primary{ color: var(--primary-color) !important; }
 .text-secondary{ color: var(--secondary-color) !important; }
 .text-success{ color: var(--accent-color) !important; }
@@ -219,7 +227,11 @@ body{
 .tab-content{ display: none; }
 .tab-content.active{ display: block; }
 
+<<<<<<< HEAD
 /* Cartaes e tabela */
+=======
+/* CartÃµes e tabela */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 .card{
   background: #fff; border-radius: 16px; padding: 20px;
   box-shadow: var(--shadow); border: 1px solid rgba(0,0,0,.04);
@@ -249,7 +261,11 @@ tbody tr:hover{ background: var(--row-hover); }
 .badge-warning{ background: var(--secondary-color); color:#fff; }
 .badge-danger { background: var(--danger-color);  color:#fff; }
 
+<<<<<<< HEAD
 /* Botaes */
+=======
+/* BotÃµes */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 .btn{
   background: var(--primary-color); color: #fff; border: none;
   padding: 10px 16px; border-radius: 10px; font-weight: 700; cursor: pointer;
@@ -262,7 +278,11 @@ tbody tr:hover{ background: var(--row-hover); }
 .btn-warning{ background: var(--warning-color); color:#fff; }
 .btn-neutral{ background: #6b7280; }
 
+<<<<<<< HEAD
 /* Formularios */
+=======
+/* FormulÃ¡rios */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 .form-grid{
   display: grid;
   grid-template-columns: repeat(2, minmax(220px, 1fr));
@@ -270,16 +290,28 @@ tbody tr:hover{ background: var(--row-hover); }
 }
 .form-group{ display: flex; flex-direction: column; gap: 6px; }
 .form-group--full{ grid-column: 1 / -1; }
+<<<<<<< HEAD
 /* Seaaes do formulario */
 .form-section{ margin-bottom: 20px; }
 .form-section h3{ margin: 0 0 8px; }
 
 /* Descriaao e validaaao */
+=======
+/* SeÃ§Ãµes do formulÃ¡rio */
+.form-section{ margin-bottom: 20px; }
+.form-section h3{ margin: 0 0 8px; }
+
+/* DescriÃ§Ã£o e validaÃ§Ã£o */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 .field-desc{ font-size: .85rem; color: var(--text-secondary); }
 .form-control.invalid{ border-color: var(--danger-color); box-shadow: 0 0 0 3px rgba(239,68,68,.2); }
 .error{ color: var(--danger-color); font-size: .85rem; margin-top: 4px; display: block; }
 
+<<<<<<< HEAD
 /* Pra-visualizaaao de arquivos */
+=======
+/* PrÃ©-visualizaÃ§Ã£o de arquivos */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 .file-preview{ margin-top: 6px; display: flex; flex-direction: column; gap: 4px; font-size: .9rem; }
 label{ font-weight: 600; font-size: .95rem; }
 .form-control{
@@ -327,7 +359,11 @@ label{ font-weight: 600; font-size: .95rem; }
 }
 .close:hover{ color: var(--danger-color); }
 
+<<<<<<< HEAD
 /* Histarico de movimentaaaes */
+=======
+/* HistÃ³rico de movimentaÃ§Ãµes */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 .history-table{
   max-height: 220px;
   overflow-y: auto;
@@ -356,7 +392,11 @@ label{ font-weight: 600; font-size: .95rem; }
   .nav-tabs{ flex-direction: column; }
 }
 
+<<<<<<< HEAD
 /* Tabelas responsivas (empilha linhas em cartoes no mobile) */
+=======
+/* Tabelas responsivas (empilha linhas em cartões no mobile) */
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 @media (max-width: 760px){
   table.responsive thead{ position: absolute; left: -9999px; top: -9999px; height: 0; width: 0; overflow: hidden; }
   table.responsive, table.responsive tbody, table.responsive tr, table.responsive td{ display: block; width: 100%; }
@@ -379,7 +419,10 @@ label{ font-weight: 600; font-size: .95rem; }
   .action-buttons{ display: flex; gap: 8px; flex-wrap: wrap; }
 }
 
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
