@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Novo Contrato</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">CNC Sistema de Contratos</div>
+      <div class="sidebar-sub">Gestao completa de contratos</div>
+    </div>
+            <nav class="nav-menu">
+      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard"></span>Dashboard</a>
+      <a class="nav-item" href="contratos.html"><span class="nav-icon nav-icon-contracts"></span>Contratos</a>
+      <a class="nav-item active" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon nav-icon-new"></span>Novo Contrato</a>
+      <a class="nav-item" href="centros.html"><span class="nav-icon nav-icon-centers"></span>Centros de Custo</a>
+      <a class="nav-item" href="contas.html"><span class="nav-icon nav-icon-accounts"></span>Contas Contabeis</a>
+      <a class="nav-item" href="relatorio.html"><span class="nav-icon nav-icon-reports"></span>Relatorios</a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+  <div id="alerts"></div>
+
+  <div class="brand-bar"></div>
+  <div class="header">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
+      <div>
+        <h1>Novo Contrato</h1>
+        <p>Preencha os dados para cadastrar um novo contrato</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <a class="btn secondary" href="index.html">Voltar</a>
+      </div>
+    </div>
+  </div>
+  <div class="container" style="max-width:720px;margin:40px auto;">
+    <h2 id="contratoModalTitle">Novo Contrato</h2>
+    <form id="contratoForm">
+      <div class="alert" style="display:none" id="msgContrato"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Namero do Contrato *</label>
+          <input id="numeroContrato" class="form-control" required />
+          <span class="error"></span>
+        </div>
+        <div class="form-group">
+          <label>Fornecedor *</label>
+          <input id="fornecedor" class="form-control" required />
+          <span class="error"></span>
+        </div>
+        <div class="form-group">
+          <label>Centro de Custo *</label>
+          <select id="centroCustoContrato" class="form-control" required>
+            <option value="">Selecione</option>
+          </select>
+          <span class="error"></span>
+        </div>
+        <div class="form-group">
+          <label>Conta Contabil *</label>
+          <select id="contaContabil" class="form-control" required>
+            <option value="">Selecione</option>
+          </select>
+          <span class="error"></span>
+        </div>
+        <div class="form-group">
+          <label>Valor Total (R$) *</label>
+          <input id="valorTotal" type="number" step="0.01" class="form-control" required />
+          <span class="error"></span>
+        </div>
+        <div class="form-group">
+          <label>Saldo Utilizado (R$)</label>
+          <input id="saldoUtilizado" type="number" step="0.01" class="form-control" value="0" />
+        </div>
+        <div class="form-group">
+          <label>Data de Inacio *</label>
+          <input id="dataInicio" type="date" class="form-control" lang="pt-BR" required />
+          <span class="error"></span>
+        </div>
+        <div class="form-group">
+          <label>Data de Vencimento *</label>
+          <input id="dataVencimento" type="date" class="form-control" lang="pt-BR" required />
+          <span class="error"></span>
+        </div>
+        <div class="form-group form-group--full">
+          <label>Observaaaes</label>
+          <textarea id="observacoes" rows="3" class="form-control"></textarea>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="contratoAtivo" checked />
+          <label for="contratoAtivo">Contrato ativo</label>
+        </div>
+        <div class="form-group form-group--full">
+          <label>Anexos do contrato</label>
+          <input id="anexosContrato" type="file" class="form-control" multiple />
+          <ul id="listaAnexosContrato"></ul>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+        <button type="button" class="btn secondary" onclick="window.location.href='index.html'">Cancelar</button>
+        <button type="submit" class="btn" id="btnSalvarContrato">Salvar</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="js/timezone.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        if (typeof updateCentroCustoOptions === 'function') updateCentroCustoOptions();
+        if (typeof updateContaContabilOptions === 'function') updateContaContabilOptions();
+
+        if (typeof formatYMD === 'function') {
+          const di = document.getElementById('dataInicio');
+          const dv = document.getElementById('dataVencimento');
+          if (di && !di.value) di.value = formatYMD(brNow());
+          if (dv && !dv.value) dv.value = '';
+        }
+
+        // Ediaao: carrega contrato se houver ?id=
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
+        if (id) {
+          window.editingId = Number(id);
+          const c = await apiGet(`/contratos/${id}`);
+          if (c) {
+            document.getElementById('contratoModalTitle').textContent = 'Editar Contrato';
+            document.getElementById('numeroContrato').value = c.numero || '';
+            document.getElementById('fornecedor').value = c.fornecedor || '';
+            document.getElementById('centroCustoContrato').value = c.centroCusto || '';
+            document.getElementById('contaContabil').value = c.contaContabil || '';
+            document.getElementById('valorTotal').value = Number(c.valorTotal) || 0;
+            document.getElementById('saldoUtilizado').value = Number(c.saldoUtilizado) || 0;
+            if (typeof formatYMD === 'function') {
+              document.getElementById('dataInicio').value = c.dataInicio ? formatYMD(c.dataInicio) : '';
+              document.getElementById('dataVencimento').value = c.dataVencimento ? formatYMD(c.dataVencimento) : '';
+            } else {
+              document.getElementById('dataInicio').value = c.dataInicio.slice(0, 10) || '';
+              document.getElementById('dataVencimento').value = c.dataVencimento.slice(0, 10) || '';
+            }
+            document.getElementById('observacoes').value = c.observacoes || '';
+            document.getElementById('contratoAtivo').checked = c.ativo !== false;
+            if (typeof updateListaAnexos === 'function') await updateListaAnexos(Number(id));
+          }
+        }
+      } catch (err) {
+        console.error('Falha ao preparar formulario de contrato:', err);
+      }
+    });
+  </script>
+  </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
