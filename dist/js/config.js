@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   var PROD = 'https://controledecontratos-production.up.railway.app';
   var LOCAL = 'http://localhost:8081';
 
@@ -28,3 +28,5 @@
     window.API_BASE = window.API_BASE || LOCAL;
   }
 })();
+
+

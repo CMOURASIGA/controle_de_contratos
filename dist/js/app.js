@@ -42,8 +42,17 @@ let localDB = loadLocalDB();
 let contratos = [];
 let centrosCusto = [];
 let contasContabeis = [];
+let centrosCustoAll = [];
+let contasContabeisAll = [];
 let editingId = null;
 let chartStatus, chartEvolucao, chartFornecedores;
+
+window.setEditingId = function (id) {
+  editingId = id == null ? null : Number(id);
+};
+window.getEditingId = function () {
+  return editingId;
+};
 
 /***********************
  * UTIL - STORAGE LOCAL
@@ -443,7 +452,8 @@ function addDateMaskFor(id) {
  ***********************/
 document.addEventListener('DOMContentLoaded', async function () {
   try {
-    await initializeData();
+    window.__CNC_INIT = window.__CNC_INIT || initializeData();
+    await window.__CNC_INIT;
     setupEventListeners();
     // Preenche selects do contrato quando presentes (novo/editar)
     updateCentroCustoOptions();
@@ -565,9 +575,16 @@ function setupEventListeners() {
   // Filtros
   document.getElementById('btnAplicarFiltros')?.addEventListener('click', applyFilters);
   document.getElementById('btnLimparFiltros')?.addEventListener('click', clearFilters);
+  document.getElementById('btnBaixar')?.addEventListener('click', baixarRelatorio);
+  document.getElementById('btnBaixarTop')?.addEventListener('click', baixarRelatorio);
   document.getElementById('navNovoContrato')?.addEventListener('click', () => {
     window.location.href = 'novo-contrato.html';
   });
+
+  document.getElementById('btnBuscarCentros')?.addEventListener('click', applyCentrosFilters);
+  document.getElementById('btnLimparCentros')?.addEventListener('click', clearCentrosFilters);
+  document.getElementById('btnBuscarContas')?.addEventListener('click', applyContasFilters);
+  document.getElementById('btnLimparContas')?.addEventListener('click', clearContasFilters);
 
   // formularios
   document.getElementById('contratoForm')?.addEventListener('submit', handleContratoSubmit);
@@ -595,6 +612,16 @@ function setupEventListeners() {
       if (typeof formatBRInput==='function' && !el.value) el.value = id==='movData' ? formatBRInput(brNow()) : el.value;
     }
   });
+
+  // Auto-abrir modais via query string (para atalhos estilo "Criar ...")
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const novo = params.get('novo');
+    if (novo === 'centro') openModal('centroModal');
+    if (novo === 'conta') openModal('contaModal');
+  } catch (e) {
+    // ignore
+  }
 }
 
 async function initializeData() {
@@ -621,6 +648,9 @@ async function initializeData() {
     });
 
     console.log('Dados carregados:', { contratos: contratos.length, centros: centrosCusto.length, contas: contasContabeis.length });
+
+    centrosCustoAll = clone(centrosCusto || []);
+    contasContabeisAll = clone(contasContabeis || []);
 
     updateTables();
     updateStats();
@@ -762,11 +792,17 @@ async function applyFilters() {
 
 async function clearFilters() {
   try {
-    document.getElementById('filtroFornecedor').value = '';
-    document.getElementById('filtroNumero').value = '';
-    document.getElementById('filtroStatus').value = '';
-    document.getElementById('filtroVencimentoDe').value = '';
-    document.getElementById('filtroVencimentoAte').value = '';
+    const fornecedor = document.getElementById('filtroFornecedor');
+    const numero = document.getElementById('filtroNumero');
+    const status = document.getElementById('filtroStatus');
+    const vencimentoDe = document.getElementById('filtroVencimentoDe');
+    const vencimentoAte = document.getElementById('filtroVencimentoAte');
+
+    if (fornecedor) fornecedor.value = '';
+    if (numero) numero.value = '';
+    if (status) status.value = '';
+    if (vencimentoDe) vencimentoDe.value = '';
+    if (vencimentoAte) vencimentoAte.value = '';
     
     contratos = await apiGet('/contratos');
     updateTables();
@@ -777,6 +813,68 @@ async function clearFilters() {
     console.error('Erro ao limpar filtros:', e);
     showAlert('Erro ao limpar filtros.', 'danger');
   }
+}
+
+/***********************
+ * FILTROS - CENTROS
+ ***********************/
+function applyCentrosFilters() {
+  const codigo = (document.getElementById('filtroCentroCodigo')?.value || '').trim().toLowerCase();
+  const nome = (document.getElementById('filtroCentroNome')?.value || '').trim().toLowerCase();
+  const responsavel = (document.getElementById('filtroCentroResponsavel')?.value || '').trim().toLowerCase();
+
+  const base = Array.isArray(centrosCustoAll) && centrosCustoAll.length ? centrosCustoAll : centrosCusto;
+  centrosCusto = (base || []).filter(c => {
+    const cCodigo = String(c.codigo || '').toLowerCase();
+    const cNome = String(c.nome || '').toLowerCase();
+    const cResp = String(c.responsavel || '').toLowerCase();
+    return (!codigo || cCodigo.includes(codigo)) && (!nome || cNome.includes(nome)) && (!responsavel || cResp.includes(responsavel));
+  });
+
+  updateCentrosTable();
+}
+
+function clearCentrosFilters() {
+  const codigo = document.getElementById('filtroCentroCodigo');
+  const nome = document.getElementById('filtroCentroNome');
+  const responsavel = document.getElementById('filtroCentroResponsavel');
+  if (codigo) codigo.value = '';
+  if (nome) nome.value = '';
+  if (responsavel) responsavel.value = '';
+
+  centrosCusto = clone(centrosCustoAll || []);
+  updateCentrosTable();
+}
+
+/***********************
+ * FILTROS - CONTAS
+ ***********************/
+function applyContasFilters() {
+  const codigo = (document.getElementById('filtroContaCodigo')?.value || '').trim().toLowerCase();
+  const descricao = (document.getElementById('filtroContaDescricao')?.value || '').trim().toLowerCase();
+  const tipo = (document.getElementById('filtroContaTipo')?.value || '').trim().toLowerCase();
+
+  const base = Array.isArray(contasContabeisAll) && contasContabeisAll.length ? contasContabeisAll : contasContabeis;
+  contasContabeis = (base || []).filter(c => {
+    const cCodigo = String(c.codigo || '').toLowerCase();
+    const cDesc = String(c.descricao || '').toLowerCase();
+    const cTipo = String(c.tipo || '').toLowerCase();
+    return (!codigo || cCodigo.includes(codigo)) && (!descricao || cDesc.includes(descricao)) && (!tipo || cTipo === tipo);
+  });
+
+  updateContasTable();
+}
+
+function clearContasFilters() {
+  const codigo = document.getElementById('filtroContaCodigo');
+  const descricao = document.getElementById('filtroContaDescricao');
+  const tipo = document.getElementById('filtroContaTipo');
+  if (codigo) codigo.value = '';
+  if (descricao) descricao.value = '';
+  if (tipo) tipo.value = '';
+
+  contasContabeis = clone(contasContabeisAll || []);
+  updateContasTable();
 }
 
 async function baixarRelatorio() {
@@ -814,6 +912,21 @@ function buildContratosCSV(data) {
 }
 
 /***********************
+ * UX - METADADOS / EMPTY STATE
+ ***********************/
+function setListViewState(opts) {
+  const countEl = opts.countId ? document.getElementById(opts.countId) : null;
+  const emptyEl = opts.emptyId ? document.getElementById(opts.emptyId) : null;
+  const tableWrap = opts.tableWrapId ? document.getElementById(opts.tableWrapId) : null;
+  const cardsWrap = opts.cardsWrapId ? document.getElementById(opts.cardsWrapId) : null;
+
+  if (countEl) countEl.textContent = String(opts.count || 0);
+  if (emptyEl) emptyEl.style.display = opts.count === 0 ? 'flex' : 'none';
+  if (tableWrap) tableWrap.style.display = opts.count === 0 ? 'none' : 'block';
+  if (cardsWrap) cardsWrap.style.display = opts.count === 0 ? 'none' : 'block';
+}
+
+/***********************
  * TABELAS
  ***********************/
 function updateTables() {
@@ -823,12 +936,104 @@ function updateTables() {
 }
 
 function updateContratosTable() {
+  const cardsContainer = document.getElementById('contratosCards');
   const tbody = document.querySelector('#contratosTable tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
+  if (!cardsContainer && !tbody) return;
+  if (tbody) tbody.innerHTML = '';
+  if (cardsContainer) cardsContainer.innerHTML = '';
+
+  setListViewState({
+    countId: 'contratosCount',
+    emptyId: 'contratosEmpty',
+    tableWrapId: 'contratosTableWrap',
+    cardsWrapId: 'contratosCardsWrap',
+    count: contratos.length
+  });
 
   if (contratos.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--text-secondary)">Nenhum contrato encontrado</td></tr>';
+    return;
+  }
+
+  if (cardsContainer) {
+    contratos.forEach(contrato => {
+      const centro = centrosCusto.find(c => c.id === contrato.centroCusto);
+      const pct = contrato.valorTotal ? (Number(contrato.saldoUtilizado) / Number(contrato.valorTotal)) * 100 : 0;
+      const diasVencimento = Math.ceil((toBRDate(contrato.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
+
+      let statusClass = 'badge-success';
+      let statusText = 'Ativo';
+      if (contrato.ativo === false) {
+        statusClass = 'badge';
+        statusText = 'Inativo';
+      } else if (diasVencimento <= 0) {
+        statusClass = 'badge-danger';
+        statusText = 'Vencido';
+      } else if (diasVencimento <= 30) {
+        statusClass = 'badge-warning';
+        statusText = 'Vencendo';
+      } else if (pct >= 90) {
+        statusClass = 'badge-warning';
+        statusText = 'Saldo Baixo';
+      }
+
+      const fornecedor = contrato.fornecedor || 'N/A';
+      const numero = contrato.numero || 'S/N';
+      const vencimento = contrato.dataVencimento ? formatBR(contrato.dataVencimento) : 'N/A';
+      const valorTotal = `R$ ${toBRL(contrato.valorTotal)}`;
+      const saldoUtilizado = `R$ ${toBRL(contrato.saldoUtilizado)}`;
+      const centroNome = centro ? centro.nome : 'N/A';
+
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      card.innerHTML = `
+        <div class="result-card__content">
+          <div class="result-card__header">
+            <span class="result-card__meta">Nº ${numero}</span>
+            <span class="badge ${statusClass}">${statusText}</span>
+          </div>
+          <div class="result-card__title">${fornecedor}</div>
+          <div class="result-card__details">
+            <div class="kv">
+              <div class="kv__label">Centro de custo</div>
+              <div class="kv__value">${centroNome}</div>
+            </div>
+            <div class="kv">
+              <div class="kv__label">Valor total</div>
+              <div class="kv__value">${valorTotal}</div>
+            </div>
+            <div class="kv">
+              <div class="kv__label">Saldo utilizado</div>
+              <div class="kv__value">
+                ${saldoUtilizado}
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width:${Math.min(pct, 100)}%; background:${pct > 90 ? 'var(--danger-color)' : 'var(--accent-color)'}"></div>
+                </div>
+                <small>${isFinite(pct) ? pct.toFixed(1) : '0.0'}% utilizado</small>
+              </div>
+            </div>
+            <div class="kv">
+              <div class="kv__label">Vencimento</div>
+              <div class="kv__value">${vencimento}</div>
+            </div>
+          </div>
+        </div>
+        <div class="result-card__actions" role="group" aria-label="Acoes">
+          <button class="card-action" type="button" title="Visualizar" aria-label="Visualizar" onclick="goContratoView(${contrato.id})">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+          <button class="card-action" type="button" title="Editar" aria-label="Editar" onclick="goContratoEdit(${contrato.id})">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+          <button class="card-action danger" type="button" title="Excluir" aria-label="Excluir" onclick="deleteContrato(${contrato.id})">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+          <button class="card-action success" type="button" title="Movimentar" aria-label="Movimentar" onclick="openMovModal(${contrato.id})">
+            <i class="fa-solid fa-right-left"></i>
+          </button>
+        </div>
+      `;
+      cardsContainer.appendChild(card);
+    });
     return;
   }
 
@@ -871,14 +1076,34 @@ function updateContratosTable() {
         <td data-label="Status"><span class="badge ${statusClass}">${statusText}</span></td>
         <td data-label="Acoes">
           <div class="action-buttons">
-            <button class="btn" onclick="viewAnexos(${contrato.id})">Visualizar</button>          
-            <button class="btn" onclick="editContrato(${contrato.id})">Editar</button>
-            <button class="btn danger" onclick="deleteContrato(${contrato.id})">Excluir</button>
-            <button class="btn success" onclick="openMovModal(${contrato.id})">Movimentar</button>
+            <button class="icon-action-btn primary" type="button" title="Visualizar" aria-label="Visualizar" onclick="goContratoView(${contrato.id})">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+            <button class="icon-action-btn primary" type="button" title="Editar" aria-label="Editar" onclick="goContratoEdit(${contrato.id})">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button class="icon-action-btn danger" type="button" title="Excluir" aria-label="Excluir" onclick="deleteContrato(${contrato.id})">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+            <button class="icon-action-btn success" type="button" title="Movimentar" aria-label="Movimentar" onclick="openMovModal(${contrato.id})">
+              <i class="fa-solid fa-right-left"></i>
+            </button>
           </div>
         </td>
       </tr>`;
   });
+}
+
+function goContratoEdit(id) {
+  if (!id && id !== 0) return;
+  const q = `id=${encodeURIComponent(id)}&from=contratos`;
+  window.location.href = `novo-contrato.html?${q}`;
+}
+
+function goContratoView(id) {
+  if (!id && id !== 0) return;
+  const q = `id=${encodeURIComponent(id)}&readonly=1&from=contratos`;
+  window.location.href = `novo-contrato.html?${q}`;
 }
 
 async function viewAnexos(id) {
@@ -913,12 +1138,57 @@ async function viewAnexos(id) {
 }
 
 function updateCentrosTable() {
+  const cardsContainer = document.getElementById('centrosCards');
   const tbody = document.querySelector('#centrosTable tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
+  if (!cardsContainer && !tbody) return;
+  if (tbody) tbody.innerHTML = '';
+  if (cardsContainer) cardsContainer.innerHTML = '';
+
+  setListViewState({
+    countId: 'centrosCount',
+    emptyId: 'centrosEmpty',
+    tableWrapId: 'centrosTableWrap',
+    cardsWrapId: 'centrosCardsWrap',
+    count: centrosCusto.length
+  });
 
   if (centrosCusto.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-secondary)">Nenhum centro de custo encontrado</td></tr>';
+    return;
+  }
+
+  if (cardsContainer) {
+    centrosCusto.forEach(centro => {
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      card.innerHTML = `
+        <div class="result-card__content">
+          <div class="result-card__header">
+            <span class="result-card__meta">${centro.codigo || 'S/N'}</span>
+            <span class="badge badge-success">Ativo</span>
+          </div>
+          <div class="result-card__title">${centro.nome || 'N/A'}</div>
+          <div class="result-card__details">
+            <div class="kv">
+              <div class="kv__label">Responsavel</div>
+              <div class="kv__value">${centro.responsavel || 'N/A'}</div>
+            </div>
+            <div class="kv">
+              <div class="kv__label">Email</div>
+              <div class="kv__value">${centro.email || 'N/A'}</div>
+            </div>
+          </div>
+        </div>
+        <div class="result-card__actions" role="group" aria-label="Acoes">
+          <button class="card-action" type="button" title="Editar" aria-label="Editar" onclick="editCentro(${centro.id})">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+          <button class="card-action danger" type="button" title="Excluir" aria-label="Excluir" onclick="deleteCentro(${centro.id})">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      `;
+      cardsContainer.appendChild(card);
+    });
     return;
   }
 
@@ -940,12 +1210,47 @@ function updateCentrosTable() {
 }
 
 function updateContasTable() {
+  const cardsContainer = document.getElementById('contasCards');
   const tbody = document.querySelector('#contasTable tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
+  if (!cardsContainer && !tbody) return;
+  if (tbody) tbody.innerHTML = '';
+  if (cardsContainer) cardsContainer.innerHTML = '';
+
+  setListViewState({
+    countId: 'contasCount',
+    emptyId: 'contasEmpty',
+    tableWrapId: 'contasTableWrap',
+    cardsWrapId: 'contasCardsWrap',
+    count: contasContabeis.length
+  });
 
   if (contasContabeis.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-secondary)">Nenhuma conta contabil encontrada</td></tr>';
+    return;
+  }
+
+  if (cardsContainer) {
+    contasContabeis.forEach(conta => {
+      const card = document.createElement('div');
+      card.className = 'result-card';
+      card.innerHTML = `
+        <div class="result-card__content">
+          <div class="result-card__header">
+            <span class="result-card__meta">${conta.codigo || 'S/N'}</span>
+            <span class="badge badge-success">${conta.tipo || 'N/A'}</span>
+          </div>
+          <div class="result-card__title">${conta.descricao || 'N/A'}</div>
+        </div>
+        <div class="result-card__actions" role="group" aria-label="Acoes">
+          <button class="card-action" type="button" title="Editar" aria-label="Editar" onclick="editConta(${conta.id})">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+          <button class="card-action danger" type="button" title="Excluir" aria-label="Excluir" onclick="deleteConta(${conta.id})">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </div>
+      `;
+      cardsContainer.appendChild(card);
+    });
     return;
   }
 
@@ -989,10 +1294,16 @@ function updateStats() {
   const elAtivos = document.getElementById('contratosAtivos');
   const elVencendo = document.getElementById('contratosVencendo');
   const elEstouro = document.getElementById('contratosEstouro');
-  if (!elTotal && !elAtivos && !elVencendo && !elEstouro) return;
+  const homeTotal = document.getElementById('homeTotalContratos');
+  const homeAtivos = document.getElementById('homeContratosAtivos');
+  const homeInativos = document.getElementById('homeContratosInativos');
+  const homeVencendo = document.getElementById('homeContratosVencendo');
+
+  if (!elTotal && !elAtivos && !elVencendo && !elEstouro && !homeTotal && !homeAtivos && !homeInativos && !homeVencendo) return;
 
   const totalContratos = contratos.length;
   const contratosAtivos = contratos.filter(c => c.ativo !== false && toBRDate(c.dataVencimento) > brNow()).length;
+  const contratosInativos = contratos.filter(c => c.ativo === false).length;
   const contratosVencendo = contratos.filter(c => {
     if (c.ativo === false) return false;
     const dias = Math.ceil((toBRDate(c.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
@@ -1007,64 +1318,17 @@ function updateStats() {
   if (elAtivos) elAtivos.textContent = contratosAtivos;
   if (elVencendo) elVencendo.textContent = contratosVencendo;
   if (elEstouro) elEstouro.textContent = contratosEstouro;
+
+  if (homeTotal) homeTotal.textContent = totalContratos;
+  if (homeAtivos) homeAtivos.textContent = contratosAtivos;
+  if (homeInativos) homeInativos.textContent = contratosInativos;
+  if (homeVencendo) homeVencendo.textContent = contratosVencendo;
 }
 
 function checkAlerts() {
-  const div = document.getElementById('alerts');
-  if (!div) return;
-
-  // Limpa alertas existentes (mas mantem os temporarios)
-  div.querySelectorAll('.alert:not([data-temporary])').forEach(el => el.remove());
-
-  const vencendo = contratos.filter(c => {
-    if (c.ativo === false) return false;
-    const dias = Math.ceil((toBRDate(c.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
-    return dias <= 30 && dias > 0;
-  });
-
-  if (vencendo.length) {
-    const el = document.createElement('div');
-    el.className = 'alert alert-warning';
-    el.innerHTML = `<strong>?? Atencao!</strong> ${vencendo.length} contrato(s) vencendo nos proximos 30 dias:
-      ${vencendo.map(c => {
-        const dias = Math.ceil((toBRDate(c.dataVencimento) - brNow()) / (1000 * 60 * 60 * 24));
-        return `<br>&bull; ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (vence em ${dias} dias)`;
-      }).join('')}`;
-    div.appendChild(el);
-  }
-
-  const estouro = contratos.filter(c => {
-    if (!c.valorTotal) return false;
-    return (Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100 > 100;
-  });
-
-  if (estouro.length) {
-    const el = document.createElement('div');
-    el.className = 'alert alert-danger';
-    el.innerHTML = `<strong>?? Critico!</strong> ${estouro.length} contrato(s) com estouro de saldo:
-      ${estouro.map(c => {
-        const pct = ((Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100).toFixed(1);
-        return `<br>&bull; ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
-      }).join('')}`;
-    div.appendChild(el);
-  }
-
-  const saldoBaixo = contratos.filter(c => {
-    if (!c.valorTotal) return false;
-    const p = (Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100;
-    return p > 90 && p <= 100;
-  });
-
-  if (saldoBaixo.length) {
-    const el = document.createElement('div');
-    el.className = 'alert alert-warning';
-    el.innerHTML = `<strong>?? Saldo Baixo!</strong> ${saldoBaixo.length} contrato(s) com saldo proximo do limite:
-      ${saldoBaixo.map(c => {
-        const pct = ((Number(c.saldoUtilizado) / Number(c.valorTotal)) * 100).toFixed(1);
-        return `<br>&bull; ${c.numero || 'S/N'} - ${c.fornecedor || 'N/A'} (${pct}% utilizado)`;
-      }).join('')}`;
-    div.appendChild(el);
-  }
+  // Alertas visuais (banners) desativados.
+  // Os indicadores de "ativos / inativos / a vencer" sao exibidos na Home.
+  return;
 }
 
 /***********************
@@ -1096,13 +1360,16 @@ async function updateListaAnexos(contratoId) {
       link.target = '_blank';
       li.appendChild(link);
 
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn ghost';
-      btn.style.marginLeft = '8px';
-      btn.textContent = 'Remover';
-      btn.onclick = () => removeAnexo(contratoId, a.id);
-      li.appendChild(btn);
+      const readonly = Boolean(window.contratoReadonly);
+      if (!readonly) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn ghost';
+        btn.style.marginLeft = '8px';
+        btn.textContent = 'Remover';
+        btn.onclick = () => removeAnexo(contratoId, a.id);
+        li.appendChild(btn);
+      }
 
       ul.appendChild(li);
     });
@@ -1410,7 +1677,14 @@ async function handleCentroSubmit(e) {
 
     centrosCusto = await apiGet('/centros');
     updateTables();
-    closeModal('centroModal');
+    editingId = null;
+
+    const modal = document.getElementById('centroModal');
+    if (modal) {
+      closeModal('centroModal');
+    } else {
+      window.location.href = 'centros.html';
+    }
   } catch (err) {
     console.error('Erro ao salvar centro:', err);
     showAlert('Erro ao salvar centro de custo.', 'danger');
@@ -1437,7 +1711,14 @@ async function handleContaSubmit(e) {
 
     contasContabeis = await apiGet('/contas');
     updateTables();
-    closeModal('contaModal');
+    editingId = null;
+
+    const modal = document.getElementById('contaModal');
+    if (modal) {
+      closeModal('contaModal');
+    } else {
+      window.location.href = 'contas.html';
+    }
   } catch (err) {
     console.error('Erro ao salvar conta:', err);
     showAlert('Erro ao salvar conta contabil.', 'danger');
@@ -1515,6 +1796,8 @@ window.editConta = editConta;
 window.deleteConta = deleteConta;
 window.openMovModal = openMovModal;
 window.viewAnexos = viewAnexos;
+
+
 
 
 

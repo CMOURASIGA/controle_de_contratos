@@ -1,160 +1,135 @@
-<<<<<<< HEAD
-<!DOCTYPE html>
-=======
 ﻿<!DOCTYPE html>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<<<<<<< HEAD
   <title>Relatorio de Contratos</title>
-=======
-  <title>Relatório de Contratos</title>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   <link rel="stylesheet" href="css/styles.css" />
-  <style>
-    .filters { display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
-    .filters .form-control { width:auto; }
-  </style>
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
 </head>
-<body>
+<body class="page page--search">
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-title">CNC Sistema de Contratos</div>
-<<<<<<< HEAD
-      <div class="sidebar-sub">Gestao completa de contratos</div>
-    </div>
-            <nav class="nav-menu">
-      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard"></span>Dashboard</a>
-      <a class="nav-item" href="contratos.html"><span class="nav-icon nav-icon-contracts"></span>Contratos</a>
-      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon nav-icon-new"></span>Novo Contrato</a>
-      <a class="nav-item" href="centros.html"><span class="nav-icon nav-icon-centers"></span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon nav-icon-accounts"></span>Contas Contabeis</a>
-      <a class="nav-item active" href="relatorio.html"><span class="nav-icon nav-icon-reports"></span>Relatorios</a>
-=======
-      <div class="sidebar-sub">Gestão completa de contratos</div>
+      <div class="sidebar-brand">
+        <img class="sidebar-logo" src="img/logo.svg" alt="CNC" />
+        <div>
+          <div class="sidebar-title">CNC</div>
+          <div class="sidebar-sub">Sistema de Contratos</div>
+        </div>
+      </div>
     </div>
     <nav class="nav-menu">
-      <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span>Dashboard</a>
-      <a class="nav-item" href="contratos.html"><span class="nav-icon">📄</span>Contratos</a>
-      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">✍️</span>Novo Contrato</a>
-      <a class="nav-item" href="centros.html"><span class="nav-icon">🏢</span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon">🧾</span>Contas Contábeis</a>
-      <a class="nav-item active" href="relatorio.html"><span class="nav-icon">📊</span>Relatórios</a>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+      <a class="nav-item" href="contratos-modulo.html"><span class="nav-icon nav-icon-contracts" aria-hidden="true"></span>Contratos</a>
+      <a class="nav-item" href="centros-modulo.html"><span class="nav-icon nav-icon-centers" aria-hidden="true"></span>Centros de Custo</a>
+      <a class="nav-item" href="contas-modulo.html"><span class="nav-icon nav-icon-accounts" aria-hidden="true"></span>Contas Contabeis</a>
+      <a class="nav-item active" href="relatorios-modulo.html"><span class="nav-icon nav-icon-reports" aria-hidden="true"></span>Relatorios</a>
     </nav>
   </div>
 
   <div class="main-content">
-    <div id="alerts"></div>
-    <div class="brand-bar"></div>
-    <div class="header">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
-        <div>
-<<<<<<< HEAD
-          <h1>Relatorio</h1>
-          <p>Exporte os contratos filtrados em CSV (UTC-3 Sao Paulo)</p>
-=======
-          <h1>Relatório</h1>
-          <p>Exporte os contratos filtrados em CSV (UTC-3 São Paulo)</p>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="btnToggleSidebar" type="button" aria-label="Abrir menu">&#9776;</button>
+        <div class="topbar-title" id="topbarTitle">Relatorios</div>
+      </div>
+      <div class="topbar-right">
+        <div class="user-pill" title="Dados locais no navegador">
+          <span class="dot"></span><span>Ambiente local</span>
         </div>
-        <div style="display:flex; gap:8px;">
-          <a class="btn secondary" href="index.html">Voltar</a>
+      </div>
+    </div>
+    <div class="page-titlebar">
+      <div class="page-titlebar__inner">
+        <div class="page-titlebar__row">
+          <div class="page-titlebar__left">
+            <a class="back-btn" href="relatorios-modulo.html" aria-label="Voltar">
+              <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="page-titlebar__titles">
+              <h1>Buscar Contratos (Relatorio)</h1>
+              <p>Filtre e exporte os contratos em CSV</p>
+            </div>
+          </div>
+          <div class="page-titlebar__actions">
+            <button class="btn success" id="btnBaixarTop" type="button">
+              <i class="fa-solid fa-file-arrow-down" style="margin-right:8px"></i>Baixar CSV
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="container">
-      <div class="content-area">
-        <h2 style="margin:0 0 12px">Filtros</h2>
-        <div class="filters">
-          <input class="form-control" id="filtroFornecedor" placeholder="Fornecedor" />
-<<<<<<< HEAD
-          <input class="form-control" id="filtroNumero" placeholder="Numero do contrato" />
-=======
-          <input class="form-control" id="filtroNumero" placeholder="Número do contrato" />
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-          <select class="form-control" id="filtroStatus">
-            <option value="">Todos os status</option>
-            <option value="ativo">Ativo</option>
-            <option value="vencendo">Vencendo</option>
-            <option value="vencido">Vencido</option>
-            <option value="inativo">Inativo</option>
-          </select>
-          <div>
-            <label>Vencimento de</label>
-            <input class="form-control" id="filtroVencimentoDe" type="date" lang="pt-BR" placeholder="dd/mm/aaaa" />
-          </div>
-          <div>
-<<<<<<< HEAD
-            <label>Vencimento ate</label>
-=======
-            <label>Vencimento até</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-            <input class="form-control" id="filtroVencimentoAte" type="date" lang="pt-BR" placeholder="dd/mm/aaaa" />
-          </div>
-          <button class="btn" id="btnAplicarFiltros">Aplicar</button>
-          <button class="btn secondary" id="btnLimparFiltros">Limpar</button>
-          <button class="btn success" id="btnBaixar">Baixar CSV</button>
-        </div>
-      </div>
-    </div>
+    <div class="content-padding">
+      <div id="alerts"></div>
 
     <div class="container">
-      <div class="content-area">
-        <div class="table-container">
-          <table id="contratosTable" class="responsive">
-            <thead>
-              <tr>
-<<<<<<< HEAD
-                <th>Numero</th>
-=======
-                <th>Número</th>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-                <th>Fornecedor</th>
-                <th>Centro de Custo</th>
-                <th>Valor Total</th>
-                <th>Saldo Utilizado</th>
-                <th>Vencimento</th>
-                <th>Status</th>
-<<<<<<< HEAD
-                <th style="width:300px;">Acoes</th>
-=======
-                <th style="width:300px;">Ações</th>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+      <div class="search-bar-container">
+        <div class="search-grid">
+          <div class="field col-4">
+            <label for="filtroFornecedor">Fornecedor</label>
+            <input class="form-control" id="filtroFornecedor" placeholder="Ex.: Alfa Telecom" />
+          </div>
+          <div class="field col-4">
+            <label for="filtroNumero">Numero do contrato</label>
+            <input class="form-control" id="filtroNumero" placeholder="Ex.: CT-1001" />
+          </div>
+          <div class="field col-4">
+            <label for="filtroStatus">Status</label>
+            <select class="form-control" id="filtroStatus">
+              <option value="">Todos</option>
+              <option value="ativo">Ativo</option>
+              <option value="vencendo">Vencendo</option>
+              <option value="vencido">Vencido</option>
+              <option value="inativo">Inativo</option>
+            </select>
+          </div>
+
+          <div class="field col-3">
+            <label for="filtroVencimentoDe">Vencimento de</label>
+            <input class="form-control" id="filtroVencimentoDe" type="date" lang="pt-BR" />
+          </div>
+          <div class="field col-3">
+            <label for="filtroVencimentoAte">Vencimento ate</label>
+            <input class="form-control" id="filtroVencimentoAte" type="date" lang="pt-BR" />
+          </div>
+
+          <div class="col-12" style="display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap;">
+            <button class="btn primary" id="btnAplicarFiltros" type="button"><i class="fa-solid fa-magnifying-glass" style="margin-right:8px"></i>Pesquisar</button>
+            <button class="btn secondary" id="btnLimparFiltros" type="button">Limpar</button>
+            <button class="btn success" id="btnBaixar" type="button"><i class="fa-solid fa-file-arrow-down" style="margin-right:8px"></i>Baixar CSV</button>
+          </div>
         </div>
+      </div>
+
+      <div class="result-metadata">
+        <div><strong id="contratosCount">0</strong> contratos encontrados</div>
+      </div>
+
+      <div id="contratosEmpty" class="empty-state" style="display:none;">
+        <div style="font-size: 28px; line-height: 1;">📂</div>
+        <h3>Nenhum contrato encontrado</h3>
+        <p>Ajuste os filtros para gerar o CSV.</p>
+      </div>
+
+      <div id="contratosCardsWrap">
+        <div id="contratosCards" class="result-cards"></div>
       </div>
     </div>
 
     <script src="js/timezone.js"></script>
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', async () => {
-        try {
-          await initializeData();
-        } catch(e) { /* silencioso para p&aacute;gina de relat&oacute;rio */ }
-
-        document.getElementById('btnBaixar')?.addEventListener('click', () => {
-          baixarRelatorio();
-        });
-      });
-    </script>
+    <script src="js/shell.js"></script>
   </div>
 </body>
 </html>
-<<<<<<< HEAD
 
 
 
 
 
-=======
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+
+

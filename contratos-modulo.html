@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contratos</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <img class="sidebar-logo" src="img/logo.svg" alt="CNC" />
+        <div>
+          <div class="sidebar-title">CNC</div>
+          <div class="sidebar-sub">Sistema de Contratos</div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav-menu">
+      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+      <a class="nav-item" href="contratos-modulo.html"><span class="nav-icon nav-icon-contracts" aria-hidden="true"></span>Contratos</a>
+      <a class="nav-item" href="centros-modulo.html"><span class="nav-icon nav-icon-centers" aria-hidden="true"></span>Centros de Custo</a>
+      <a class="nav-item" href="contas-modulo.html"><span class="nav-icon nav-icon-accounts" aria-hidden="true"></span>Contas Contabeis</a>
+      <a class="nav-item" href="relatorios-modulo.html"><span class="nav-icon nav-icon-reports" aria-hidden="true"></span>Relatorios</a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="btnToggleSidebar" type="button" aria-label="Abrir menu">&#9776;</button>
+        <div class="topbar-title" id="topbarTitle">Contratos</div>
+      </div>
+      <div class="topbar-right">
+        <div class="user-pill" title="Dados locais no navegador">
+          <span class="dot"></span><span>Ambiente local</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-padding">
+      <div class="header header--flat">
+        <div class="page-header">
+          <div class="page-header__titles">
+            <h1>Contratos</h1>
+          </div>
+        </div>
+      </div>
+
+      <div class="module-cards">
+        <a class="action-card" href="novo-contrato.html">
+          <div class="action-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"></path>
+              <circle cx="12" cy="12" r="9"></circle>
+            </svg>
+          </div>
+          <div class="action-card__title">Criar Contrato</div>
+          <div class="action-card__subtitle">Cadastre um novo contrato</div>
+        </a>
+
+        <a class="action-card" href="contratos.html">
+          <div class="action-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M20 20l-3.5-3.5"></path>
+            </svg>
+          </div>
+          <div class="action-card__title">Buscar Contratos</div>
+          <div class="action-card__subtitle">Faca uma busca com filtros</div>
+        </a>
+      </div>
+    </div>
+
+    <script src="js/shell.js"></script>
+  </div>
+</body>
+</html>

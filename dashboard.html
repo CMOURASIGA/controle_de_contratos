@@ -1,61 +1,114 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard de Contratos</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
 </head>
 <body>
-  <div class="container">
-    <div class="dashboard-grid">
-      <div class="metric-box">
-        <h4>Contratos Ativos</h4>
-        <div class="metric-value" id="dashContratos">0</div>
-      </div>
-      <div class="metric-box">
-        <h4>Valor Total</h4>
-        <div class="metric-value" id="dashValor">R$ 0,00</div>
-      </div>
-      <div class="metric-box">
-        <h4>Fornecedores</h4>
-        <div class="metric-value" id="dashFornecedores">0</div>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <img class="sidebar-logo" src="img/logo.svg" alt="CNC" />
+        <div>
+          <div class="sidebar-title">CNC</div>
+          <div class="sidebar-sub">Sistema de Contratos</div>
+        </div>
       </div>
     </div>
-    <div class="dashboard-charts">
-      <div class="card">
-        <h3>Status dos Contratos</h3>
-        <canvas id="chartStatus"></canvas>
+    <nav class="nav-menu">
+      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+      <a class="nav-item" href="contratos-modulo.html"><span class="nav-icon nav-icon-contracts" aria-hidden="true"></span>Contratos</a>
+      <a class="nav-item" href="centros-modulo.html"><span class="nav-icon nav-icon-centers" aria-hidden="true"></span>Centros de Custo</a>
+      <a class="nav-item" href="contas-modulo.html"><span class="nav-icon nav-icon-accounts" aria-hidden="true"></span>Contas Contabeis</a>
+      <a class="nav-item" href="relatorios-modulo.html"><span class="nav-icon nav-icon-reports" aria-hidden="true"></span>Relatorios</a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="btnToggleSidebar" type="button" aria-label="Abrir menu">&#9776;</button>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
       </div>
-      <div class="card">
-<<<<<<< HEAD
-        <h3>Gastos por Mas</h3>
-=======
-        <h3>Gastos por Mês</h3>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-        <canvas id="chartEvolucao"></canvas>
+      <div class="topbar-right">
+        <div class="user-pill" title="Dados locais no navegador">
+          <span class="dot"></span><span>Ambiente local</span>
+        </div>
       </div>
-      <div class="card">
-        <h3>Top Fornecedores</h3>
-        <canvas id="chartFornecedores"></canvas>
+    </div>
+
+    <div class="content-padding">
+      <div id="alerts"></div>
+      <div class="brand-bar"></div>
+      <div class="header header--flat">
+        <div class="page-header">
+          <div class="page-header__titles">
+            <h1>Dashboard</h1>
+            <p>Metricas e graficos (dados locais no navegador)</p>
+          </div>
+          <div class="page-header__actions">
+            <a class="btn secondary" href="relatorios-modulo.html">Voltar</a>
+          </div>
+        </div>
       </div>
+
+      <div class="container">
+      <div class="dashboard-grid">
+        <div class="metric-box">
+          <h4>Contratos Ativos</h4>
+          <div class="metric-value" id="dashContratos">0</div>
+        </div>
+        <div class="metric-box">
+          <h4>Valor Total</h4>
+          <div class="metric-value" id="dashValor">R$ 0,00</div>
+        </div>
+        <div class="metric-box">
+          <h4>Fornecedores</h4>
+          <div class="metric-value" id="dashFornecedores">0</div>
+        </div>
+      </div>
+      <div class="dashboard-charts">
+        <div class="card">
+          <h3>Status dos Contratos</h3>
+          <canvas id="chartStatus"></canvas>
+        </div>
+        <div class="card">
+          <h3>Gastos por Mes</h3>
+          <canvas id="chartEvolucao"></canvas>
+        </div>
+        <div class="card">
+          <h3>Top Fornecedores</h3>
+          <canvas id="chartFornecedores"></canvas>
+        </div>
+      </div>
+      </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/timezone.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/shell.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        try {
+          await (window.__CNC_INIT || Promise.resolve());
+        } finally {
+          loadDashboard();
+        }
+      });
+    </script>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="js/app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      await initializeData();
-      loadDashboard();
-    });
-  </script>
 </body>
-<<<<<<< HEAD
 </html>
 
 
 
 
-=======
-</html>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+
+

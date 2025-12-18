@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nova Conta Contabil</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
+</head>
+<body class="page page--form">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <img class="sidebar-logo" src="img/logo.svg" alt="CNC" />
+        <div>
+          <div class="sidebar-title">CNC</div>
+          <div class="sidebar-sub">Sistema de Contratos</div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav-menu">
+      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+      <a class="nav-item" href="contratos-modulo.html"><span class="nav-icon nav-icon-contracts" aria-hidden="true"></span>Contratos</a>
+      <a class="nav-item" href="centros-modulo.html"><span class="nav-icon nav-icon-centers" aria-hidden="true"></span>Centros de Custo</a>
+      <a class="nav-item active" href="contas-modulo.html"><span class="nav-icon nav-icon-accounts" aria-hidden="true"></span>Contas Contabeis</a>
+      <a class="nav-item" href="relatorios-modulo.html"><span class="nav-icon nav-icon-reports" aria-hidden="true"></span>Relatorios</a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="btnToggleSidebar" type="button" aria-label="Abrir menu">&#9776;</button>
+        <div class="topbar-title" id="topbarTitle">Contas Contabeis</div>
+      </div>
+      <div class="topbar-right">
+        <div class="user-pill" title="Dados locais no navegador">
+          <span class="dot"></span><span>Ambiente local</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-titlebar">
+      <div class="page-titlebar__inner">
+        <a class="back-btn" href="contas-modulo.html" aria-label="Voltar">
+          <span class="back-btn__icon" aria-hidden="true">&larr;</span>
+        </a>
+        <div class="page-titlebar__titles">
+          <h1 id="pageTitle">Cadastro de Conta Contabil</h1>
+          <p id="pageSubtitle">Registre as informacoes da conta contabil.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-padding">
+      <div id="alerts"></div>
+
+      <div class="container">
+        <div class="form-card form-card--flat">
+          <div class="tabs" aria-label="Etapas do cadastro">
+            <a class="tab active" href="#" onclick="return false;">Dados Principais</a>
+          </div>
+
+          <div class="form-title">
+            <h2 id="contaFormTitle">Dados Principais</h2>
+          </div>
+
+          <form id="contaForm">
+            <div class="alert" id="msgConta" style="display:none"></div>
+            <details class="collapse" open>
+              <summary>Dados Cadastrais</summary>
+              <div class="collapse__body">
+                <div class="form-grid">
+                  <div class="form-group span-3">
+                    <label>Codigo *</label>
+                    <input id="codigoConta" class="form-control" required />
+                  </div>
+                  <div class="form-group span-6">
+                    <label>Descricao *</label>
+                    <input id="descricaoConta" class="form-control" required />
+                  </div>
+                  <div class="form-group span-3">
+                    <label>Tipo *</label>
+                    <select id="tipoConta" class="form-control" required>
+                      <option value="">Selecione</option>
+                      <option>Despesa</option>
+                      <option>Receita</option>
+                      <option>Ativo</option>
+                      <option>Passivo</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <div class="form-actions">
+              <button type="button" class="btn secondary" onclick="window.location.href='contas.html'">Cancelar</button>
+              <button type="submit" class="btn primary" id="btnSalvarConta">Salvar alteracoes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <script src="js/timezone.js"></script>
+      <script src="js/config.js"></script>
+      <script src="js/app.js"></script>
+      <script src="js/shell.js"></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+          try {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+
+            window.editingId = Number(id);
+            const c = await apiGet(`/contas/${id}`);
+            if (!c) return;
+
+            const pageTitle = document.getElementById('pageTitle');
+            const pageSubtitle = document.getElementById('pageSubtitle');
+            if (pageTitle) pageTitle.textContent = 'Editar Conta Contabil';
+            if (pageSubtitle) pageSubtitle.textContent = 'Pagina de edicao da conta contabil.';
+
+            document.getElementById('codigoConta').value = c.codigo || '';
+            document.getElementById('descricaoConta').value = c.descricao || '';
+            document.getElementById('tipoConta').value = c.tipo || '';
+          } catch (err) {
+            console.error('Falha ao preparar formulario de conta:', err);
+          }
+        });
+      </script>
+    </div>
+  </div>
+</body>
+</html>

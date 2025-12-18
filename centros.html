@@ -5,136 +5,146 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Centros de Custo</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
 </head>
-<body>
+<body class="page page--search">
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-title">CNC Sistema de Contratos</div>
-<<<<<<< HEAD
-      <div class="sidebar-sub">Gestao completa de contratos</div>
-    </div>
-            <nav class="nav-menu">
-      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard"></span>Dashboard</a>
-      <a class="nav-item" href="contratos.html"><span class="nav-icon nav-icon-contracts"></span>Contratos</a>
-      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon nav-icon-new"></span>Novo Contrato</a>
-      <a class="nav-item active" href="centros.html"><span class="nav-icon nav-icon-centers"></span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon nav-icon-accounts"></span>Contas Contabeis</a>
-      <a class="nav-item" href="relatorio.html"><span class="nav-icon nav-icon-reports"></span>Relatorios</a>
-=======
-      <div class="sidebar-sub">Gestão completa de contratos</div>
+      <div class="sidebar-brand">
+        <img class="sidebar-logo" src="img/logo.svg" alt="CNC" />
+        <div>
+          <div class="sidebar-title">CNC</div>
+          <div class="sidebar-sub">Sistema de Contratos</div>
+        </div>
+      </div>
     </div>
     <nav class="nav-menu">
-      <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span>Dashboard</a>
-      <a class="nav-item" href="contratos.html"><span class="nav-icon">📄</span>Contratos</a>
-      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">✍️</span>Novo Contrato</a>
-      <a class="nav-item active" href="centros.html"><span class="nav-icon">🏢</span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon">🧾</span>Contas Contábeis</a>
-      <a class="nav-item" href="relatorio.html"><span class="nav-icon">📊</span>Relatórios</a>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+      <a class="nav-item" href="contratos-modulo.html"><span class="nav-icon nav-icon-contracts" aria-hidden="true"></span>Contratos</a>
+      <a class="nav-item active" href="centros-modulo.html"><span class="nav-icon nav-icon-centers" aria-hidden="true"></span>Centros de Custo</a>
+      <a class="nav-item" href="contas-modulo.html"><span class="nav-icon nav-icon-accounts" aria-hidden="true"></span>Contas Contabeis</a>
+      <a class="nav-item" href="relatorios-modulo.html"><span class="nav-icon nav-icon-reports" aria-hidden="true"></span>Relatorios</a>
     </nav>
   </div>
 
   <div class="main-content">
-  <div id="alerts"></div>
-
-  <div class="brand-bar"></div>
-  <div class="header">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
-      <div>
-        <h1>Centros de Custo</h1>
-        <p>Cadastre e gerencie centros de custo</p>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="btnToggleSidebar" type="button" aria-label="Abrir menu">&#9776;</button>
+        <div class="topbar-title" id="topbarTitle">Centros</div>
       </div>
-      <div style="display:flex; gap:8px;">
-        <a class="btn secondary" href="index.html">Voltar</a>
-        <button class="btn warning" onclick="openModal('centroModal')">Novo Centro</button>
+      <div class="topbar-right">
+        <div class="user-pill" title="Dados locais no navegador">
+          <span class="dot"></span><span>Ambiente local</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="container" style="max-width:960px;margin:40px auto;">
-    <div class="table-container">
-      <table id="centrosTable" class="responsive">
-        <thead>
-          <tr>
-<<<<<<< HEAD
-            <th>Cadigo</th>
-            <th>Nome</th>
-            <th>Responsavel</th>
-            <th>Email</th>
-            <th style="width: 200px;">Aaaes</th>
-=======
-            <th>Código</th>
-            <th>Nome</th>
-            <th>Responsável</th>
-            <th>Email</th>
-            <th style="width: 200px;">Ações</th>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Preenchido via JavaScript -->
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Modal CENTRO -->
-  <div id="centroModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="centroModalTitle">Novo Centro de Custo</h2>
-        <button class="close" onclick="closeModal('centroModal')">&times;</button>
-      </div>
-      <form id="centroForm">
-        <div class="alert" id="msgCentro" style="display:none"></div>
-        <div class="form-grid">
-          <div class="form-group">
-<<<<<<< HEAD
-            <label>Cadigo *</label>
-=======
-            <label>Código *</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-            <input id="codigoCentro" class="form-control" required />
+    <div class="page-titlebar">
+      <div class="page-titlebar__inner">
+        <div class="page-titlebar__row">
+          <div class="page-titlebar__left">
+            <a class="back-btn" href="centros-modulo.html" aria-label="Voltar">
+              <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div class="page-titlebar__titles">
+              <h1>Buscar Centros de Custo</h1>
+              <p>Pagina de busca de centros de custo</p>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Nome *</label>
-            <input id="nomeCentro" class="form-control" required />
-          </div>
-          <div class="form-group">
-<<<<<<< HEAD
-            <label>Responsavel *</label>
-=======
-            <label>Responsável *</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-            <input id="responsavel" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Email *</label>
-            <input id="emailResponsavel" type="email" class="form-control" required />
+          <div class="page-titlebar__actions">
+            <button class="btn green" type="button" onclick="openModal('centroModal')">
+              <i class="fa-solid fa-plus" style="margin-right:8px"></i>Novo centro
+            </button>
           </div>
         </div>
-        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
-          <button type="button" class="btn secondary" onclick="closeModal('centroModal')">Cancelar</button>
-          <button type="submit" class="btn">Salvar</button>
-        </div>
-      </form>
+      </div>
     </div>
-  </div>
 
-  <script src="js/timezone.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/app.js"></script>
+    <div class="content-padding">
+      <div id="alerts"></div>
+
+      <div class="container">
+        <div class="search-bar-container">
+          <div class="search-grid">
+            <div class="field col-4">
+              <label for="filtroCentroCodigo">Codigo</label>
+              <input class="form-control" id="filtroCentroCodigo" placeholder="Ex.: ADM" />
+            </div>
+            <div class="field col-4">
+              <label for="filtroCentroNome">Nome</label>
+              <input class="form-control" id="filtroCentroNome" placeholder="Ex.: Administrativo" />
+            </div>
+            <div class="field col-4">
+              <label for="filtroCentroResponsavel">Responsavel</label>
+              <input class="form-control" id="filtroCentroResponsavel" placeholder="Ex.: Ana" />
+            </div>
+            <div class="col-12" style="display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap;">
+              <button class="btn primary" id="btnBuscarCentros" type="button">
+                <i class="fa-solid fa-magnifying-glass" style="margin-right:8px"></i>Pesquisar
+              </button>
+              <button class="btn secondary" id="btnLimparCentros" type="button">Limpar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-metadata">
+          <div><strong id="centrosCount">0</strong> centros encontrados</div>
+        </div>
+
+        <div id="centrosEmpty" class="empty-state" style="display:none;">
+          <div style="font-size: 22px; line-height: 1;"><i class="fa-regular fa-folder-open"></i></div>
+          <h3>Nenhum centro de custo encontrado</h3>
+          <p>Utilize os filtros para refinar sua busca.</p>
+        </div>
+
+        <div id="centrosCardsWrap">
+          <div id="centrosCards" class="result-cards"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal CENTRO -->
+    <div id="centroModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="centroModalTitle">Novo Centro de Custo</h2>
+          <button class="close" onclick="closeModal('centroModal')">&times;</button>
+        </div>
+        <form id="centroForm">
+          <div class="alert" id="msgCentro" style="display:none"></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Codigo *</label>
+              <input id="codigoCentro" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>Nome *</label>
+              <input id="nomeCentro" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>Responsavel *</label>
+              <input id="responsavel" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label>Email *</label>
+              <input id="emailResponsavel" type="email" class="form-control" required />
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+            <button type="button" class="btn secondary" onclick="closeModal('centroModal')">Cancelar</button>
+            <button type="submit" class="btn primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="js/timezone.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/shell.js"></script>
   </div>
 </body>
 </html>
-<<<<<<< HEAD
-
-
-
-
-
-
-
-=======
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51

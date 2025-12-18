@@ -1,117 +1,110 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<<<<<<< HEAD
   <title>Gestao de Contratos</title>
-=======
-  <title>Gestão de Contratos</title>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
 </head>
-<body>
+<body class="page page--search">
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-title">CNC Sistema de Contratos</div>
-<<<<<<< HEAD
-      <div class="sidebar-sub">Gestao completa de contratos</div>
-    </div>
-            <nav class="nav-menu">
-      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard"></span>Dashboard</a>
-      <a class="nav-item active" href="contratos.html"><span class="nav-icon nav-icon-contracts"></span>Contratos</a>
-      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon nav-icon-new"></span>Novo Contrato</a>
-      <a class="nav-item" href="centros.html"><span class="nav-icon nav-icon-centers"></span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon nav-icon-accounts"></span>Contas Contabeis</a>
-      <a class="nav-item" href="relatorio.html"><span class="nav-icon nav-icon-reports"></span>Relatorios</a>
-=======
-      <div class="sidebar-sub">Gestão completa de contratos</div>
+      <div class="sidebar-brand">
+        <img class="sidebar-logo" src="img/logo.svg" alt="CNC" />
+        <div>
+          <div class="sidebar-title">CNC</div>
+          <div class="sidebar-sub">Sistema de Contratos</div>
+        </div>
+      </div>
     </div>
     <nav class="nav-menu">
-      <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span>Dashboard</a>
-      <a class="nav-item active" href="contratos.html"><span class="nav-icon">📄</span>Contratos</a>
-      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">✍️</span>Novo Contrato</a>
-      <a class="nav-item" href="centros.html"><span class="nav-icon">🏢</span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon">🧾</span>Contas Contábeis</a>
-      <a class="nav-item" href="relatorio.html"><span class="nav-icon">📊</span>Relatórios</a>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+      <a class="nav-item active" href="contratos-modulo.html"><span class="nav-icon nav-icon-contracts" aria-hidden="true"></span>Contratos</a>
+      <a class="nav-item" href="centros-modulo.html"><span class="nav-icon nav-icon-centers" aria-hidden="true"></span>Centros de Custo</a>
+      <a class="nav-item" href="contas-modulo.html"><span class="nav-icon nav-icon-accounts" aria-hidden="true"></span>Contas Contabeis</a>
+      <a class="nav-item" href="relatorios-modulo.html"><span class="nav-icon nav-icon-reports" aria-hidden="true"></span>Relatorios</a>
     </nav>
   </div>
 
   <div class="main-content">
-  <div id="alerts"></div>
-
-  <div class="brand-bar"></div>
-  <div class="header">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
-      <div>
-<<<<<<< HEAD
-        <h1>Gestao de Contratos</h1>
-=======
-        <h1>Gestão de Contratos</h1>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-        <p>Visualize, filtre e gerencie seus contratos</p>
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" id="btnToggleSidebar" type="button" aria-label="Abrir menu">&#9776;</button>
+      <div class="topbar-title" id="topbarTitle">Contratos</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-pill" title="Dados locais no navegador">
+        <span class="dot"></span><span>Ambiente local</span>
       </div>
-      <div style="display:flex; gap:8px;">
-        <a class="btn secondary" href="index.html">Voltar</a>
+    </div>
+  </div>
+  <div class="page-titlebar">
+    <div class="page-titlebar__inner">
+      <div class="page-titlebar__row">
+        <div class="page-titlebar__left">
+          <a class="back-btn" href="contratos-modulo.html" aria-label="Voltar">
+            <i class="fa-solid fa-arrow-left"></i>
+          </a>
+          <div class="page-titlebar__titles">
+            <h1>Buscar Contratos</h1>
+            <p>Pagina de busca de contratos</p>
+          </div>
+        </div>
+        <div class="page-titlebar__actions">
+          <a class="btn green" href="novo-contrato.html"><i class="fa-solid fa-plus" style="margin-right:8px"></i>Novo contrato</a>
+        </div>
       </div>
     </div>
   </div>
 
+  <div class="content-padding">
+    <div id="alerts"></div>
+
   <div class="container">
     <div id="contratos" class="tab-content active">
       <div class="content-area">
-        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
-<<<<<<< HEAD
-          <h2>Gestao de Contratos</h2>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <input class="form-control" id="filtroFornecedor" placeholder="Filtrar por fornecedor" style="width: auto;">
-            <input class="form-control" id="filtroNumero" placeholder="Namero do contrato" style="width: auto;">
-=======
-          <h2>Gestão de Contratos</h2>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <input class="form-control" id="filtroFornecedor" placeholder="Filtrar por fornecedor" style="width: auto;">
-            <input class="form-control" id="filtroNumero" placeholder="Número do contrato" style="width: auto;">
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-            <select class="form-control" id="filtroStatus" style="width: auto;">
-              <option value="">Todos os status</option>
-              <option value="ativo">Ativo</option>
-              <option value="vencendo">Vencendo</option>
-              <option value="vencido">Vencido</option>
-              <option value="inativo">Inativo</option>
-            </select>
-            <button class="btn" id="btnAplicarFiltros">Aplicar</button>
-            <button class="btn secondary" id="btnLimparFiltros">Limpar</button>
+        <div class="search-bar-container">
+          <div class="search-grid">
+            <div class="field col-4">
+              <label for="filtroFornecedor">Fornecedor</label>
+              <input class="form-control" id="filtroFornecedor" placeholder="Ex.: Alfa Telecom" />
+            </div>
+            <div class="field col-4">
+              <label for="filtroNumero">Numero do contrato</label>
+              <input class="form-control" id="filtroNumero" placeholder="Ex.: CT-1001" />
+            </div>
+            <div class="field col-4">
+              <label for="filtroStatus">Status</label>
+              <select class="form-control" id="filtroStatus">
+                <option value="">Todos</option>
+                <option value="ativo">Ativo</option>
+                <option value="vencendo">Vencendo</option>
+                <option value="vencido">Vencido</option>
+                <option value="inativo">Inativo</option>
+              </select>
+            </div>
+            <div class="col-12" style="display:flex; gap:12px; justify-content:flex-end; flex-wrap:wrap;">
+              <button class="btn primary" id="btnAplicarFiltros" type="button"><i class="fa-solid fa-magnifying-glass" style="margin-right:8px"></i>Pesquisar</button>
+              <button class="btn secondary" id="btnLimparFiltros" type="button">Limpar</button>
+            </div>
           </div>
         </div>
 
-        <div class="table-container">
-          <table id="contratosTable" class="responsive">
-            <thead>
-              <tr>
-<<<<<<< HEAD
-                <th>Namero</th>
-=======
-                <th>Número</th>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-                <th>Fornecedor</th>
-                <th>Centro de Custo</th>
-                <th>Valor Total</th>
-                <th>Saldo Utilizado</th>
-                <th>Vencimento</th>
-                <th>Status</th>
-<<<<<<< HEAD
-                <th style="width: 300px;">Aaaes</th>
-=======
-                <th style="width: 300px;">Ações</th>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Preenchido via JavaScript -->
-            </tbody>
-          </table>
+        <div class="result-metadata">
+          <div><strong id="contratosCount">0</strong> contratos encontrados</div>
+        </div>
+
+        <div id="contratosEmpty" class="empty-state" style="display:none;">
+          <div style="font-size: 28px; line-height: 1;"><i class="fa-regular fa-folder-open"></i></div>
+          <h3>Nenhum contrato encontrado</h3>
+          <p>Ajuste os filtros ou cadastre um novo contrato.</p>
+        </div>
+
+        <div id="contratosCardsWrap">
+          <div id="contratosCards" class="result-cards"></div>
         </div>
       </div>
     </div>
@@ -121,11 +114,7 @@
   <div id="movModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-<<<<<<< HEAD
-        <h2>Movimentaaaes do Contrato</h2>
-=======
-        <h2>Movimentações do Contrato</h2>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+        <h2>Movimentacoes do Contrato</h2>
         <button class="close" onclick="closeModal('movModal')">&times;</button>
       </div>
 
@@ -137,11 +126,7 @@
           <div class="form-group">
             <label>Tipo</label>
             <select id="movTipo" class="form-control">
-<<<<<<< HEAD
-              <option value="saida">Pagamento (Saada)</option>
-=======
-              <option value="saida">Pagamento (Saída)</option>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+              <option value="saida">Pagamento (Saida)</option>
               <option value="ajuste">Ajuste de Saldo</option>
             </select>
           </div>
@@ -154,21 +139,13 @@
             <input id="movData" type="date" class="form-control" lang="pt-BR" />
           </div>
           <div class="form-group form-group--full">
-<<<<<<< HEAD
-            <label>Observaaaes</label>
-=======
-            <label>Observações</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+            <label>Observacoes</label>
             <input id="movObs" class="form-control" />
           </div>
         </div>
         <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:20px">
           <button type="button" class="btn secondary" onclick="closeModal('movModal')">Fechar</button>
-<<<<<<< HEAD
-          <button type="submit" class="btn success">Aplicar Movimentaaao</button>
-=======
-          <button type="submit" class="btn success">Aplicar Movimentação</button>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+          <button type="submit" class="btn success">Aplicar Movimentacao</button>
         </div>
       </form>
 
@@ -199,11 +176,7 @@
         <div class="alert" id="msgCentro" style="display:none"></div>
         <div class="form-grid">
           <div class="form-group">
-<<<<<<< HEAD
             <label>Cadigo *</label>
-=======
-            <label>Código *</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
             <input id="codigoCentro" class="form-control" required />
           </div>
           <div class="form-group">
@@ -211,11 +184,7 @@
             <input id="nomeCentro" class="form-control" required />
           </div>
           <div class="form-group">
-<<<<<<< HEAD
             <label>Responsavel *</label>
-=======
-            <label>Responsável *</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
             <input id="responsavel" class="form-control" required />
           </div>
           <div class="form-group">
@@ -235,30 +204,18 @@
   <div id="contaModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-<<<<<<< HEAD
         <h2 id="contaModalTitle">Nova Conta Contabil</h2>
-=======
-        <h2 id="contaModalTitle">Nova Conta Contábil</h2>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
         <button class="close" onclick="closeModal('contaModal')">&times;</button>
       </div>
       <form id="contaForm">
         <div class="alert" id="msgConta" style="display:none"></div>
         <div class="form-grid">
           <div class="form-group">
-<<<<<<< HEAD
             <label>Cadigo *</label>
             <input id="codigoConta" class="form-control" required />
           </div>
           <div class="form-group">
             <label>Descriaao *</label>
-=======
-            <label>Código *</label>
-            <input id="codigoConta" class="form-control" required />
-          </div>
-          <div class="form-group">
-            <label>Descrição *</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
             <input id="descricaoConta" class="form-control" required />
           </div>
           <div class="form-group">
@@ -277,21 +234,17 @@
           <button type="submit" class="btn">Salvar</button>
         </div>
       </form>
-    </div>
+  </div>
   </div>
 
+  </div>
   <script src="js/timezone.js"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      await initializeData();
-    });
-  </script>
+  <script src="js/shell.js"></script>
   </div>
 </body>
 </html>
-<<<<<<< HEAD
 
 
 
@@ -299,5 +252,6 @@
 
 
 
-=======
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+
+
+

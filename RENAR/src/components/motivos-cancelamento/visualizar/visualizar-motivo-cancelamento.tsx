@@ -1,0 +1,45 @@
+"use client";
+
+import { ButtonOutline } from "@/components/layouts/ui/buttons/button-outline/button-outline";
+import { PencilIcon } from "@/components/layouts/ui/icons/pincel";
+import Label from "@/components/layouts/ui/label/label";
+import { PageHeader } from "@/components/layouts/ui/page-header";
+import { FormularioMandatosSkeleton } from "@/components/mandatos/formularios/formulario-mandatos.skeleton";
+import { useConsultarMotivoCancelamentoPorId } from "@/hooks/motivos-cancelamento/use-consultar-motivo-cancelamento-por-id";
+import Link from "next/link";
+
+interface IVisualizarMotivoCancelamentoProps {
+  id: string;
+}
+
+const VisualizarMotivoCancelamento = ({ id }: IVisualizarMotivoCancelamentoProps) => {
+  const { motivoSelecionado, isLoading } = useConsultarMotivoCancelamentoPorId(id);
+  return <>
+    <PageHeader
+        title={motivoSelecionado ? `Motivo Cancelamento ID Nº ${motivoSelecionado.id}` : "Visualizar Motivo Cancelamento"}
+        goBack
+      >
+        <ButtonOutline>
+          <Link href={`/motivos-cancelamento/editar/${motivoSelecionado?.id}`}>
+            <span className="flex flex-row items-center gap-2">
+              <PencilIcon className="size-4" />
+              Editar
+            </span>
+          </Link>
+        </ButtonOutline>
+      </PageHeader>
+      {
+        isLoading ? (
+          <FormularioMandatosSkeleton />
+        ) : (
+          <div className="mx-auto max-sm:w-screen p-6 bg-white m-4">
+            <div className="grid grid-cols-1 gap-8 mt-4">
+              <Label label="descrição:" value={motivoSelecionado?.descricao} />
+            </div>
+          </div>
+        )
+      }
+  </>;
+}
+
+export default VisualizarMotivoCancelamento;

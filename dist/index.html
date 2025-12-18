@@ -1,91 +1,110 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sistema de Controle de Contratos</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
 </head>
-<body>
+<body class="page page--home">
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-title">CNC Sistema de Contratos</div>
-      <div class="sidebar-sub">Gestao completa de contratos</div>
+      <div class="sidebar-brand">
+        <img class="sidebar-logo" src="img/logo.svg" alt="CNC" />
+        <div>
+          <div class="sidebar-title">CNC</div>
+          <div class="sidebar-sub">Sistema de Contratos</div>
+        </div>
+      </div>
     </div>
-            <nav class="nav-menu">
-      <a class="nav-item active" href="index.html"><span class="nav-icon nav-icon-dashboard"></span>Dashboard</a>
-      <a class="nav-item" href="contratos.html"><span class="nav-icon nav-icon-contracts"></span>Contratos</a>
-      <a class="nav-item" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon nav-icon-new"></span>Novo Contrato</a>
-      <a class="nav-item" href="centros.html"><span class="nav-icon nav-icon-centers"></span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon nav-icon-accounts"></span>Contas Contabeis</a>
-      <a class="nav-item" href="relatorio.html"><span class="nav-icon nav-icon-reports"></span>Relatorios</a>
+    <nav class="nav-menu">
+      <a class="nav-item active" href="index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+      <a class="nav-item" href="contratos-modulo.html"><span class="nav-icon nav-icon-contracts" aria-hidden="true"></span>Contratos</a>
+      <a class="nav-item" href="centros-modulo.html"><span class="nav-icon nav-icon-centers" aria-hidden="true"></span>Centros de Custo</a>
+      <a class="nav-item" href="contas-modulo.html"><span class="nav-icon nav-icon-accounts" aria-hidden="true"></span>Contas Contabeis</a>
+      <a class="nav-item" href="relatorios-modulo.html"><span class="nav-icon nav-icon-reports" aria-hidden="true"></span>Relatorios</a>
     </nav>
   </div>
 
   <div class="main-content">
-    <div id="alerts"></div>
-    <div class="brand-bar"></div>
-
-    <div class="header">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
-        <div>
-          <h1>Sistema de Controle de Contratos</h1>
-          <p>Gestao de contratos, centros de custo e contas contabeis</p>
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" id="btnToggleSidebar" type="button" aria-label="Abrir menu">
+          &#9776;
+        </button>
+        <div class="topbar-title" id="topbarTitle"></div>
+      </div>
+      <div class="topbar-right">
+        <div class="user-pill" title="Dados locais no navegador">
+          <span class="dot"></span>
+          <span>Ambiente local</span>
         </div>
-      <div style="display:flex; gap:8px;">
-        <a class="btn" href="contratos.html">Ir para Gestao</a>
-        <a class="btn secondary" href="relatorio.html">Relatarios</a>
       </div>
     </div>
-  </div>
+    <div class="content-padding">
+      <div id="alerts"></div>
 
-  <div class="container">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number" id="totalContratos">0</div>
-        <div class="stat-label">Total de Contratos</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="contratosAtivos">0</div>
-        <div class="stat-label">Contratos Ativos</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="contratosVencendo">0</div>
-        <div class="stat-label">Vencendo em 30 dias</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="contratosEstouro">0</div>
-        <div class="stat-label">Com Estouro de Saldo</div>
-      </div>
-    </div>
+      <div class="module-cards">
+        <a class="action-card" href="contratos-modulo.html">
+          <div class="action-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <path d="M14 2v6h6"></path>
+              <path d="M8 13h8"></path>
+              <path d="M8 17h8"></path>
+            </svg>
+          </div>
+          <div class="action-card__title">Contratos</div>
+          <div class="action-card__subtitle">Criar e buscar contratos</div>
+        </a>
 
-    <div class="dashboard-grid">
-      <a class="card" href="contratos.html" style="text-decoration:none; color:inherit;">
-        <h3>Gerenciar Contratos</h3>
-        <p class="stat-label">Visualize, crie e gerencie todos os seus contratos</p>
-      </a>
-      <a class="card" href="centros.html" style="text-decoration:none; color:inherit;">
-        <h3>Centros de Custo</h3>
-        <p class="stat-label">Configure e administre os Centros de Custo</p>
-      </a>
-      <a class="card" href="contas.html" style="text-decoration:none; color:inherit;">
-        <h3>Contas Contabeis</h3>
-        <p class="stat-label">Gerencie o plano de contas</p>
-      </a>
-      <a class="card" href="relatorio.html" style="text-decoration:none; color:inherit;">
-        <h3>Relatarios e Analytics</h3>
-        <p class="stat-label">Acompanhe matricas e gere relatarios</p>
-      </a>
+        <a class="action-card" href="relatorios-modulo.html">
+          <div class="action-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19V5"></path>
+              <path d="M20 19V9"></path>
+              <path d="M12 19V3"></path>
+              <path d="M8 19v-7"></path>
+              <path d="M16 19v-5"></path>
+            </svg>
+          </div>
+          <div class="action-card__title">Relatorios</div>
+          <div class="action-card__subtitle">Exportar CSV e ver dashboards</div>
+        </a>
+      </div>
+
+      <div class="home-metrics">
+        <div class="home-metric">
+          <div class="home-metric__label">Total de contratos</div>
+          <div class="home-metric__value" id="homeTotalContratos">0</div>
+        </div>
+        <div class="home-metric">
+          <div class="home-metric__label">Contratos ativos</div>
+          <div class="home-metric__value" id="homeContratosAtivos">0</div>
+        </div>
+        <div class="home-metric">
+          <div class="home-metric__label">Contratos inativos</div>
+          <div class="home-metric__value" id="homeContratosInativos">0</div>
+        </div>
+        <div class="home-metric">
+          <div class="home-metric__label">A vencer (30 dias)</div>
+          <div class="home-metric__value" id="homeContratosVencendo">0</div>
+        </div>
+      </div>
     </div>
-  </div>
 
   <script src="js/timezone.js"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/shell.js"></script>
   </div>
 </body>
 </html>
+
+
 
 
 

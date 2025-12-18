@@ -1,197 +1,424 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Novo Contrato</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg" />
 </head>
-<body>
+<body class="page page--form">
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-title">CNC Sistema de Contratos</div>
-<<<<<<< HEAD
-      <div class="sidebar-sub">Gestao completa de contratos</div>
-    </div>
-            <nav class="nav-menu">
-      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard"></span>Dashboard</a>
-      <a class="nav-item" href="contratos.html"><span class="nav-icon nav-icon-contracts"></span>Contratos</a>
-      <a class="nav-item active" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon nav-icon-new"></span>Novo Contrato</a>
-      <a class="nav-item" href="centros.html"><span class="nav-icon nav-icon-centers"></span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon nav-icon-accounts"></span>Contas Contabeis</a>
-      <a class="nav-item" href="relatorio.html"><span class="nav-icon nav-icon-reports"></span>Relatorios</a>
-=======
-      <div class="sidebar-sub">Gestão completa de contratos</div>
+      <div class="sidebar-brand">
+        <img class="sidebar-logo" src="img/logo.svg" alt="CNC" />
+        <div>
+          <div class="sidebar-title">CNC</div>
+          <div class="sidebar-sub">Sistema de Contratos</div>
+        </div>
+      </div>
     </div>
     <nav class="nav-menu">
-      <a class="nav-item" href="index.html"><span class="nav-icon">🏠</span>Dashboard</a>
-      <a class="nav-item" href="contratos.html"><span class="nav-icon">📄</span>Contratos</a>
-      <a class="nav-item active" id="navNovoContrato" href="novo-contrato.html"><span class="nav-icon">✍️</span>Novo Contrato</a>
-      <a class="nav-item" href="centros.html"><span class="nav-icon">🏢</span>Centros de Custo</a>
-      <a class="nav-item" href="contas.html"><span class="nav-icon">🧾</span>Contas Contábeis</a>
-      <a class="nav-item" href="relatorio.html"><span class="nav-icon">📊</span>Relatórios</a>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+      <a class="nav-item" href="index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+      <a class="nav-item active" href="contratos-modulo.html"><span class="nav-icon nav-icon-contracts" aria-hidden="true"></span>Contratos</a>
+      <a class="nav-item" href="centros-modulo.html"><span class="nav-icon nav-icon-centers" aria-hidden="true"></span>Centros de Custo</a>
+      <a class="nav-item" href="contas-modulo.html"><span class="nav-icon nav-icon-accounts" aria-hidden="true"></span>Contas Contabeis</a>
+      <a class="nav-item" href="relatorios-modulo.html"><span class="nav-icon nav-icon-reports" aria-hidden="true"></span>Relatorios</a>
     </nav>
   </div>
 
   <div class="main-content">
-  <div id="alerts"></div>
-
-  <div class="brand-bar"></div>
-  <div class="header">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;">
-      <div>
-        <h1>Novo Contrato</h1>
-        <p>Preencha os dados para cadastrar um novo contrato</p>
-      </div>
-      <div style="display:flex; gap:8px;">
-        <a class="btn secondary" href="index.html">Voltar</a>
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" id="btnToggleSidebar" type="button" aria-label="Abrir menu">&#9776;</button>
+      <div class="topbar-title" id="topbarTitle">Novo Contrato</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-pill" title="Dados locais no navegador">
+        <span class="dot"></span><span>Ambiente local</span>
       </div>
     </div>
   </div>
-  <div class="container" style="max-width:720px;margin:40px auto;">
-    <h2 id="contratoModalTitle">Novo Contrato</h2>
-    <form id="contratoForm">
-      <div class="alert" style="display:none" id="msgContrato"></div>
-      <div class="form-grid">
-        <div class="form-group">
-<<<<<<< HEAD
-          <label>Namero do Contrato *</label>
-=======
-          <label>Número do Contrato *</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+  <div class="page-titlebar">
+    <div class="page-titlebar__inner">
+      <a class="back-btn" href="contratos-modulo.html" aria-label="Voltar">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+      <div class="page-titlebar__titles">
+        <h1 id="pageTitle">Cadastro Contrato</h1>
+        <p id="pageSubtitle">Pagina de criacao/edicao de contratos</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-padding">
+  <div id="alerts"></div>
+
+  <div class="container">
+    <div class="form-card form-card--flat">
+      <div class="tabs" aria-label="Etapas do cadastro">
+        <a class="tab active" href="#" id="tabDadosLink" data-target="tabDadosContent">Dados Principais</a>
+        <a class="tab disabled" href="#" id="tabMovLink" data-target="tabMovContent" aria-disabled="true" tabindex="-1">Movimentos</a>
+        <a class="tab disabled" href="#" id="tabAnexosLink" data-target="tabAnexosContent" aria-disabled="true" tabindex="-1">Anexos</a>
+      </div>
+
+      <div class="form-title">
+        <h2 id="contratoModalTitle">Dados Principais</h2>
+      </div>
+      <form id="contratoForm">
+        <div class="alert" style="display:none" id="msgContrato"></div>
+
+        <div id="tabDadosContent" class="tab-content active">
+          <details class="collapse" open>
+            <summary>Dados Cadastrais</summary>
+            <div class="collapse__body">
+              <div class="form-grid">
+        <div class="form-group span-3">
+          <label>Numero do Contrato *</label>
           <input id="numeroContrato" class="form-control" required />
           <span class="error"></span>
         </div>
-        <div class="form-group">
+        <div class="form-group span-3">
           <label>Fornecedor *</label>
           <input id="fornecedor" class="form-control" required />
           <span class="error"></span>
         </div>
-        <div class="form-group">
+        <div class="form-group span-2">
           <label>Centro de Custo *</label>
           <select id="centroCustoContrato" class="form-control" required>
             <option value="">Selecione</option>
           </select>
           <span class="error"></span>
         </div>
-        <div class="form-group">
-<<<<<<< HEAD
+        <div class="form-group span-2">
           <label>Conta Contabil *</label>
-=======
-          <label>Conta Contábil *</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
           <select id="contaContabil" class="form-control" required>
             <option value="">Selecione</option>
           </select>
           <span class="error"></span>
         </div>
-        <div class="form-group">
+        <div class="form-group span-2">
           <label>Valor Total (R$) *</label>
           <input id="valorTotal" type="number" step="0.01" class="form-control" required />
           <span class="error"></span>
         </div>
-        <div class="form-group">
+        <div class="form-group span-2">
           <label>Saldo Utilizado (R$)</label>
           <input id="saldoUtilizado" type="number" step="0.01" class="form-control" value="0" />
         </div>
-        <div class="form-group">
-<<<<<<< HEAD
-          <label>Data de Inacio *</label>
-=======
-          <label>Data de Início *</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+              </div>
+            </div>
+          </details>
+
+          <details class="collapse" open>
+            <summary>Contrato</summary>
+            <div class="collapse__body">
+              <div class="form-grid">
+        <div class="form-group span-3">
+          <label>Data de Inicio *</label>
           <input id="dataInicio" type="date" class="form-control" lang="pt-BR" required />
           <span class="error"></span>
         </div>
-        <div class="form-group">
+        <div class="form-group span-3">
           <label>Data de Vencimento *</label>
           <input id="dataVencimento" type="date" class="form-control" lang="pt-BR" required />
           <span class="error"></span>
         </div>
-        <div class="form-group form-group--full">
-<<<<<<< HEAD
-          <label>Observaaaes</label>
-=======
-          <label>Observações</label>
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+        <div class="form-group form-group--full span-12">
+          <label>Observacoes</label>
           <textarea id="observacoes" rows="3" class="form-control"></textarea>
         </div>
-        <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <div class="form-group span-4" style="display:flex;align-items:center;gap:8px">
           <input type="checkbox" id="contratoAtivo" checked />
           <label for="contratoAtivo">Contrato ativo</label>
         </div>
-        <div class="form-group form-group--full">
-          <label>Anexos do contrato</label>
-          <input id="anexosContrato" type="file" class="form-control" multiple />
-          <ul id="listaAnexosContrato"></ul>
+              </div>
+            </div>
+          </details>
+
+          <div class="form-actions">
+            <button type="button" class="btn secondary" id="btnCancelarContrato">Cancelar</button>
+            <button type="submit" class="btn primary" id="btnSalvarContrato">Salvar alteracoes</button>
+          </div>
         </div>
-      </div>
-      <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
-        <button type="button" class="btn secondary" onclick="window.location.href='index.html'">Cancelar</button>
-        <button type="submit" class="btn" id="btnSalvarContrato">Salvar</button>
-      </div>
-    </form>
+
+        <div id="tabMovContent" class="tab-content">
+          <div class="card" style="box-shadow:none;border:1px solid rgba(0,0,0,.12)">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px">
+              <h3 style="margin:0">Movimentos</h3>
+              <span id="movimentosHint" style="color:var(--text-secondary); font-size:.92rem"></span>
+            </div>
+
+            <div id="movimentosEmpty" class="empty-state" style="display:none;">
+              <h3>Nenhuma movimentacao</h3>
+              <p>Este contrato nao possui movimentacoes registradas.</p>
+            </div>
+
+            <div class="table-container" id="movimentosTableWrap" style="display:none;">
+              <table class="responsive">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
+                    <th>Obs</th>
+                  </tr>
+                </thead>
+                <tbody id="tbMovPage"></tbody>
+              </table>
+            </div>
+
+            <form id="movFormPage" style="display:none; margin-top:16px;">
+              <div class="form-grid" style="grid-template-columns: repeat(12, 1fr); gap: 14px 18px;">
+                <div class="form-group span-3">
+                  <label>Tipo</label>
+                  <select id="movTipoPage" class="form-control">
+                    <option value="saida">Pagamento (Saida)</option>
+                    <option value="ajuste">Ajuste de Saldo</option>
+                  </select>
+                </div>
+                <div class="form-group span-3">
+                  <label>Valor (R$)</label>
+                  <input id="movValorPage" type="number" step="0.01" class="form-control" required />
+                </div>
+                <div class="form-group span-6">
+                  <label>Observacoes</label>
+                  <input id="movObsPage" class="form-control" />
+                </div>
+                <div class="form-actions" style="grid-column:1 / -1; margin-top: 4px;">
+                  <button type="submit" class="btn success">Adicionar movimentacao</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div id="tabAnexosContent" class="tab-content">
+          <div class="card" style="box-shadow:none;border:1px solid rgba(0,0,0,.12)">
+            <h3 style="margin:0 0 12px">Anexos</h3>
+            <div class="form-group">
+              <label>Anexos do contrato</label>
+              <input id="anexosContrato" type="file" class="form-control" multiple />
+              <ul id="listaAnexosContrato"></ul>
+            </div>
+            <p style="margin: 10px 0 0; color: var(--text-secondary); font-size: .92rem">
+              Os anexos sao enviados ao salvar.
+            </p>
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="js/timezone.js"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/shell.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       try {
-        if (typeof updateCentroCustoOptions === 'function') updateCentroCustoOptions();
-        if (typeof updateContaContabilOptions === 'function') updateContaContabilOptions();
+        const params = new URLSearchParams(window.location.search);
+        const readonly = params.get('readonly') === '1' || params.get('readonly') === 'true' || params.get('mode') === 'view';
+        const from = params.get('from');
+        window.contratoReadonly = readonly;
 
-        if (typeof formatYMD === 'function') {
-          const di = document.getElementById('dataInicio');
-          const dv = document.getElementById('dataVencimento');
-          if (di && !di.value) di.value = formatYMD(brNow());
-          if (dv && !dv.value) dv.value = '';
+        if (from === 'contratos') {
+          const back = document.querySelector('.back-btn');
+          if (back) back.setAttribute('href', 'contratos.html');
         }
 
-<<<<<<< HEAD
-        // Ediaao: carrega contrato se houver ?id=
-=======
-        // Edição: carrega contrato se houver ?id=
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-        const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
-        if (id) {
-          window.editingId = Number(id);
-          const c = await apiGet(`/contratos/${id}`);
-          if (c) {
-            document.getElementById('contratoModalTitle').textContent = 'Editar Contrato';
-            document.getElementById('numeroContrato').value = c.numero || '';
-            document.getElementById('fornecedor').value = c.fornecedor || '';
-            document.getElementById('centroCustoContrato').value = c.centroCusto || '';
-            document.getElementById('contaContabil').value = c.contaContabil || '';
-            document.getElementById('valorTotal').value = Number(c.valorTotal) || 0;
-            document.getElementById('saldoUtilizado').value = Number(c.saldoUtilizado) || 0;
-            if (typeof formatYMD === 'function') {
-              document.getElementById('dataInicio').value = c.dataInicio ? formatYMD(c.dataInicio) : '';
-              document.getElementById('dataVencimento').value = c.dataVencimento ? formatYMD(c.dataVencimento) : '';
-            } else {
-<<<<<<< HEAD
-              document.getElementById('dataInicio').value = c.dataInicio.slice(0, 10) || '';
-              document.getElementById('dataVencimento').value = c.dataVencimento.slice(0, 10) || '';
-=======
-              document.getElementById('dataInicio').value = c.dataInicio?.slice(0, 10) || '';
-              document.getElementById('dataVencimento').value = c.dataVencimento?.slice(0, 10) || '';
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
-            }
-            document.getElementById('observacoes').value = c.observacoes || '';
-            document.getElementById('contratoAtivo').checked = c.ativo !== false;
-            if (typeof updateListaAnexos === 'function') await updateListaAnexos(Number(id));
+        const btnCancelar = document.getElementById('btnCancelarContrato');
+        if (btnCancelar) {
+          btnCancelar.addEventListener('click', () => {
+            if (from === 'contratos') window.location.href = 'contratos.html';
+            else window.location.href = 'contratos-modulo.html';
+          });
+        }
+
+        function enableTab(linkEl, enabled) {
+          if (!linkEl) return;
+          linkEl.classList.toggle('disabled', !enabled);
+          if (enabled) {
+            linkEl.removeAttribute('aria-disabled');
+            linkEl.removeAttribute('tabindex');
+          } else {
+            linkEl.setAttribute('aria-disabled', 'true');
+            linkEl.setAttribute('tabindex', '-1');
           }
         }
+
+        function showTabContent(targetId) {
+          document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('#contratoForm .tab-content').forEach(p => p.classList.remove('active'));
+          const link = document.querySelector(`.tabs .tab[data-target="${targetId}"]`);
+          if (link) link.classList.add('active');
+          const panel = document.getElementById(targetId);
+          if (panel) panel.classList.add('active');
+        }
+
+        document.querySelectorAll('.tabs .tab[data-target]').forEach(link => {
+          link.addEventListener('click', e => {
+            e.preventDefault();
+            if (link.classList.contains('disabled')) return;
+            showTabContent(link.getAttribute('data-target'));
+          });
+        });
+
+        // Aguarda inicializacao global (centros/contas) antes de preencher selects
+        if (window.__CNC_INIT) {
+          await window.__CNC_INIT;
+        }
+
+        const tabMov = document.getElementById('tabMovLink');
+        const tabAnexos = document.getElementById('tabAnexosLink');
+
+        async function loadContratoData(contratoId) {
+          const c = await apiGet(`/contratos/${contratoId}`);
+          if (!c || c.error) return null;
+
+          document.getElementById('contratoModalTitle').textContent = 'Dados Principais';
+          const pageTitle = document.getElementById('pageTitle');
+          const pageSubtitle = document.getElementById('pageSubtitle');
+          if (pageTitle) pageTitle.textContent = readonly ? 'Consulta Contrato' : 'Editar Contrato';
+          if (pageSubtitle) pageSubtitle.textContent = readonly ? 'Pagina de consulta de contratos' : 'Pagina de edicao de contratos';
+          document.getElementById('numeroContrato').value = c.numero || '';
+          document.getElementById('fornecedor').value = c.fornecedor || '';
+          document.getElementById('centroCustoContrato').value = c.centroCusto || '';
+          document.getElementById('contaContabil').value = c.contaContabil || '';
+          document.getElementById('valorTotal').value = Number(c.valorTotal) || 0;
+          document.getElementById('saldoUtilizado').value = Number(c.saldoUtilizado) || 0;
+          if (typeof formatYMD === 'function') {
+            document.getElementById('dataInicio').value = c.dataInicio ? formatYMD(c.dataInicio) : '';
+            document.getElementById('dataVencimento').value = c.dataVencimento ? formatYMD(c.dataVencimento) : '';
+          } else {
+            document.getElementById('dataInicio').value = c.dataInicio?.slice(0, 10) || '';
+            document.getElementById('dataVencimento').value = c.dataVencimento?.slice(0, 10) || '';
+          }
+          document.getElementById('observacoes').value = c.observacoes || '';
+          document.getElementById('contratoAtivo').checked = c.ativo !== false;
+          return c;
+        }
+
+        async function refreshAnexos(contratoId) {
+          let anexos = [];
+          try {
+            anexos = await apiGet(`/contratos/${contratoId}/arquivos`);
+          } catch (e) {
+            anexos = [];
+          }
+
+          const enabled = Boolean(contratoId) && (!readonly || (Array.isArray(anexos) && anexos.length > 0));
+          enableTab(tabAnexos, enabled);
+
+          if (typeof updateListaAnexos === 'function') {
+            await updateListaAnexos(Number(contratoId));
+          }
+
+          return anexos;
+        }
+
+        async function refreshMovimentos(contratoId) {
+          let movimentos = [];
+          try {
+            movimentos = await apiGet(`/contratos/${contratoId}/movimentos`);
+          } catch (e) {
+            movimentos = [];
+          }
+
+          const tbody = document.getElementById('tbMovPage');
+          const empty = document.getElementById('movimentosEmpty');
+          const wrap = document.getElementById('movimentosTableWrap');
+          const hint = document.getElementById('movimentosHint');
+          if (hint) hint.textContent = Array.isArray(movimentos) ? `${movimentos.length} registros` : '';
+
+          if (!Array.isArray(movimentos) || movimentos.length === 0) {
+            if (empty) empty.style.display = 'flex';
+            if (wrap) wrap.style.display = 'none';
+          } else {
+            if (empty) empty.style.display = 'none';
+            if (wrap) wrap.style.display = 'block';
+            if (tbody) {
+              tbody.innerHTML = '';
+              movimentos.forEach(m => {
+                const tr = document.createElement('tr');
+                const dt = m.criadoEm ? formatBR(m.criadoEm) : 'N/A';
+                const tipo = m.tipo || 'N/A';
+                const valor = `R$ ${toBRL(m.valorDelta)}`;
+                const obs = m.observacao || '-';
+                tr.innerHTML = `<td>${dt}</td><td>${tipo}</td><td>${valor}</td><td>${obs}</td>`;
+                tbody.appendChild(tr);
+              });
+            }
+          }
+
+          // Movimentos: no modo edicao, habilita sempre (para permitir incluir).
+          // No modo consulta, habilita apenas se houver registros.
+          const enabled = Boolean(contratoId) && (!readonly || (Array.isArray(movimentos) && movimentos.length > 0));
+          enableTab(tabMov, enabled);
+
+          const movForm = document.getElementById('movFormPage');
+          if (movForm) movForm.style.display = !readonly && Boolean(contratoId) ? 'block' : 'none';
+
+          return movimentos;
+        }
+
+        // Edicao: carrega contrato se houver ?id=
+        const id = params.get('id');
+        if (id) {
+          if (typeof window.setEditingId === 'function') window.setEditingId(Number(id));
+
+          const c = await loadContratoData(id);
+          if (c) {
+            await refreshAnexos(id);
+            await refreshMovimentos(id);
+          } else {
+            if (typeof showAlert === 'function') showAlert('Contrato nao encontrado.', 'danger');
+          }
+        } else {
+          enableTab(tabMov, false);
+          enableTab(tabAnexos, false);
+        }
+
+        if (readonly) {
+          document.querySelectorAll('#contratoForm input, #contratoForm select, #contratoForm textarea').forEach(el => {
+            if (el && el.id !== 'anexosContrato') el.disabled = true;
+          });
+          const anexosInput = document.getElementById('anexosContrato');
+          if (anexosInput) anexosInput.disabled = true;
+          const submit = document.getElementById('btnSalvarContrato');
+          if (submit) submit.style.display = 'none';
+        }
+
+        // Submit de movimentos (apenas com contrato existente)
+        const movForm = document.getElementById('movFormPage');
+        if (movForm) {
+          movForm.addEventListener('submit', async e => {
+            e.preventDefault();
+            const currentId = params.get('id');
+            if (!currentId) return;
+            const tipoTela = document.getElementById('movTipoPage').value;
+            const payload = {
+              tipo: (tipoTela === 'saida' ? 'PAGAMENTO' : 'AJUSTE'),
+              observacao: document.getElementById('movObsPage').value || null,
+              valorDelta: parseFloat(document.getElementById('movValorPage').value) || 0
+            };
+            try {
+              await apiSend(`/contratos/${currentId}/movimentos`, 'POST', payload);
+              document.getElementById('movValorPage').value = '';
+              document.getElementById('movObsPage').value = '';
+              await loadContratoData(currentId);
+              await refreshMovimentos(currentId);
+              showTabContent('tabMovContent');
+            } catch (err) {
+              console.error('Erro ao adicionar movimentacao:', err);
+              if (typeof showAlert === 'function') showAlert('Erro ao adicionar movimentacao.', 'danger');
+            }
+          });
+        }
       } catch (err) {
-<<<<<<< HEAD
         console.error('Falha ao preparar formulario de contrato:', err);
-=======
-        console.error('Falha ao preparar formulário de contrato:', err);
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
       }
     });
   </script>
@@ -199,7 +426,6 @@
 </body>
 </html>
 
-<<<<<<< HEAD
 
 
 
@@ -207,5 +433,5 @@
 
 
 
-=======
->>>>>>> 8804e5c05fa9bffc8526991029854834c655de51
+
+
